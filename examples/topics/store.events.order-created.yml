@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: topic
 metadata:
-  name: myapp.events.order_created
+  name: store.events.order-created
 spec:
   configs:
     cleanup.policy: delete
@@ -21,7 +21,7 @@ spec:
     message.timestamp.type: CreateTime
     min.cleanable.dirty.ratio: "0.5"
     min.compaction.lag.ms: "0"
-    min.insync.replicas: 2
+    min.insync.replicas: "2"
     preallocate: "false"
     retention.bytes: "-1"
     retention.ms: "604800000"
