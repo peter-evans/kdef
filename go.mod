@@ -1,6 +1,6 @@
 module github.com/peter-evans/kdef
 
-go 1.13
+go 1.16
 
 require (
 	github.com/aws/aws-sdk-go v1.40.21
