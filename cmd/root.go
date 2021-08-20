@@ -39,7 +39,7 @@ definitions can be reviewed and applied to a cluster.
 
 kdef was designed to support being run in a CI-CD environment, allowing
 teams to manage Kafka resource definitions in source control with pull
-requests.
+requests (GitOps).
 
 Create a configuration file for your cluster:
 kdef configure
