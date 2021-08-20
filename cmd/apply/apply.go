@@ -30,6 +30,9 @@ cat topics/my_topic.yml | kdef apply - --dry-run`,
 		DisableFlagsInUseLine: true,
 		Args:                  cobra.MinimumNArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
+			if flags.ExitCode {
+				flags.DryRun = true
+			}
 			if flags.DryRun {
 				log.InfoWithKey("dry-run", "Enabled")
 			}
@@ -82,6 +85,7 @@ cat topics/my_topic.yml | kdef apply - --dry-run`,
 	cmd.Flags().BoolVar(&flags.DeleteMissingConfigs, "delete-missing-configs", false, `allow deletion of dynamic config keys not present in the definition
 CAUTION: this will permanently delete configuration keys — always confirm with --dry-run`)
 	cmd.Flags().BoolVarP(&flags.DryRun, "dry-run", "d", false, "validate and review the operation only")
+	cmd.Flags().BoolVarP(&flags.ExitCode, "exit-code", "e", false, "implies --dry-run and causes the program to exit with 1 if there are unapplied changes and 0 otherwise.")
 	cmd.Flags().BoolVarP(&flags.NonIncremental, "non-inc", "n", false, `use the non-incremental alter configs request method
 required by clusters that do not support incremental alter configs (Kafka 0.11.0 to 2.2.0)`)
 

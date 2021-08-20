@@ -16,7 +16,7 @@ spec:
     max.compaction.lag.ms: "9223372036854775807"
     max.message.bytes: "1048588"
     message.downconversion.enable: "true"
-    message.format.version: 2.6-IV0
+    message.format.version: 2.8-IV1
     message.timestamp.difference.max.ms: "9223372036854775807"
     message.timestamp.type: CreateTime
     min.cleanable.dirty.ratio: "0.5"
@@ -29,6 +29,6 @@ spec:
     segment.index.bytes: "10485760"
     segment.jitter.ms: "0"
     segment.ms: "604800000"
-    unclean.leader.election.enable: "true"
+    unclean.leader.election.enable: "false"
   partitions: 3
   replicationFactor: 3

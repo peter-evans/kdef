@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/bradfitz/slice"
 	"github.com/fatih/color"
 	"github.com/ghodss/yaml"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/core/req"
 	"github.com/peter-evans/kdef/util"
 	"github.com/twmb/franz-go/pkg/kerr"
 	"github.com/twmb/franz-go/pkg/kmsg"
@@ -46,6 +48,7 @@ func (c configOps) containsOp(operation int8) bool {
 type ApplierFlags struct {
 	DeleteMissingConfigs bool
 	DryRun               bool
+	ExitCode             bool
 	NonIncremental       bool
 }
 
@@ -93,16 +96,31 @@ func (a *applier) Execute() error {
 	}
 
 	if a.create {
-		return a.createTopic()
+		if err := a.createTopic(); err != nil {
+			return err
+		}
 	} else {
-		return a.updateTopic()
+		if err := a.updateTopic(); err != nil {
+			return err
+		}
 	}
+
+	if a.changesExist() {
+		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Completed apply for topic %q", a.topicDef.Metadata.Name)
+		if a.flags.DryRun && a.flags.ExitCode {
+			return fmt.Errorf("unapplied changes exist for topic %q", a.topicDef.Metadata.Name)
+		}
+	} else {
+		log.Info("No changes to apply for topic %q", a.topicDef.Metadata.Name)
+	}
+
+	return nil
 }
 
 // Fetch metadata and config for a topic if it exists
 func (a *applier) tryFetchExistingTopic() error {
 	log.Info("Checking if topic %q exists...", a.topicDef.Metadata.Name)
-	topicMetadataResp, err := requestTopicMetadata(a.cl, []string{a.topicDef.Metadata.Name}, false)
+	topicMetadataResp, err := req.RequestTopicMetadata(a.cl, []string{a.topicDef.Metadata.Name}, false)
 	if err != nil {
 		return err
 	}
@@ -115,7 +133,7 @@ func (a *applier) tryFetchExistingTopic() error {
 	}
 
 	log.Info("Fetching configs for existing topic %q...", a.topicDef.Metadata.Name)
-	topicConfigsResp, err := requestDescribeTopicConfigs(a.cl, []string{a.topicDef.Metadata.Name})
+	topicConfigsResp, err := req.RequestDescribeTopicConfigs(a.cl, []string{a.topicDef.Metadata.Name})
 	if err != nil {
 		return err
 	}
@@ -131,11 +149,7 @@ func (a *applier) tryFetchExistingTopic() error {
 
 // Create a topic (Kafka 0.10.1+)
 func (a *applier) createTopic() error {
-	if a.flags.DryRun {
-		log.InfoWithKey("dry-run", "Creating topic %q...", a.topicDef.Metadata.Name)
-	} else {
-		log.Info("Creating topic %q...", a.topicDef.Metadata.Name)
-	}
+	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Creating topic %q...", a.topicDef.Metadata.Name)
 
 	var configs []kmsg.CreateTopicsRequestTopicConfig
 	for k, v := range a.topicDef.Spec.Configs {
@@ -165,11 +179,7 @@ func (a *applier) createTopic() error {
 	if err := kerr.ErrorForCode(resp.Topics[0].ErrorCode); err != nil {
 		return fmt.Errorf(*resp.Topics[0].ErrorMessage)
 	} else {
-		if a.flags.DryRun {
-			log.InfoWithKey("dry-run", "Created topic %q", a.topicDef.Metadata.Name)
-		} else {
-			log.Info("Created topic %q", a.topicDef.Metadata.Name)
-		}
+		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Created topic %q", a.topicDef.Metadata.Name)
 	}
 
 	return nil
@@ -181,7 +191,9 @@ func (a *applier) updateTopic() error {
 	a.buildConfigOperations()
 
 	if len(a.configOperations) > 0 {
-		a.displayConfigOperations()
+		if !log.Quiet {
+			a.displayConfigOperations()
+		}
 
 		if err := a.updateConfigs(); err != nil {
 			return err
@@ -201,9 +213,9 @@ func (a *applier) buildConfigOperations() {
 
 	for k, v := range a.topicDef.Spec.Configs {
 		if cv, ok := a.existingTopicDef.Spec.Configs[k]; ok {
-			// config exists
+			// Config exists
 			if *v != *cv {
-				// config value has changed
+				// Config value has changed
 				log.Debug("Value of config key %q has changed from %q to %q", k, *cv, *v)
 				a.configOperations = append(a.configOperations, configOp{
 					name:         k,
@@ -213,7 +225,7 @@ func (a *applier) buildConfigOperations() {
 				})
 			}
 		} else {
-			// config does not exist
+			// Config does not exist
 			log.Debug("Config key %q is missing from existing config", k)
 			a.configOperations = append(a.configOperations, configOp{
 				name:  k,
@@ -223,10 +235,10 @@ func (a *applier) buildConfigOperations() {
 		}
 	}
 
-	// mark missing configs for deletion
+	// Mark missing configs for deletion
 	if a.flags.DeleteMissingConfigs || a.flags.NonIncremental {
 		for _, config := range a.topicConfigsResp.Configs {
-			// ignore static and default config keys that cannot be deleted
+			// Ignore static and default config keys that cannot be deleted
 			if config.Source == kmsg.ConfigSourceStaticBrokerConfig || config.Source == kmsg.ConfigSourceDefaultConfig {
 				continue
 			}
@@ -240,6 +252,12 @@ func (a *applier) buildConfigOperations() {
 			}
 		}
 	}
+
+	// Sort the config operations
+	// TODO: Use sort.Slice in the standard library after upgrading to Go 1.8
+	slice.Sort(a.configOperations[:], func(i, j int) bool {
+		return a.configOperations[i].name < a.configOperations[j].name
+	})
 }
 
 // Display alter configs operations
@@ -271,8 +289,8 @@ func (a *applier) updateConfigs() error {
 		}
 	} else {
 		log.Debug("Checking if incremental alter configs is supported by the target cluster...")
-		req := kmsg.NewIncrementalAlterConfigsRequest()
-		supported, err := requestSupported(a.cl, req.Key())
+		r := kmsg.NewIncrementalAlterConfigsRequest()
+		supported, err := req.RequestSupported(a.cl, r.Key())
 		if err != nil {
 			return err
 		}
@@ -293,11 +311,7 @@ func (a *applier) updateConfigs() error {
 
 // Perform a non-incremental alter configs (Kafka 0.11.0+)
 func (a *applier) alterConfigs() error {
-	if a.flags.DryRun {
-		log.InfoWithKey("dry-run", "Altering configs (non-incremental)...")
-	} else {
-		log.Info("Altering configs (non-incremental)...")
-	}
+	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altering configs (non-incremental)...")
 
 	var configs []kmsg.AlterConfigsRequestResourceConfig
 	for _, co := range a.configOperations {
@@ -327,11 +341,7 @@ func (a *applier) alterConfigs() error {
 	if err := kerr.ErrorForCode(resp.Resources[0].ErrorCode); err != nil {
 		return fmt.Errorf(*resp.Resources[0].ErrorMessage)
 	} else {
-		if a.flags.DryRun {
-			log.InfoWithKey("dry-run", "Altered configs for topic %q", a.topicDef.Metadata.Name)
-		} else {
-			log.Info("Altered configs for topic %q", a.topicDef.Metadata.Name)
-		}
+		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altered configs for topic %q", a.topicDef.Metadata.Name)
 	}
 
 	return nil
@@ -339,11 +349,7 @@ func (a *applier) alterConfigs() error {
 
 // Perform an incremental alter configs (Kafka 2.3.0+)
 func (a *applier) incrementalAlterConfigs() error {
-	if a.flags.DryRun {
-		log.InfoWithKey("dry-run", "Altering configs...")
-	} else {
-		log.Info("Altering configs...")
-	}
+	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altering configs...")
 
 	var configs []kmsg.IncrementalAlterConfigsRequestResourceConfig
 	for _, co := range a.configOperations {
@@ -372,12 +378,25 @@ func (a *applier) incrementalAlterConfigs() error {
 	if err := kerr.ErrorForCode(resp.Resources[0].ErrorCode); err != nil {
 		return fmt.Errorf(*resp.Resources[0].ErrorMessage)
 	} else {
-		if a.flags.DryRun {
-			log.InfoWithKey("dry-run", "Altered configs for topic %q", a.topicDef.Metadata.Name)
-		} else {
-			log.Info("Altered configs for topic %q", a.topicDef.Metadata.Name)
-		}
+		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altered configs for topic %q", a.topicDef.Metadata.Name)
 	}
 
 	return nil
+}
+
+// Determine if changes existed (or still exist if dry-run was used)
+func (a *applier) changesExist() bool {
+	if a.create {
+		// The topic didn't/doesn't exist
+		return true
+	}
+
+	if len(a.configOperations) > 0 {
+		// There were/are topic config changes
+		return true
+	}
+
+	// TODO: include other topic spec changes
+
+	return false
 }

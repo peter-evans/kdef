@@ -16,11 +16,18 @@ func TestDerefStr(t *testing.T) {
 		want string
 	}{
 		{
-			name: "Derefs a string",
+			name: "Tests dereferencing a string pointer",
 			args: args{
 				s: &str,
 			},
 			want: "foo",
+		},
+		{
+			name: "Tests dereferencing a nil pointer",
+			args: args{
+				s: nil,
+			},
+			want: "",
 		},
 	}
 	for _, tt := range tests {
@@ -42,7 +49,7 @@ func TestNormStr(t *testing.T) {
 		want string
 	}{
 		{
-			name: "Normalises a string",
+			name: "Tests normalising a string",
 			args: args{
 				s: " FOO-bar__Baz ",
 			},
@@ -69,7 +76,7 @@ func TestStringInList(t *testing.T) {
 		want bool
 	}{
 		{
-			name: "List contains string",
+			name: "Tests a list containing a string",
 			args: args{
 				str:  "bar",
 				list: []string{"foo", "bar", "baz"},
@@ -77,7 +84,7 @@ func TestStringInList(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "List does not contain string",
+			name: "Tests a list not containing a string",
 			args: args{
 				str:  "ba",
 				list: []string{"foo", "bar", "baz"},

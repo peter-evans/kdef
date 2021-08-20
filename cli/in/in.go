@@ -10,13 +10,13 @@ import (
 
 var (
 	yamlDocSeparatorRegExp = regexp.MustCompile(`(?m)^---`)
-	yamlCommentRegExp      = regexp.MustCompile(`(?m)^\s*#.*$`)
+	yamlCommentRegExp      = regexp.MustCompile(`(?m)^([^#]*)#?.*$`)
 )
 
 // Converts bytes to an array of yaml documents
 func bytesToYamlDocs(bytes []byte) ([]string, error) {
 	// Remove yaml comments
-	cleanFileBytes := yamlCommentRegExp.ReplaceAll(bytes, nil)
+	cleanFileBytes := yamlCommentRegExp.ReplaceAll(bytes, []byte("$1"))
 
 	// Separate into yaml documents
 	separatedDocs := yamlDocSeparatorRegExp.Split(string(cleanFileBytes), -1)

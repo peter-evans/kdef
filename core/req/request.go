@@ -1,8 +1,9 @@
-package topics
+package req
 
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/peter-evans/kdef/client"
 	"github.com/twmb/franz-go/pkg/kerr"
@@ -11,7 +12,7 @@ import (
 )
 
 // Execute a request for topic metadata (Kafka 0.8.0+)
-func requestTopicMetadata(cl *client.Client, topics []string, validateResponse bool) ([]kmsg.MetadataResponseTopic, error) {
+func RequestTopicMetadata(cl *client.Client, topics []string, validateResponse bool) ([]kmsg.MetadataResponseTopic, error) {
 	req := kmsg.NewMetadataRequest()
 
 	for _, topic := range topics {
@@ -42,7 +43,7 @@ func requestTopicMetadata(cl *client.Client, topics []string, validateResponse b
 }
 
 // Execute a request to describe topic configs (Kafka 0.11.0+)
-func requestDescribeTopicConfigs(cl *client.Client, topics []string) ([]kmsg.DescribeConfigsResponseResource, error) {
+func RequestDescribeTopicConfigs(cl *client.Client, topics []string) ([]kmsg.DescribeConfigsResponseResource, error) {
 	req := kmsg.NewDescribeConfigsRequest()
 
 	for _, topic := range topics {
@@ -72,7 +73,7 @@ func requestDescribeTopicConfigs(cl *client.Client, topics []string) ([]kmsg.Des
 }
 
 // Execute a request to determine if a request key is supported by the cluster (Kafka 0.10.0+)
-func requestSupported(cl *client.Client, requestKey int16) (bool, error) {
+func RequestSupported(cl *client.Client, requestKey int16) (bool, error) {
 	req := kmsg.NewApiVersionsRequest()
 	kresp, err := cl.Client().Request(context.Background(), &req)
 	if err != nil {
@@ -80,4 +81,40 @@ func requestSupported(cl *client.Client, requestKey int16) (bool, error) {
 	}
 	resp := kresp.(*kmsg.ApiVersionsResponse)
 	return kversion.FromApiVersionsResponse(resp).HasKey(requestKey), nil
+}
+
+// Execute a request to describe the cluster (Kafka 2.8.0+)
+func RequestDescribeCluster(cl *client.Client) (*kmsg.DescribeClusterResponse, error) {
+	kresp, err := cl.Client().Request(context.Background(), kmsg.NewPtrDescribeClusterRequest())
+	if err != nil {
+		return nil, err
+	}
+	resp := kresp.(*kmsg.DescribeClusterResponse)
+
+	if err := kerr.ErrorForCode(resp.ErrorCode); err != nil {
+		return nil, fmt.Errorf(*resp.ErrorMessage)
+	}
+
+	return resp, nil
+}
+
+// Execute describe cluster requests until a minimum number of brokers are alive (Kafka 2.8.0+)
+func IsKafkaReady(cl *client.Client, minBrokers int, timeoutSec int) bool {
+	timeout := time.After(time.Duration(timeoutSec) * time.Second)
+
+	for {
+		select {
+		case <-timeout:
+			return false
+		default:
+			resp, err := RequestDescribeCluster(cl)
+			if err == nil {
+				if len(resp.Brokers) >= minBrokers {
+					return true
+				}
+			}
+			time.Sleep(2 * time.Second)
+			continue
+		}
+	}
 }
