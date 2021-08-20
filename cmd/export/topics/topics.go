@@ -29,7 +29,7 @@ kdef export topics --match "myapp.*"`,
 		RunE: func(_ *cobra.Command, args []string) error {
 
 			exporter := topics.NewExporter(cl, flags)
-			if err := exporter.Execute(); err != nil {
+			if _, err := exporter.Execute(); err != nil {
 				return err
 			}
 

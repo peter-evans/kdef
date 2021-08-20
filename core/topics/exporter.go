@@ -11,6 +11,7 @@ import (
 
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/core/req"
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
@@ -42,24 +43,25 @@ func NewExporter(
 }
 
 // Executes the export operation
-func (e *exporter) Execute() error {
+func (e *exporter) Execute() (int, error) {
 	log.Info("Fetching topics...")
 	topicDefs, err := e.getTopicDefinitions()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	if len(topicDefs) == 0 {
+	topicCount := len(topicDefs)
+	if topicCount == 0 {
 		log.Info("No topics found")
-		return nil
+		return 0, nil
 	}
 
 	for index, topicDef := range topicDefs {
-		log.Info("Exporting topic definition %d of %d", index+1, len(topicDefs))
+		log.Info("Exporting topic definition %d of %d", index+1, topicCount)
 
 		yaml, err := topicDef.YAML()
 		if err != nil {
-			return err
+			return 0, err
 		}
 
 		if e.flags.OutputDir != "" {
@@ -74,19 +76,20 @@ func (e *exporter) Execute() error {
 
 			log.Info("Writing topic definition file %q", outputPath)
 			if err = ioutil.WriteFile(outputPath, []byte(yaml), 0644); err != nil {
-				return err
+				return 0, err
 			}
 		} else {
+			// Ignores --quiet
 			fmt.Printf("---\n%s", yaml)
 		}
 	}
 
-	return nil
+	return topicCount, nil
 }
 
 // Returns topic definitions from existing topics in a cluster
 func (e *exporter) getTopicDefinitions() ([]TopicDefinition, error) {
-	topicMetadata, err := requestTopicMetadata(e.cl, []string{}, true)
+	topicMetadata, err := req.RequestTopicMetadata(e.cl, []string{}, true)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +99,7 @@ func (e *exporter) getTopicDefinitions() ([]TopicDefinition, error) {
 		topicNames = append(topicNames, topic.Topic)
 	}
 
-	topicConfigs, err := requestDescribeTopicConfigs(e.cl, topicNames)
+	topicConfigs, err := req.RequestDescribeTopicConfigs(e.cl, topicNames)
 	if err != nil {
 		return nil, err
 	}

@@ -27,6 +27,15 @@ func InfoWithKey(key string, format string, args ...interface{}) {
 	}
 }
 
+// Print an info level message optionally with prefixed key
+func InfoMaybeWithKey(key string, showKey bool, format string, args ...interface{}) {
+	if showKey {
+		InfoWithKey(key, format, args...)
+	} else {
+		Info(format, args...)
+	}
+}
+
 // Print a debug level message
 func Debug(format string, args ...interface{}) {
 	if !Quiet && Verbose {

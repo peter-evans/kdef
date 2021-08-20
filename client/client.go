@@ -198,14 +198,14 @@ func (cl *Client) buildTLSOpt() error {
 
 	// Set cipher suites
 	if suites := cl.cc.TLS.CipherSuites; len(suites) > 0 {
-		potentials := make(map[string]uint16)
+		candidates := make(map[string]uint16)
 		for _, suite := range append(tls.CipherSuites(), tls.InsecureCipherSuites()...) {
-			potentials[util.NormStr(suite.Name)] = suite.ID
-			potentials[util.NormStr(strings.TrimPrefix("TLS_", suite.Name))] = suite.ID
+			candidates[util.NormStr(suite.Name)] = suite.ID
+			candidates[util.NormStr(strings.TrimPrefix("TLS_", suite.Name))] = suite.ID
 		}
 
 		for _, suite := range cl.cc.TLS.CipherSuites {
-			id, exists := potentials[util.NormStr(suite)]
+			id, exists := candidates[util.NormStr(suite)]
 			if !exists {
 				return fmt.Errorf("invalid cipher suite %q", suite)
 			}
@@ -215,7 +215,7 @@ func (cl *Client) buildTLSOpt() error {
 
 	// Set curve preferences
 	if curves := cl.cc.TLS.CurvePreferences; len(curves) > 0 {
-		potentials := map[string]tls.CurveID{
+		candidates := map[string]tls.CurveID{
 			"curvep256": tls.CurveP256,
 			"curvep384": tls.CurveP384,
 			"curvep521": tls.CurveP521,
@@ -223,7 +223,7 @@ func (cl *Client) buildTLSOpt() error {
 		}
 
 		for _, curve := range cl.cc.TLS.CurvePreferences {
-			id, exists := potentials[util.NormStr(curve)]
+			id, exists := candidates[util.NormStr(curve)]
 			if !exists {
 				return fmt.Errorf("invalid curve preference %q", curve)
 			}

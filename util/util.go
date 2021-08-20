@@ -2,7 +2,7 @@ package util
 
 import "strings"
 
-// Dereference a string pointer
+// Dereference a string pointer handling nil
 func DerefStr(s *string) string {
 	if s != nil {
 		return *s

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/fatih/color"
@@ -16,7 +15,7 @@ import (
 // Execute the root command
 func Execute(version string) {
 	if err := rootCmd(version).Execute(); err != nil {
-		log.Error(fmt.Errorf("command failed: %v", err))
+		log.Error(err)
 		os.Exit(1)
 	}
 }
