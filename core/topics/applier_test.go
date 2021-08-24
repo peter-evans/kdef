@@ -172,6 +172,29 @@ func Test_applier_Execute(t *testing.T) {
 			},
 			wantErr: "",
 		},
+		{
+			// Add partitions
+			name: "9: Dry-run topic version 5",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: yamlDocs[5],
+				flags: ApplierFlags{
+					DryRun:   true,
+					ExitCode: true,
+				},
+			},
+			wantErr: "unapplied changes exist for topic",
+		},
+		{
+			// Add partitions
+			name: "10: Apply topic version 5",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: yamlDocs[5],
+				flags:   ApplierFlags{},
+			},
+			wantErr: "",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
