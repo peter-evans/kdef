@@ -1,4 +1,4 @@
-package topics
+package def
 
 import (
 	"errors"
@@ -61,7 +61,7 @@ func (t TopicDefinition) Validate() error {
 }
 
 // Create a topic definition from metadata and config
-func topicDefinitionFromMetadata(metadata kmsg.MetadataResponseTopic, topicConfig kmsg.DescribeConfigsResponseResource) TopicDefinition {
+func TopicDefinitionFromMetadata(metadata kmsg.MetadataResponseTopic, topicConfig kmsg.DescribeConfigsResponseResource) TopicDefinition {
 	topicConfigsDef := TopicConfigDefinition{}
 	for _, config := range topicConfig.Configs {
 		topicConfigsDef[config.Name] = config.Value

@@ -11,6 +11,7 @@ import (
 
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/core/def"
 	"github.com/peter-evans/kdef/core/req"
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
@@ -88,7 +89,7 @@ func (e *exporter) Execute() (int, error) {
 }
 
 // Returns topic definitions from existing topics in a cluster
-func (e *exporter) getTopicDefinitions() ([]TopicDefinition, error) {
+func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 	topicMetadata, err := req.RequestTopicMetadata(e.cl, []string{}, true)
 	if err != nil {
 		return nil, err
@@ -118,7 +119,7 @@ func (e *exporter) getTopicDefinitions() ([]TopicDefinition, error) {
 		return nil, err
 	}
 
-	topicDefs := []TopicDefinition{}
+	topicDefs := []def.TopicDefinition{}
 	for _, topic := range topicMetadata {
 		// Kafka internal topics are prefixed by double underscores
 		// Confluent Schema Registry uses a single underscore
@@ -133,7 +134,7 @@ func (e *exporter) getTopicDefinitions() ([]TopicDefinition, error) {
 		}
 		topicDefs = append(
 			topicDefs,
-			topicDefinitionFromMetadata(topic, topicConfigsMap[topic.Topic]),
+			def.TopicDefinitionFromMetadata(topic, topicConfigsMap[topic.Topic]),
 		)
 	}
 
