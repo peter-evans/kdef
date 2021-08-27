@@ -212,7 +212,7 @@ func RequestAlterConfigs(
 }
 
 // Execute a request to perform an incremental alter configs (Kafka 2.3.0+)
-func incrementalAlterConfigs(
+func RequestIncrementalAlterConfigs(
 	cl *client.Client,
 	topic string,
 	configOps ConfigOperations,
