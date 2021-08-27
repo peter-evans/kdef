@@ -329,7 +329,7 @@ func (a *applier) alterConfigs() error {
 func (a *applier) incrementalAlterConfigs() error {
 	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altering configs...")
 
-	if err := req.RequestAlterConfigs(a.cl, a.topicDef.Metadata.Name, a.configOps, a.flags.DryRun); err != nil {
+	if err := req.RequestIncrementalAlterConfigs(a.cl, a.topicDef.Metadata.Name, a.configOps, a.flags.DryRun); err != nil {
 		return err
 	} else {
 		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altered configs for topic %q", a.topicDef.Metadata.Name)
