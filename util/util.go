@@ -27,3 +27,15 @@ func StringInList(str string, list []string) bool {
 	}
 	return false
 }
+
+func DuplicateInSlice(s []int32) bool {
+	k := make(map[int32]bool, len(s))
+	for _, ss := range s {
+		if k[ss] {
+			return true
+		} else {
+			k[ss] = true
+		}
+	}
+	return false
+}

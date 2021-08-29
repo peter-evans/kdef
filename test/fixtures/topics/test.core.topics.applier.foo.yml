@@ -1,5 +1,6 @@
 ---
 # Version 0
+# Create topic
 apiVersion: v1
 kind: topic
 metadata:

@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/ghodss/yaml"
+	"github.com/google/go-cmp/cmp"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
@@ -33,13 +35,14 @@ type applier struct {
 	flags   ApplierFlags
 
 	// internal
-	configOps         req.ConfigOperations
-	partitionsOp      bool
-	createOp          bool
-	topicDef          def.TopicDefinition
-	existingTopicDef  def.TopicDefinition
-	topicConfigsResp  kmsg.DescribeConfigsResponseResource
-	topicMetadataResp kmsg.MetadataResponseTopic
+	configOps            req.ConfigOperations
+	createOp             bool
+	partitionsOp         bool
+	assignmentsOp        bool
+	topicDef             def.TopicDefinition
+	existingTopicDef     def.TopicDefinition
+	existingTopicConfigs kmsg.DescribeConfigsResponseResource
+	metadata             *kmsg.MetadataResponse
 }
 
 // Creates a new applier
@@ -67,6 +70,12 @@ func (a *applier) Execute() error {
 
 	// Determine if the topic exists
 	if err := a.tryFetchExistingTopic(); err != nil {
+		return err
+	}
+
+	// Perform further validations with metadata
+	log.Debug("Validating topic definition using cluster metadata")
+	if err := a.topicDef.ValidateWithMetadata(a.metadata); err != nil {
 		return err
 	}
 
@@ -102,28 +111,35 @@ func (a *applier) Execute() error {
 // Fetch metadata and config for a topic if it exists
 func (a *applier) tryFetchExistingTopic() error {
 	log.Info("Checking if topic %q exists...", a.topicDef.Metadata.Name)
-	topicMetadataResp, err := req.RequestTopicMetadata(a.cl, []string{a.topicDef.Metadata.Name}, false)
+
+	// Fetch and store metadata
+	metadataResp, err := req.RequestMetadata(a.cl, []string{a.topicDef.Metadata.Name}, false)
 	if err != nil {
 		return err
 	}
-	a.topicMetadataResp = topicMetadataResp[0]
+	a.metadata = metadataResp
 
-	a.createOp = a.topicMetadataResp.ErrorCode == kerr.UnknownTopicOrPartition.Code
+	// Check if the topic exists
+	topicMetadata := a.metadata.Topics[0]
+	a.createOp = topicMetadata.ErrorCode == kerr.UnknownTopicOrPartition.Code
 	if a.createOp {
 		log.Debug("Topic %q does not exist", a.topicDef.Metadata.Name)
 		return nil
 	}
 
+	// Fetch and store existing topic configs
 	log.Info("Fetching configs for existing topic %q...", a.topicDef.Metadata.Name)
 	topicConfigsResp, err := req.RequestDescribeTopicConfigs(a.cl, []string{a.topicDef.Metadata.Name})
 	if err != nil {
 		return err
 	}
-	a.topicConfigsResp = topicConfigsResp[0]
+	a.existingTopicConfigs = topicConfigsResp[0]
 
-	a.existingTopicDef = def.TopicDefinitionFromMetadata(
-		a.topicMetadataResp,
-		a.topicConfigsResp,
+	// Build existing topic definition
+	a.existingTopicDef = def.NewTopicDefinition(
+		topicMetadata,
+		a.existingTopicConfigs,
+		false,
 	)
 
 	return nil
@@ -136,6 +152,8 @@ func (a *applier) buildOperations() error {
 	if err := a.buildPartitionsOperation(); err != nil {
 		return err
 	}
+
+	a.buildAssignmentsOperation()
 
 	return nil
 }
@@ -151,6 +169,10 @@ func (a *applier) pendingOpsExist() bool {
 	}
 
 	if a.partitionsOp {
+		return true
+	}
+
+	if a.assignmentsOp {
 		return true
 	}
 
@@ -175,6 +197,12 @@ func (a *applier) displayPendingOps() {
 			a.topicDef.Spec.Partitions,
 		)
 	}
+
+	if a.assignmentsOp {
+		log.Info("The following changes will be applied to topic %q assignments:", a.topicDef.Metadata.Name)
+		diff := cmp.Diff(a.existingTopicDef.Spec.Assignments, a.topicDef.Spec.Assignments)
+		fmt.Print(strings.Replace(diff, "def.TopicAssignmentsDefinition", "PartitionAssignments", 1))
+	}
 }
 
 // Build topic update operations
@@ -193,6 +221,12 @@ func (a *applier) executeOperations() error {
 
 	if a.partitionsOp {
 		if err := a.updatePartitions(); err != nil {
+			return err
+		}
+	}
+
+	if a.assignmentsOp {
+		if err := a.updateAssignments(); err != nil {
 			return err
 		}
 	}
@@ -243,7 +277,7 @@ func (a *applier) buildConfigOps() {
 
 	// Mark missing configs for deletion
 	if a.flags.DeleteMissingConfigs || a.flags.NonIncremental {
-		for _, config := range a.topicConfigsResp.Configs {
+		for _, config := range a.existingTopicConfigs.Configs {
 			// Ignore static and default config keys that cannot be deleted
 			if config.Source == kmsg.ConfigSourceStaticBrokerConfig || config.Source == kmsg.ConfigSourceDefaultConfig {
 				continue
@@ -316,7 +350,12 @@ func (a *applier) updateConfigs() error {
 func (a *applier) alterConfigs() error {
 	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altering configs (non-incremental)...")
 
-	if err := req.RequestAlterConfigs(a.cl, a.topicDef.Metadata.Name, a.configOps, a.flags.DryRun); err != nil {
+	if err := req.RequestAlterConfigs(
+		a.cl,
+		a.topicDef.Metadata.Name,
+		a.configOps,
+		a.flags.DryRun,
+	); err != nil {
 		return err
 	} else {
 		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altered configs for topic %q", a.topicDef.Metadata.Name)
@@ -329,7 +368,12 @@ func (a *applier) alterConfigs() error {
 func (a *applier) incrementalAlterConfigs() error {
 	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altering configs...")
 
-	if err := req.RequestIncrementalAlterConfigs(a.cl, a.topicDef.Metadata.Name, a.configOps, a.flags.DryRun); err != nil {
+	if err := req.RequestIncrementalAlterConfigs(
+		a.cl,
+		a.topicDef.Metadata.Name,
+		a.configOps,
+		a.flags.DryRun,
+	); err != nil {
 		return err
 	} else {
 		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altered configs for topic %q", a.topicDef.Metadata.Name)
@@ -360,10 +404,44 @@ func (a *applier) buildPartitionsOperation() error {
 func (a *applier) updatePartitions() error {
 	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Creating partitions...")
 
-	if err := req.RequestCreatePartitions(a.cl, a.topicDef.Metadata.Name, a.topicDef.Spec.Partitions, a.flags.DryRun); err != nil {
+	if err := req.RequestCreatePartitions(
+		a.cl,
+		a.topicDef.Metadata.Name,
+		a.topicDef.Spec.Partitions,
+		a.flags.DryRun,
+	); err != nil {
 		return err
 	} else {
 		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Created partitions for topic %q", a.topicDef.Metadata.Name)
+	}
+
+	return nil
+}
+
+// Build partitions operation
+func (a *applier) buildAssignmentsOperation() {
+	a.assignmentsOp = a.topicDef.Spec.HasAssignments() &&
+		!cmp.Equal(a.existingTopicDef.Spec.Assignments, a.topicDef.Spec.Assignments)
+}
+
+// Execute a request to alter assignments
+func (a *applier) updateAssignments() error {
+	if a.flags.DryRun {
+		log.Info("Skipped altering partition assignments (dry-run not available)")
+	} else {
+		// TODO: Need to check for ongoing assignment ops on this topic(?)
+
+		log.Info("Altering partition assignments...")
+
+		if err := req.RequestAlterPartitionAssignments(
+			a.cl,
+			a.topicDef.Metadata.Name,
+			a.topicDef.Spec.Assignments,
+		); err != nil {
+			return err
+		} else {
+			log.Info("Altered partition assignments for topic %q", a.topicDef.Metadata.Name)
+		}
 	}
 
 	return nil

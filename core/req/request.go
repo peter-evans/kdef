@@ -47,8 +47,8 @@ func (c ConfigOperations) Sort() {
 	})
 }
 
-// Execute a request for topic metadata (Kafka 0.8.0+)
-func RequestTopicMetadata(cl *client.Client, topics []string, validateResponse bool) ([]kmsg.MetadataResponseTopic, error) {
+// Execute a request for metadata (Kafka 0.8.0+)
+func RequestMetadata(cl *client.Client, topics []string, validateResponse bool) (*kmsg.MetadataResponse, error) {
 	req := kmsg.NewMetadataRequest()
 
 	for _, topic := range topics {
@@ -75,7 +75,7 @@ func RequestTopicMetadata(cl *client.Client, topics []string, validateResponse b
 		}
 	}
 
-	return resp.Topics, nil
+	return resp, nil
 }
 
 // Execute a request to describe topic configs (Kafka 0.11.0+)
@@ -150,9 +150,23 @@ func RequestCreateTopic(
 
 	reqT := kmsg.NewCreateTopicsRequestTopic()
 	reqT.Topic = topicDef.Metadata.Name
-	reqT.ReplicationFactor = int16(topicDef.Spec.ReplicationFactor)
-	reqT.NumPartitions = int32(topicDef.Spec.Partitions)
 	reqT.Configs = configs
+
+	if topicDef.Spec.HasAssignments() {
+		var assignments []kmsg.CreateTopicsRequestTopicReplicaAssignment
+		for i, replicas := range topicDef.Spec.Assignments {
+			assignments = append(assignments, kmsg.CreateTopicsRequestTopicReplicaAssignment{
+				Partition: int32(i),
+				Replicas:  replicas,
+			})
+		}
+		reqT.ReplicaAssignment = assignments
+		reqT.ReplicationFactor = -1
+		reqT.NumPartitions = -1
+	} else {
+		reqT.ReplicationFactor = int16(topicDef.Spec.ReplicationFactor)
+		reqT.NumPartitions = int32(topicDef.Spec.Partitions)
+	}
 
 	req := kmsg.NewCreateTopicsRequest()
 	req.Topics = append(req.Topics, reqT)
@@ -165,8 +179,14 @@ func RequestCreateTopic(
 	}
 	resp := kresp.(*kmsg.CreateTopicsResponse)
 
-	if err := kerr.ErrorForCode(resp.Topics[0].ErrorCode); err != nil {
-		return fmt.Errorf(*resp.Topics[0].ErrorMessage)
+	if len(resp.Topics) != 1 {
+		return fmt.Errorf("requested %d topics but received %d", 1, len(resp.Topics))
+	}
+
+	for _, topic := range resp.Topics {
+		if err := kerr.ErrorForCode(topic.ErrorCode); err != nil {
+			return fmt.Errorf(*topic.ErrorMessage)
+		}
 	}
 
 	return nil
@@ -204,8 +224,14 @@ func RequestAlterConfigs(
 	}
 	resp := kresp.(*kmsg.AlterConfigsResponse)
 
-	if err := kerr.ErrorForCode(resp.Resources[0].ErrorCode); err != nil {
-		return fmt.Errorf(*resp.Resources[0].ErrorMessage)
+	if len(resp.Resources) != 1 {
+		return fmt.Errorf("requested %d resources but received %d", 1, len(resp.Resources))
+	}
+
+	for _, resource := range resp.Resources {
+		if err := kerr.ErrorForCode(resource.ErrorCode); err != nil {
+			return fmt.Errorf(*resource.ErrorMessage)
+		}
 	}
 
 	return nil
@@ -242,8 +268,14 @@ func RequestIncrementalAlterConfigs(
 	}
 	resp := kresp.(*kmsg.IncrementalAlterConfigsResponse)
 
-	if err := kerr.ErrorForCode(resp.Resources[0].ErrorCode); err != nil {
-		return fmt.Errorf(*resp.Resources[0].ErrorMessage)
+	if len(resp.Resources) != 1 {
+		return fmt.Errorf("requested %d resources but received %d", 1, len(resp.Resources))
+	}
+
+	for _, resource := range resp.Resources {
+		if err := kerr.ErrorForCode(resource.ErrorCode); err != nil {
+			return fmt.Errorf(*resource.ErrorMessage)
+		}
 	}
 
 	return nil
@@ -262,6 +294,7 @@ func RequestCreatePartitions(
 
 	req := kmsg.NewCreatePartitionsRequest()
 	req.Topics = append(req.Topics, t)
+	req.TimeoutMillis = cl.TimeoutMs()
 	req.ValidateOnly = validateOnly
 
 	kresp, err := cl.Client().Request(context.Background(), &req)
@@ -277,6 +310,53 @@ func RequestCreatePartitions(
 	for _, topic := range resp.Topics {
 		if err := kerr.ErrorForCode(topic.ErrorCode); err != nil {
 			return fmt.Errorf(*topic.ErrorMessage)
+		}
+	}
+
+	return nil
+}
+
+// Execute a request to alter partition assignments (Kafka 2.4.0+)
+func RequestAlterPartitionAssignments(
+	cl *client.Client,
+	topic string,
+	assignments def.TopicAssignmentsDefinition,
+) error {
+	var partitions []kmsg.AlterPartitionAssignmentsRequestTopicPartition
+	for i, replicas := range assignments {
+		partitions = append(partitions, kmsg.AlterPartitionAssignmentsRequestTopicPartition{
+			Partition: int32(i),
+			Replicas:  replicas,
+		})
+	}
+
+	t := kmsg.NewAlterPartitionAssignmentsRequestTopic()
+	t.Topic = topic
+	t.Partitions = partitions
+
+	req := kmsg.NewAlterPartitionAssignmentsRequest()
+	req.Topics = append(req.Topics, t)
+	req.TimeoutMillis = cl.TimeoutMs()
+
+	kresp, err := cl.Client().Request(context.Background(), &req)
+	if err != nil {
+		return err
+	}
+	resp := kresp.(*kmsg.AlterPartitionAssignmentsResponse)
+
+	if len(resp.Topics) != 1 {
+		return fmt.Errorf("requested %d topics but received %d", 1, len(resp.Topics))
+	}
+
+	if err := kerr.ErrorForCode(resp.ErrorCode); err != nil {
+		return fmt.Errorf(*resp.ErrorMessage)
+	}
+
+	for _, topic := range resp.Topics {
+		for _, partition := range topic.Partitions {
+			if err := kerr.ErrorForCode(partition.ErrorCode); err != nil {
+				return fmt.Errorf(*partition.ErrorMessage)
+			}
 		}
 	}
 

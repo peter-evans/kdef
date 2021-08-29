@@ -1,9 +1,10 @@
 package def
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/ghodss/yaml"
+	"github.com/peter-evans/kdef/util"
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
@@ -26,13 +27,22 @@ type TopicMetadataLabels map[string]string
 
 // Topic spec definition
 type TopicSpecDefinition struct {
-	Configs           TopicConfigDefinition `json:"configs,omitempty"`
-	Partitions        int                   `json:"partitions"`
-	ReplicationFactor int                   `json:"replicationFactor"`
+	Configs           TopicConfigsDefinition     `json:"configs,omitempty"`
+	Partitions        int                        `json:"partitions"`
+	ReplicationFactor int                        `json:"replicationFactor"`
+	Assignments       TopicAssignmentsDefinition `json:"assignments,omitempty"`
 }
 
-// Topic config definition
-type TopicConfigDefinition map[string]*string
+// Topic configs definition
+type TopicConfigsDefinition map[string]*string
+
+// Topic assignments definition
+type TopicAssignmentsDefinition [][]int32
+
+// Determines if a spec has assignments
+func (s TopicSpecDefinition) HasAssignments() bool {
+	return len(s.Assignments) > 0
+}
 
 // Converts a topic definition to YAML
 func (t TopicDefinition) YAML() (string, error) {
@@ -46,28 +56,73 @@ func (t TopicDefinition) YAML() (string, error) {
 // Validate a topic definition
 func (t TopicDefinition) Validate() error {
 	if len(t.Metadata.Name) == 0 {
-		return errors.New("metadata.name must be supplied")
+		return fmt.Errorf("metadata name must be supplied")
 	}
 
 	if t.Spec.Partitions <= 0 {
-		return errors.New("spec.partitions must be greater than 0")
+		return fmt.Errorf("partitions must be greater than 0")
 	}
 
 	if t.Spec.ReplicationFactor <= 0 {
-		return errors.New("spec.replicationFactor must be greater than 0")
+		return fmt.Errorf("replication factor must be greater than 0")
+	}
+
+	if t.Spec.HasAssignments() {
+		if len(t.Spec.Assignments) != t.Spec.Partitions {
+			return fmt.Errorf("number of replica assignments must match partitions")
+		}
+
+		for _, replicas := range t.Spec.Assignments {
+			if len(replicas) != t.Spec.ReplicationFactor {
+				return fmt.Errorf("number of replicas in each assignment must match replication factor")
+			}
+
+			if util.DuplicateInSlice(replicas) {
+				return fmt.Errorf("a replica assignment cannot contain duplicate brokers")
+			}
+		}
+	}
+
+	return nil
+}
+
+// Further topic definition validation using metadata
+func (t TopicDefinition) ValidateWithMetadata(metadata *kmsg.MetadataResponse) error {
+	// Note:
+	// These are validations that are applicable regardless of whether it's a create or update operation
+	// Validation specific to either create or update can remain in the applier
+
+	if t.Spec.HasAssignments() {
+		// Check the broker IDs in the assignments are valid
+		brokerIds := make(map[int32]bool, len(metadata.Brokers))
+		for _, broker := range metadata.Brokers {
+			brokerIds[broker.NodeID] = true
+		}
+
+		for _, replicas := range t.Spec.Assignments {
+			for _, id := range replicas {
+				if !brokerIds[id] {
+					return fmt.Errorf("invalid broker id %q in assignments", id)
+				}
+			}
+		}
 	}
 
 	return nil
 }
 
 // Create a topic definition from metadata and config
-func TopicDefinitionFromMetadata(metadata kmsg.MetadataResponseTopic, topicConfig kmsg.DescribeConfigsResponseResource) TopicDefinition {
-	topicConfigsDef := TopicConfigDefinition{}
+func NewTopicDefinition(
+	metadata kmsg.MetadataResponseTopic,
+	topicConfig kmsg.DescribeConfigsResponseResource,
+	forExport bool,
+) TopicDefinition {
+	topicConfigsDef := TopicConfigsDefinition{}
 	for _, config := range topicConfig.Configs {
 		topicConfigsDef[config.Name] = config.Value
 	}
 
-	return TopicDefinition{
+	topicDef := TopicDefinition{
 		ApiVersion: "v1",
 		Kind:       "topic",
 		Metadata: TopicMetadataDefinition{
@@ -79,4 +134,22 @@ func TopicDefinitionFromMetadata(metadata kmsg.MetadataResponseTopic, topicConfi
 			Configs:           topicConfigsDef,
 		},
 	}
+
+	if !forExport {
+		topicDef.Spec.Assignments = assignmentsDefinitionFromMetadata(metadata.Partitions)
+	}
+
+	return topicDef
+}
+
+// Create an assignments definition from metadata
+func assignmentsDefinitionFromMetadata(
+	partitions []kmsg.MetadataResponseTopicPartition,
+) TopicAssignmentsDefinition {
+	assignments := make(TopicAssignmentsDefinition, len(partitions))
+	for _, p := range partitions {
+		assignments[p.Partition] = p.Replicas
+	}
+
+	return assignments
 }
