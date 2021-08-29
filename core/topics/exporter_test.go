@@ -12,6 +12,7 @@ import (
 	"github.com/peter-evans/kdef/test/tutil"
 )
 
+// go test -run ^Test_exporter_Execute$ ./core/topics -v
 func Test_exporter_Execute(t *testing.T) {
 	// Create the test cluster
 	c := compose.Up(

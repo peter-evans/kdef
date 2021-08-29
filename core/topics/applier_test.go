@@ -12,6 +12,7 @@ import (
 	"github.com/peter-evans/kdef/test/tutil"
 )
 
+// go test -run ^Test_applier_Execute$ ./core/topics -v
 func Test_applier_Execute(t *testing.T) {
 	// Create the test cluster
 	c := compose.Up(
@@ -36,24 +37,29 @@ func Test_applier_Execute(t *testing.T) {
 	}
 
 	// Load YAML doc test fixtures
-	yamlDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topics/test.core.topics.applier.foo.yml")
+	fooDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topics/test.core.topics.applier.foo.yml")
+	barDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topics/test.core.topics.applier.bar.yml")
 
 	type fields struct {
 		cl      *client.Client
 		yamlDoc string
 		flags   ApplierFlags
 	}
-	tests := []struct {
+	type testCase struct {
 		name    string
 		fields  fields
 		wantErr string
-	}{
+	}
+
+	// Tests configs and addition of partitions
+	fooTests := []testCase{
 		// NOTE: Execution of tests is ordered
 		{
-			name: "1: Dry-run topic version 0",
+			// Create topic
+			name: "1: Dry-run topic foo version 0",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: yamlDocs[0],
+				yamlDoc: fooDocs[0],
 				flags: ApplierFlags{
 					DryRun:   true,
 					ExitCode: true,
@@ -62,20 +68,21 @@ func Test_applier_Execute(t *testing.T) {
 			wantErr: "unapplied changes exist for topic",
 		},
 		{
-			name: "2: Apply topic version 0",
+			// Create topic
+			name: "2: Apply topic foo version 0",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: yamlDocs[0],
+				yamlDoc: fooDocs[0],
 				flags:   ApplierFlags{},
 			},
 			wantErr: "",
 		},
 		{
 			// Update configs
-			name: "3: Dry-run topic version 1",
+			name: "3: Dry-run topic foo version 1",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: yamlDocs[1],
+				yamlDoc: fooDocs[1],
 				flags: ApplierFlags{
 					DryRun:   true,
 					ExitCode: true,
@@ -85,20 +92,20 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Update configs
-			name: "4: Apply topic version 1",
+			name: "4: Apply topic foo version 1",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: yamlDocs[1],
+				yamlDoc: fooDocs[1],
 				flags:   ApplierFlags{},
 			},
 			wantErr: "",
 		},
 		{
 			// Delete configs
-			name: "5: Dry-run topic version 2",
+			name: "5: Dry-run topic foo version 2",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: yamlDocs[2],
+				yamlDoc: fooDocs[2],
 				flags: ApplierFlags{
 					DryRun:               true,
 					ExitCode:             true,
@@ -109,10 +116,10 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Delete configs
-			name: "6: Apply topic version 2",
+			name: "6: Apply topic foo version 2",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: yamlDocs[2],
+				yamlDoc: fooDocs[2],
 				flags: ApplierFlags{
 					DeleteMissingConfigs: true,
 				},
@@ -121,10 +128,10 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Update configs (non-incremental)
-			name: "7: Dry-run topic version 3",
+			name: "7: Dry-run topic foo version 3",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: yamlDocs[3],
+				yamlDoc: fooDocs[3],
 				flags: ApplierFlags{
 					DryRun:         true,
 					ExitCode:       true,
@@ -135,10 +142,10 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Update configs (non-incremental)
-			name: "7: Apply topic version 3",
+			name: "7: Apply topic foo version 3",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: yamlDocs[3],
+				yamlDoc: fooDocs[3],
 				flags: ApplierFlags{
 					NonIncremental: true,
 				},
@@ -147,10 +154,10 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Delete configs (non-incremental)
-			name: "7: Dry-run topic version 4",
+			name: "7: Dry-run topic foo version 4",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: yamlDocs[4],
+				yamlDoc: fooDocs[4],
 				flags: ApplierFlags{
 					DryRun:         true,
 					ExitCode:       true,
@@ -161,10 +168,10 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Delete configs (non-incremental)
-			name: "8: Apply topic version 4",
+			name: "8: Apply topic foo version 4",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: yamlDocs[4],
+				yamlDoc: fooDocs[4],
 				flags: ApplierFlags{
 					NonIncremental:       true,
 					DeleteMissingConfigs: true,
@@ -174,10 +181,10 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Add partitions
-			name: "9: Dry-run topic version 5",
+			name: "9: Dry-run topic foo version 5",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: yamlDocs[5],
+				yamlDoc: fooDocs[5],
 				flags: ApplierFlags{
 					DryRun:   true,
 					ExitCode: true,
@@ -187,15 +194,150 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Add partitions
-			name: "10: Apply topic version 5",
+			name: "10: Apply topic foo version 5",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: yamlDocs[5],
+				yamlDoc: fooDocs[5],
 				flags:   ApplierFlags{},
 			},
 			wantErr: "",
 		},
 	}
+
+	// Tests assignments and reassignment cases
+	barTests := []testCase{
+		// NOTE: Execution of tests is ordered
+		{
+			// Create topic
+			name: "1: Dry-run topic bar version 0",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[0],
+				flags: ApplierFlags{
+					DryRun:   true,
+					ExitCode: true,
+				},
+			},
+			wantErr: "invalid broker id",
+		},
+		{
+			// Create topic
+			name: "2: Dry-run topic bar version 1",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[1],
+				flags: ApplierFlags{
+					DryRun:   true,
+					ExitCode: true,
+				},
+			},
+			wantErr: "unapplied changes exist for topic",
+		},
+		{
+			// Create topic
+			name: "3: Apply topic bar version 1",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[1],
+				flags:   ApplierFlags{},
+			},
+			wantErr: "",
+		},
+		{
+			// Increase replication factor
+			name: "4: Dry-run topic bar version 2",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[2],
+				flags: ApplierFlags{
+					DryRun:   true,
+					ExitCode: true,
+				},
+			},
+			wantErr: "unapplied changes exist for topic",
+		},
+		{
+			// Increase replication factor
+			name: "5: Apply topic bar version 2",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[2],
+				flags:   ApplierFlags{},
+			},
+			wantErr: "",
+		},
+		{
+			// Add partitions
+			name: "6: Dry-run topic bar version 3",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[3],
+				flags: ApplierFlags{
+					DryRun:   true,
+					ExitCode: true,
+				},
+			},
+			wantErr: "unapplied changes exist for topic",
+		},
+		{
+			// Add partitions
+			name: "7: Apply topic bar version 3",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[3],
+				flags:   ApplierFlags{},
+			},
+			wantErr: "",
+		},
+		{
+			// Add partitions and decrease replication factor
+			name: "8: Dry-run topic bar version 4",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[4],
+				flags: ApplierFlags{
+					DryRun:   true,
+					ExitCode: true,
+				},
+			},
+			wantErr: "unapplied changes exist for topic",
+		},
+		{
+			// Add partitions and decrease replication factor
+			name: "9: Apply topic bar version 4",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[4],
+				flags:   ApplierFlags{},
+			},
+			wantErr: "",
+		},
+		{
+			// TEMP
+			name: "10: Dry-run topic bar version 4",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[4],
+				flags: ApplierFlags{
+					DryRun:   true,
+					ExitCode: true,
+				},
+			},
+			wantErr: "",
+		},
+	}
+
+	var tests []testCase
+	for _, tcs := range [][]testCase{
+		fooTests,
+		barTests,
+	} {
+		tests = append(tests, tcs...)
+	}
+
+	// TODO: TEMP
+	// tests = barTests
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := NewApplier(tt.fields.cl, tt.fields.yamlDoc, tt.fields.flags)

@@ -100,3 +100,36 @@ func TestStringInList(t *testing.T) {
 		})
 	}
 }
+
+func Test_duplicateInSlice(t *testing.T) {
+	type args struct {
+		s []int32
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "Tests when a duplicate is contained in the slice",
+			args: args{
+				s: []int32{1, 2, 3, 4, 2, 5},
+			},
+			want: true,
+		},
+		{
+			name: "Tests when a duplicate is not contained in the slice",
+			args: args{
+				s: []int32{1, 2, 3, 4, 5, 6},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := DuplicateInSlice(tt.args.s); got != tt.want {
+				t.Errorf("duplicateInSlice() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

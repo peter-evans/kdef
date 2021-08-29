@@ -15,7 +15,7 @@ func TestTopicDefinition_Validate(t *testing.T) {
 		{
 			name:     "Tests missing metadata name",
 			topicDef: TopicDefinition{},
-			wantErr:  "metadata.name must be supplied",
+			wantErr:  "metadata name must be supplied",
 		},
 		{
 			name: "Tests invalid spec partitions",
@@ -24,7 +24,7 @@ func TestTopicDefinition_Validate(t *testing.T) {
 					Name: "foo",
 				},
 			},
-			wantErr: "spec.partitions must be greater than 0",
+			wantErr: "partitions must be greater than 0",
 		},
 		{
 			name: "Tests invalid spec replication factor",
@@ -36,7 +36,60 @@ func TestTopicDefinition_Validate(t *testing.T) {
 					Partitions: 3,
 				},
 			},
-			wantErr: "spec.replicationFactor must be greater than 0",
+			wantErr: "replication factor must be greater than 0",
+		},
+		{
+			name: "Tests invalid number of assignments",
+			topicDef: TopicDefinition{
+				Metadata: TopicMetadataDefinition{
+					Name: "foo",
+				},
+				Spec: TopicSpecDefinition{
+					Partitions:        3,
+					ReplicationFactor: 2,
+					Assignments: [][]int32{
+						{1, 2},
+						{2, 3},
+					},
+				},
+			},
+			wantErr: "number of replica assignments must match partitions",
+		},
+		{
+			name: "Tests invalid number of replicas in assignment",
+			topicDef: TopicDefinition{
+				Metadata: TopicMetadataDefinition{
+					Name: "foo",
+				},
+				Spec: TopicSpecDefinition{
+					Partitions:        3,
+					ReplicationFactor: 2,
+					Assignments: [][]int32{
+						{1, 2},
+						{2, 3},
+						{3},
+					},
+				},
+			},
+			wantErr: "number of replicas in each assignment must match replication factor",
+		},
+		{
+			name: "Tests duplicate brokers in replica assignment",
+			topicDef: TopicDefinition{
+				Metadata: TopicMetadataDefinition{
+					Name: "foo",
+				},
+				Spec: TopicSpecDefinition{
+					Partitions:        3,
+					ReplicationFactor: 2,
+					Assignments: [][]int32{
+						{1, 2},
+						{2, 3},
+						{3, 3},
+					},
+				},
+			},
+			wantErr: "a replica assignment cannot contain duplicate brokers",
 		},
 		{
 			name: "Tests a valid TopicDefinition",
@@ -46,7 +99,12 @@ func TestTopicDefinition_Validate(t *testing.T) {
 				},
 				Spec: TopicSpecDefinition{
 					Partitions:        3,
-					ReplicationFactor: 3,
+					ReplicationFactor: 2,
+					Assignments: [][]int32{
+						{1, 2},
+						{2, 3},
+						{3, 1},
+					},
 				},
 			},
 			wantErr: "",

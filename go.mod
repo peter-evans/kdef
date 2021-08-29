@@ -7,6 +7,7 @@ require (
 	github.com/bradfitz/slice v0.0.0-20180809154707-2b758aa73013 // indirect
 	github.com/fatih/color v1.12.0
 	github.com/ghodss/yaml v1.0.0
+	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/uuid v1.3.0
 	github.com/iancoleman/strcase v0.2.0
 	github.com/jedib0t/go-pretty/v6 v6.2.4
