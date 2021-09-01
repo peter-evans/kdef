@@ -121,6 +121,12 @@ func (a *applier) apply() error {
 			return err
 		}
 
+		// Check for replica migrations
+		// TODO: check for partitions ops too (?)
+		if a.assignmentsOp {
+			log.Info("Fetching ongoing replica migrations...")
+		}
+
 		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Completed apply for topic %q", a.localDef.Metadata.Name)
 	} else {
 		log.Info("No changes to apply for topic %q", a.localDef.Metadata.Name)
