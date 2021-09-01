@@ -125,6 +125,13 @@ func (a *applier) apply() error {
 		// TODO: check for partitions ops too (?)
 		if a.assignmentsOp {
 			log.Info("Fetching ongoing replica migrations...")
+			partitions, err := req.RequestListPartitionReassignments(a.cl, a.localDef.Metadata.Name)
+			if err != nil {
+				return err
+			}
+			for _, p := range partitions {
+				fmt.Printf("Partition %s: +%d -%d", fmt.Sprint(p.Partition), len(p.AddingReplicas), len(p.RemovingReplicas))
+			}
 		}
 
 		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Completed apply for topic %q", a.localDef.Metadata.Name)
