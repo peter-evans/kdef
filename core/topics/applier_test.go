@@ -14,6 +14,8 @@ import (
 
 // go test -run ^Test_applier_Execute$ ./core/topics -v
 func Test_applier_Execute(t *testing.T) {
+	// log.Verbose = true
+
 	// Create the test cluster
 	c := compose.Up(
 		t,
@@ -31,7 +33,7 @@ func Test_applier_Execute(t *testing.T) {
 	})
 
 	// Wait for Kafka to be ready
-	if !req.IsKafkaReady(cl, fixtures.TopicsApplierTest.Brokers, 60) {
+	if !req.IsKafkaReady(cl, fixtures.TopicsApplierTest.Brokers, 90) {
 		t.Errorf("kafka failed to be ready within timeout")
 		t.FailNow()
 	}
@@ -46,9 +48,10 @@ func Test_applier_Execute(t *testing.T) {
 		flags   ApplierFlags
 	}
 	type testCase struct {
-		name    string
-		fields  fields
-		wantErr string
+		name                    string
+		fields                  fields
+		wantErr                 string
+		wantHasUnappliedChanges bool
 	}
 
 	// Tests configs and addition of partitions
@@ -61,11 +64,11 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: fooDocs[0],
 				flags: ApplierFlags{
-					DryRun:   true,
-					ExitCode: true,
+					DryRun: true,
 				},
 			},
-			wantErr: "unapplied changes exist for topic",
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
 		},
 		{
 			// Create topic
@@ -75,7 +78,8 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: fooDocs[0],
 				flags:   ApplierFlags{},
 			},
-			wantErr: "",
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
 		},
 		{
 			// Update configs
@@ -84,11 +88,11 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: fooDocs[1],
 				flags: ApplierFlags{
-					DryRun:   true,
-					ExitCode: true,
+					DryRun: true,
 				},
 			},
-			wantErr: "unapplied changes exist for topic",
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
 		},
 		{
 			// Update configs
@@ -98,7 +102,8 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: fooDocs[1],
 				flags:   ApplierFlags{},
 			},
-			wantErr: "",
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
 		},
 		{
 			// Delete configs
@@ -108,11 +113,11 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: fooDocs[2],
 				flags: ApplierFlags{
 					DryRun:               true,
-					ExitCode:             true,
 					DeleteMissingConfigs: true,
 				},
 			},
-			wantErr: "unapplied changes exist for topic",
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
 		},
 		{
 			// Delete configs
@@ -124,7 +129,8 @@ func Test_applier_Execute(t *testing.T) {
 					DeleteMissingConfigs: true,
 				},
 			},
-			wantErr: "",
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
 		},
 		{
 			// Update configs (non-incremental)
@@ -134,11 +140,11 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: fooDocs[3],
 				flags: ApplierFlags{
 					DryRun:         true,
-					ExitCode:       true,
 					NonIncremental: true,
 				},
 			},
-			wantErr: "unapplied changes exist for topic",
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
 		},
 		{
 			// Update configs (non-incremental)
@@ -150,7 +156,8 @@ func Test_applier_Execute(t *testing.T) {
 					NonIncremental: true,
 				},
 			},
-			wantErr: "",
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
 		},
 		{
 			// Delete configs (non-incremental)
@@ -160,11 +167,11 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: fooDocs[4],
 				flags: ApplierFlags{
 					DryRun:         true,
-					ExitCode:       true,
 					NonIncremental: true,
 				},
 			},
-			wantErr: "cannot apply operations containing deletions",
+			wantErr:                 "cannot apply delete config operations because flag --delete-missing-configs is not set",
+			wantHasUnappliedChanges: true,
 		},
 		{
 			// Delete configs (non-incremental)
@@ -177,7 +184,8 @@ func Test_applier_Execute(t *testing.T) {
 					DeleteMissingConfigs: true,
 				},
 			},
-			wantErr: "",
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
 		},
 		{
 			// Add partitions
@@ -186,11 +194,11 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: fooDocs[5],
 				flags: ApplierFlags{
-					DryRun:   true,
-					ExitCode: true,
+					DryRun: true,
 				},
 			},
-			wantErr: "unapplied changes exist for topic",
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
 		},
 		{
 			// Add partitions
@@ -200,7 +208,8 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: fooDocs[5],
 				flags:   ApplierFlags{},
 			},
-			wantErr: "",
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
 		},
 	}
 
@@ -214,11 +223,11 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[0],
 				flags: ApplierFlags{
-					DryRun:   true,
-					ExitCode: true,
+					DryRun: true,
 				},
 			},
-			wantErr: "invalid broker id",
+			wantErr:                 "invalid broker id",
+			wantHasUnappliedChanges: false,
 		},
 		{
 			// Create topic
@@ -227,11 +236,11 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[1],
 				flags: ApplierFlags{
-					DryRun:   true,
-					ExitCode: true,
+					DryRun: true,
 				},
 			},
-			wantErr: "unapplied changes exist for topic",
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
 		},
 		{
 			// Create topic
@@ -241,7 +250,8 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: barDocs[1],
 				flags:   ApplierFlags{},
 			},
-			wantErr: "",
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
 		},
 		{
 			// Increase replication factor
@@ -250,11 +260,11 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[2],
 				flags: ApplierFlags{
-					DryRun:   true,
-					ExitCode: true,
+					DryRun: true,
 				},
 			},
-			wantErr: "unapplied changes exist for topic",
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
 		},
 		{
 			// Increase replication factor
@@ -264,7 +274,8 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: barDocs[2],
 				flags:   ApplierFlags{},
 			},
-			wantErr: "",
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
 		},
 		{
 			// Add partitions
@@ -273,11 +284,11 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[3],
 				flags: ApplierFlags{
-					DryRun:   true,
-					ExitCode: true,
+					DryRun: true,
 				},
 			},
-			wantErr: "unapplied changes exist for topic",
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
 		},
 		{
 			// Add partitions
@@ -287,7 +298,8 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: barDocs[3],
 				flags:   ApplierFlags{},
 			},
-			wantErr: "",
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
 		},
 		{
 			// Add partitions and decrease replication factor
@@ -296,11 +308,11 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[4],
 				flags: ApplierFlags{
-					DryRun:   true,
-					ExitCode: true,
+					DryRun: true,
 				},
 			},
-			wantErr: "unapplied changes exist for topic",
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
 		},
 		{
 			// Add partitions and decrease replication factor
@@ -310,7 +322,8 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: barDocs[4],
 				flags:   ApplierFlags{},
 			},
-			wantErr: "",
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
 		},
 		{
 			// TEMP
@@ -319,11 +332,11 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[4],
 				flags: ApplierFlags{
-					DryRun:   true,
-					ExitCode: true,
+					DryRun: true,
 				},
 			},
-			wantErr: "",
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
 		},
 	}
 
@@ -341,8 +354,12 @@ func Test_applier_Execute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := NewApplier(tt.fields.cl, tt.fields.yamlDoc, tt.fields.flags)
-			if err := a.Execute(); !tutil.ErrorContains(err, tt.wantErr) {
-				t.Errorf("applier.Execute() error = %v, wantErr %v", err, tt.wantErr)
+			res := a.Execute()
+			if !tutil.ErrorContains(res.GetErr(), tt.wantErr) {
+				t.Errorf("applier.Execute() error = %v, wantErr %v", res.GetErr(), tt.wantErr)
+			}
+			if res.HasUnappliedChanges() != tt.wantHasUnappliedChanges {
+				t.Errorf("exporter.Execute().HasUnappliedChanges() = %v, want %v", res.HasUnappliedChanges(), tt.wantHasUnappliedChanges)
 			}
 
 			// Sleep to give Kafka time to update internally

@@ -14,6 +14,8 @@ import (
 
 // go test -run ^Test_exporter_Execute$ ./core/topics -v
 func Test_exporter_Execute(t *testing.T) {
+	// log.Verbose = true
+
 	// Create the test cluster
 	c := compose.Up(
 		t,
@@ -31,7 +33,7 @@ func Test_exporter_Execute(t *testing.T) {
 	})
 
 	// Wait for Kafka to be ready
-	if !req.IsKafkaReady(cl, fixtures.TopicsExporterTest.Brokers, 60) {
+	if !req.IsKafkaReady(cl, fixtures.TopicsExporterTest.Brokers, 90) {
 		t.Errorf("kafka failed to be ready within timeout")
 		t.FailNow()
 	}
@@ -42,7 +44,8 @@ func Test_exporter_Execute(t *testing.T) {
 	// Apply the topic fixtures
 	for _, yamlDoc := range yamlDocs {
 		applier := NewApplier(cl, yamlDoc, ApplierFlags{})
-		if err := applier.Execute(); err != nil {
+		res := applier.Execute()
+		if err := res.GetErr(); err != nil {
 			t.Errorf("failed to apply topic fixture: %v", err)
 			t.FailNow()
 		}

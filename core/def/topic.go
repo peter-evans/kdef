@@ -1,9 +1,11 @@
 package def
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/ghodss/yaml"
+	"github.com/gotidy/copy"
 	"github.com/peter-evans/kdef/util"
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
@@ -51,6 +53,24 @@ func (t TopicDefinition) YAML() (string, error) {
 		return "", err
 	}
 	return string(y), nil
+}
+
+// Converts a topic definition to JSON
+func (t TopicDefinition) JSON() (string, error) {
+	j, err := json.Marshal(t)
+	if err != nil {
+		return "", err
+	}
+	return string(j), nil
+}
+
+// Creates a copy of this TopicDefinition
+func (t TopicDefinition) Copy() TopicDefinition {
+	copiers := copy.New()
+	copier := copiers.Get(&TopicDefinition{}, &TopicDefinition{})
+	topicDefCopy := TopicDefinition{}
+	copier.Copy(&topicDefCopy, &t)
+	return topicDefCopy
 }
 
 // Validate a topic definition
@@ -102,7 +122,7 @@ func (t TopicDefinition) ValidateWithMetadata(metadata *kmsg.MetadataResponse) e
 		for _, replicas := range t.Spec.Assignments {
 			for _, id := range replicas {
 				if !brokerIds[id] {
-					return fmt.Errorf("invalid broker id %q in assignments", id)
+					return fmt.Errorf("invalid broker id %q in assignments", fmt.Sprint(id))
 				}
 			}
 		}
@@ -152,4 +172,40 @@ func assignmentsDefinitionFromMetadata(
 	}
 
 	return assignments
+}
+
+// Compute a JSON diff between two definitions
+func DiffTopicDefinitions(a *TopicDefinition, b *TopicDefinition) (string, error) {
+	// Convert definition to JSON handling null pointers
+	toJson := func(t *TopicDefinition) (string, error) {
+		j := "null"
+		if t != nil {
+			var err error
+			j, err = t.JSON()
+			if err != nil {
+				return "", err
+			}
+		}
+		return j, nil
+	}
+
+	aJson, err := toJson(a)
+	if err != nil {
+		return "", err
+	}
+
+	bJson, err := toJson(b)
+	if err != nil {
+		return "", err
+	}
+
+	diff, err := util.JsonDiff(
+		[]byte(aJson),
+		[]byte(bJson),
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return diff, nil
 }
