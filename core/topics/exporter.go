@@ -57,15 +57,15 @@ func (e *exporter) Execute() (int, error) {
 		return 0, nil
 	}
 
-	for index, topicDef := range topicDefs {
-		log.Info("Exporting topic definition %d of %d", index+1, topicCount)
+	log.Info("Exporting %d topic definitions...", topicCount)
 
+	for _, topicDef := range topicDefs {
 		yaml, err := topicDef.YAML()
 		if err != nil {
 			return 0, err
 		}
 
-		if e.flags.OutputDir != "" {
+		if len(e.flags.OutputDir) > 0 {
 			outputPath := filepath.Join(e.flags.OutputDir, fmt.Sprintf("%s.yml", topicDef.Metadata.Name))
 
 			if !e.flags.Overwrite {
@@ -88,7 +88,7 @@ func (e *exporter) Execute() (int, error) {
 	return topicCount, nil
 }
 
-// Returns topic definitions from existing topics in a cluster
+// Returns topic definitions for existing topics in a cluster
 func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 	metadata, err := req.RequestMetadata(e.cl, []string{}, true)
 	if err != nil {

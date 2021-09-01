@@ -29,6 +29,16 @@ type ConfigOperation struct {
 // A collection of alter config operations
 type ConfigOperations []ConfigOperation
 
+// Determine if the specified config key name exists in the collection
+func (c ConfigOperations) Contains(name string) bool {
+	for _, op := range c {
+		if op.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
 // Determine if the specified operation type exists in the collection
 func (c ConfigOperations) ContainsOp(operation int8) bool {
 	for _, op := range c {

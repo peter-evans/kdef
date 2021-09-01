@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/peter-evans/kdef/test/tutil"
+	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
 func TestTopicDefinition_Validate(t *testing.T) {
@@ -114,6 +115,82 @@ func TestTopicDefinition_Validate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.topicDef.Validate(); !tutil.ErrorContains(err, tt.wantErr) {
 				t.Errorf("TopicDefinition.Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestTopicDefinition_ValidateWithMetadata(t *testing.T) {
+	metadataResp := &kmsg.MetadataResponse{
+		Brokers: []kmsg.MetadataResponseBroker{
+			{
+				NodeID: 1,
+			},
+			{
+				NodeID: 2,
+			},
+			{
+				NodeID: 3,
+			},
+		},
+	}
+
+	type args struct {
+		metadata *kmsg.MetadataResponse
+	}
+	tests := []struct {
+		name     string
+		topicDef TopicDefinition
+		args     args
+		wantErr  string
+	}{
+		{
+			name: "Tests an invalid broker id",
+			topicDef: TopicDefinition{
+				Metadata: TopicMetadataDefinition{
+					Name: "foo",
+				},
+				Spec: TopicSpecDefinition{
+					Partitions:        3,
+					ReplicationFactor: 2,
+					Assignments: [][]int32{
+						{1, 2},
+						{2, 4},
+						{3, 1},
+					},
+				},
+			},
+			args: args{
+				metadata: metadataResp,
+			},
+			wantErr: "invalid broker id \"4\" in assignments",
+		},
+		{
+			name: "Tests valid broker ids",
+			topicDef: TopicDefinition{
+				Metadata: TopicMetadataDefinition{
+					Name: "foo",
+				},
+				Spec: TopicSpecDefinition{
+					Partitions:        3,
+					ReplicationFactor: 2,
+					Assignments: [][]int32{
+						{1, 2},
+						{2, 3},
+						{3, 1},
+					},
+				},
+			},
+			args: args{
+				metadata: metadataResp,
+			},
+			wantErr: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.topicDef.ValidateWithMetadata(tt.args.metadata); !tutil.ErrorContains(err, tt.wantErr) {
+				t.Errorf("TopicDefinition.ValidateWithMetadata() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
