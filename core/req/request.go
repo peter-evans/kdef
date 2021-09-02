@@ -383,10 +383,12 @@ func RequestListPartitionReassignments(
 		TimeoutMillis: cl.TimeoutMs(),
 	}
 
-	// req.Topics = append(req.Topics, kmsg.ListPartitionReassignmentsRequestTopic{
-	// 	Topic:      topic,
-	// 	Partitions: nil,
-	// })
+	if len(topic) > 0 {
+		req.Topics = append(req.Topics, kmsg.ListPartitionReassignmentsRequestTopic{
+			Topic:      topic,
+			Partitions: nil,
+		})
+	}
 
 	// t := kmsg.NewListPartitionReassignmentsRequestTopic()
 	// t.Topic = topic
