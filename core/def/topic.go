@@ -146,7 +146,7 @@ func NewTopicDefinition(
 		ApiVersion: "v1",
 		Kind:       "topic",
 		Metadata: TopicMetadataDefinition{
-			Name: metadata.Topic,
+			Name: *metadata.Topic,
 		},
 		Spec: TopicSpecDefinition{
 			Partitions:        len(metadata.Partitions),
