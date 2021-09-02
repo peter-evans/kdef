@@ -139,7 +139,7 @@ func (a *applier) apply() error {
 				return err
 			}
 			for _, p := range partitions {
-				fmt.Printf("Partition %s: +%d -%d", fmt.Sprint(p.Partition), len(p.AddingReplicas), len(p.RemovingReplicas))
+				fmt.Printf("Partition %s: +%d -%d\n", fmt.Sprint(p.Partition), len(p.AddingReplicas), len(p.RemovingReplicas))
 			}
 		}
 
