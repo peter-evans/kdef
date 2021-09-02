@@ -96,8 +96,8 @@ func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 	}
 
 	topicNames := []string{}
-	for _, topic := range metadata.Topics {
-		topicNames = append(topicNames, topic.Topic)
+	for _, t := range metadata.Topics {
+		topicNames = append(topicNames, *t.Topic)
 	}
 
 	topicConfigs, err := req.RequestDescribeTopicConfigs(e.cl, topicNames)
@@ -120,23 +120,24 @@ func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 	}
 
 	topicDefs := []def.TopicDefinition{}
-	for _, topic := range metadata.Topics {
+	for _, t := range metadata.Topics {
+		topic := *t.Topic
 		// Kafka internal topics are prefixed by double underscores
 		// Confluent Schema Registry uses a single underscore
-		if strings.HasPrefix(topic.Topic, "_") && !e.flags.IncludeInternal {
+		if strings.HasPrefix(topic, "_") && !e.flags.IncludeInternal {
 			continue
 		}
-		if !matchRegExp.MatchString(topic.Topic) {
+		if !matchRegExp.MatchString(topic) {
 			continue
 		}
-		if excludeRegExp.MatchString(topic.Topic) {
+		if excludeRegExp.MatchString(topic) {
 			continue
 		}
 		topicDefs = append(
 			topicDefs,
 			def.NewTopicDefinition(
-				topic,
-				topicConfigsMap[topic.Topic],
+				t,
+				topicConfigsMap[topic],
 				true,
 			),
 		)

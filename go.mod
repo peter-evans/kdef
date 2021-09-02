@@ -16,8 +16,8 @@ require (
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/spf13/cobra v1.2.1
 	github.com/testcontainers/testcontainers-go v0.11.1
-	github.com/twmb/franz-go v0.9.1
-	github.com/twmb/franz-go/pkg/kmsg v0.0.0-20210726202344-c376dbc9081f
+	github.com/twmb/franz-go v0.11.0
+	github.com/twmb/franz-go/pkg/kmsg v0.0.0-20210901054312-f2002b3e2313
 	github.com/yudai/gojsondiff v1.0.0
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/yudai/pp v2.0.1+incompatible // indirect
