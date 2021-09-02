@@ -59,7 +59,7 @@ func Test_applier_Execute(t *testing.T) {
 	topic := "test.core.topics.applier.bar"
 	t.Logf("Producing records into topic %q", topic)
 	val, _ := tutil.RandomBytes(5000)
-	for i := 0; i < 1000000; i++ {
+	for i := 0; i < 1500000; i++ {
 		key, _ := tutil.RandomBytes(16)
 		r := &kgo.Record{
 			Topic: topic,
