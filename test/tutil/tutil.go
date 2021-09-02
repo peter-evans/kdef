@@ -1,6 +1,7 @@
 package tutil
 
 import (
+	"crypto/rand"
 	"strings"
 	"testing"
 
@@ -26,4 +27,13 @@ func FileToYamlDocs(t *testing.T, path string) []string {
 		t.FailNow()
 	}
 	return yamlDocs
+}
+
+func RandomBytes(n int) ([]byte, error) {
+	bytes := make([]byte, n)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return nil, err
+	}
+	return bytes, nil
 }

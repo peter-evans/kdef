@@ -378,12 +378,23 @@ func RequestListPartitionReassignments(
 	cl *client.Client,
 	topic string,
 ) ([]kmsg.ListPartitionReassignmentsResponseTopicPartition, error) {
-	t := kmsg.NewListPartitionReassignmentsRequestTopic()
-	t.Topic = topic
 
-	req := kmsg.NewListPartitionReassignmentsRequest()
-	req.Topics = append(req.Topics, t)
-	req.TimeoutMillis = cl.TimeoutMs()
+	req := kmsg.ListPartitionReassignmentsRequest{
+		TimeoutMillis: cl.TimeoutMs(),
+	}
+
+	// req.Topics = append(req.Topics, kmsg.ListPartitionReassignmentsRequestTopic{
+	// 	Topic:      topic,
+	// 	Partitions: nil,
+	// })
+
+	// t := kmsg.NewListPartitionReassignmentsRequestTopic()
+	// t.Topic = topic
+	// t.Partitions = nil
+
+	// req := kmsg.NewListPartitionReassignmentsRequest()
+	// req.Topics = append(req.Topics, t)
+	// req.TimeoutMillis = cl.TimeoutMs()
 
 	kresp, err := cl.Client().Request(context.Background(), &req)
 	if err != nil {

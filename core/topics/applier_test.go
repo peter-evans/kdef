@@ -1,6 +1,7 @@
 package topics
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/peter-evans/kdef/test/compose"
 	"github.com/peter-evans/kdef/test/fixtures"
 	"github.com/peter-evans/kdef/test/tutil"
+	"github.com/twmb/franz-go/pkg/kgo"
 )
 
 // go test -run ^Test_applier_Execute$ ./core/topics -v
@@ -41,6 +43,39 @@ func Test_applier_Execute(t *testing.T) {
 	// Load YAML doc test fixtures
 	fooDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topics/test.core.topics.applier.foo.yml")
 	barDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topics/test.core.topics.applier.bar.yml")
+
+	// Create topic bar
+	applier := NewApplier(cl, barDocs[1], ApplierFlags{})
+	res := applier.Execute()
+	if err := res.GetErr(); err != nil {
+		t.Errorf("failed to apply topic fixture: %v", err)
+		t.FailNow()
+	}
+
+	// Sleep to give Kafka time to update internally
+	time.Sleep(2 * time.Second)
+
+	// Produce records into topic bar
+	topic := "test.core.topics.applier.bar"
+	t.Logf("Producing records into topic %q", topic)
+	val, _ := tutil.RandomBytes(5000)
+	for i := 0; i < 1000000; i++ {
+		key, _ := tutil.RandomBytes(16)
+		r := &kgo.Record{
+			Topic: topic,
+			Key:   key,
+			Value: val,
+		}
+		cl.Client().Produce(context.Background(), r, func(r *kgo.Record, err error) {
+			// if err != nil {
+			// 	t.Errorf("failed to produce record: %v", err)
+			// }
+		})
+	}
+	if err := cl.Client().Flush(context.Background()); err != nil {
+		t.Errorf("failed to produce records: %v", err)
+		t.FailNow()
+	}
 
 	type fields struct {
 		cl      *client.Client
@@ -216,43 +251,43 @@ func Test_applier_Execute(t *testing.T) {
 	// Tests assignments and reassignment cases
 	barTests := []testCase{
 		// NOTE: Execution of tests is ordered
-		{
-			// Create topic
-			name: "1: Dry-run topic bar version 0",
-			fields: fields{
-				cl:      cl,
-				yamlDoc: barDocs[0],
-				flags: ApplierFlags{
-					DryRun: true,
-				},
-			},
-			wantErr:                 "invalid broker id",
-			wantHasUnappliedChanges: false,
-		},
-		{
-			// Create topic
-			name: "2: Dry-run topic bar version 1",
-			fields: fields{
-				cl:      cl,
-				yamlDoc: barDocs[1],
-				flags: ApplierFlags{
-					DryRun: true,
-				},
-			},
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
-		},
-		{
-			// Create topic
-			name: "3: Apply topic bar version 1",
-			fields: fields{
-				cl:      cl,
-				yamlDoc: barDocs[1],
-				flags:   ApplierFlags{},
-			},
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
-		},
+		// {
+		// 	// Create topic
+		// 	name: "1: Dry-run topic bar version 0",
+		// 	fields: fields{
+		// 		cl:      cl,
+		// 		yamlDoc: barDocs[0],
+		// 		flags: ApplierFlags{
+		// 			DryRun: true,
+		// 		},
+		// 	},
+		// 	wantErr:                 "invalid broker id",
+		// 	wantHasUnappliedChanges: false,
+		// },
+		// {
+		// 	// Create topic
+		// 	name: "2: Dry-run topic bar version 1",
+		// 	fields: fields{
+		// 		cl:      cl,
+		// 		yamlDoc: barDocs[1],
+		// 		flags: ApplierFlags{
+		// 			DryRun: true,
+		// 		},
+		// 	},
+		// 	wantErr:                 "",
+		// 	wantHasUnappliedChanges: true,
+		// },
+		// {
+		// 	// Create topic
+		// 	name: "3: Apply topic bar version 1",
+		// 	fields: fields{
+		// 		cl:      cl,
+		// 		yamlDoc: barDocs[1],
+		// 		flags:   ApplierFlags{},
+		// 	},
+		// 	wantErr:                 "",
+		// 	wantHasUnappliedChanges: false,
+		// },
 		{
 			// Increase replication factor
 			name: "4: Dry-run topic bar version 2",
@@ -349,7 +384,7 @@ func Test_applier_Execute(t *testing.T) {
 	}
 
 	// TODO: TEMP
-	// tests = barTests
+	tests = barTests
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

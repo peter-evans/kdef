@@ -99,6 +99,15 @@ func (a *applier) apply() error {
 	}
 
 	if !a.createOp {
+		log.Info("Fetching ongoing replica migrations...")
+		partitions, err := req.RequestListPartitionReassignments(a.cl, a.localDef.Metadata.Name)
+		if err != nil {
+			return err
+		}
+		for _, p := range partitions {
+			fmt.Printf("Partition %s: +%d -%d\n", fmt.Sprint(p.Partition), len(p.AddingReplicas), len(p.RemovingReplicas))
+		}
+
 		// Build topic update operations and determine if updates are required
 		if err := a.buildOperations(); err != nil {
 			return err
