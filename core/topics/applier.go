@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/ghodss/yaml"
 	"github.com/google/go-cmp/cmp"
@@ -141,9 +142,18 @@ func (a *applier) apply() error {
 			if err := a.fetchPartitionReassignments(); err != nil {
 				return err
 			}
-			if len(a.reassignments) > 0 && !log.Quiet {
-				// Display in-progress partition reassignments
-				a.displayPartitionReassignments()
+			if len(a.reassignments) > 0 {
+				// TODO: fetch this from spec
+				awaitTimeout := 30
+				if awaitTimeout > 0 {
+					// Wait for reassignments to complete
+					if err := a.awaitReassignments(30); err != nil {
+						return err
+					}
+				} else if !log.Quiet {
+					// Display of in-progress partition reassignments
+					a.displayPartitionReassignments()
+				}
 			}
 		}
 
@@ -507,6 +517,7 @@ func (a *applier) fetchPartitionReassignments() error {
 		return err
 	}
 
+	a.reassignments = []PartitionReassignment{}
 	for _, r := range reassResp {
 		a.reassignments = append(a.reassignments, PartitionReassignment{
 			Partition:        r.Partition,
@@ -566,4 +577,35 @@ func (a *applier) updateAssignments() error {
 	}
 
 	return nil
+}
+
+// Await the completion of in-progress partition reassignments
+func (a *applier) awaitReassignments(timeoutSec int) error {
+	log.Info("Awaiting completion of partition reassignments (timeout: %d seconds)...", timeoutSec)
+	timeout := time.After(time.Duration(timeoutSec) * time.Second)
+
+	remaining := 0
+	for {
+		select {
+		case <-timeout:
+			log.Info("Awaiting completion of partition reassignments timed out after %d seconds", timeoutSec)
+			return nil
+		default:
+			if err := a.fetchPartitionReassignments(); err != nil {
+				return err
+			}
+			if len(a.reassignments) > 0 {
+				if !log.Quiet && len(a.reassignments) != remaining {
+					a.displayPartitionReassignments()
+				}
+				remaining = len(a.reassignments)
+			} else {
+				log.Info("Partition reassignments completed")
+				return nil
+			}
+
+			time.Sleep(5 * time.Second)
+			continue
+		}
+	}
 }
