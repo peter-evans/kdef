@@ -2,6 +2,7 @@ package topics
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -46,8 +47,8 @@ func Test_applier_Execute(t *testing.T) {
 
 	// Create topic bar
 	applier := NewApplier(cl, barDocs[1], ApplierFlags{})
-	res := applier.Execute()
-	if err := res.GetErr(); err != nil {
+	result := applier.Execute()
+	if err := result.GetErr(); err != nil {
 		t.Errorf("failed to apply topic fixture: %v", err)
 		t.FailNow()
 	}
@@ -389,12 +390,24 @@ func Test_applier_Execute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := NewApplier(tt.fields.cl, tt.fields.yamlDoc, tt.fields.flags)
-			res := a.Execute()
-			if !tutil.ErrorContains(res.GetErr(), tt.wantErr) {
-				t.Errorf("applier.Execute() error = %v, wantErr %v", res.GetErr(), tt.wantErr)
+			result := a.Execute()
+
+			// Output apply result JSON
+			jsonOut, err := json.MarshalIndent(result, "", "  ")
+			if err != nil {
+				t.Errorf("failed to convert apply result to json: %v", err)
+				t.FailNow()
 			}
-			if res.HasUnappliedChanges() != tt.wantHasUnappliedChanges {
-				t.Errorf("exporter.Execute().HasUnappliedChanges() = %v, want %v", res.HasUnappliedChanges(), tt.wantHasUnappliedChanges)
+			fmt.Println(string(jsonOut))
+
+			if !tutil.ErrorContains(result.GetErr(), tt.wantErr) {
+				t.Errorf("applier.Execute() error = %v, wantErr %v", result.GetErr(), tt.wantErr)
+			}
+			if result.HasUnappliedChanges() != tt.wantHasUnappliedChanges {
+				t.Errorf("exporter.Execute().HasUnappliedChanges() = %v, want %v",
+					result.HasUnappliedChanges(),
+					tt.wantHasUnappliedChanges,
+				)
 			}
 
 			// Sleep to give Kafka time to update internally

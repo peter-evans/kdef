@@ -32,15 +32,6 @@ func (a ApplyResult) HasUnappliedChanges() bool {
 // A collection of apply results
 type ApplyResults []*ApplyResult
 
-// Convert apply results to JSON
-func (a ApplyResults) JSON() (string, error) {
-	j, err := json.Marshal(a)
-	if err != nil {
-		return "", err
-	}
-	return string(j), nil
-}
-
 // Determine if any apply result has an error
 func (a ApplyResults) ContainsErr() bool {
 	for _, res := range a {
@@ -60,6 +51,15 @@ func (a ApplyResults) ContainsUnappliedChanges() bool {
 		}
 	}
 	return false
+}
+
+// Convert apply results to JSON
+func (a ApplyResults) JSON() (string, error) {
+	j, err := json.Marshal(a)
+	if err != nil {
+		return "", err
+	}
+	return string(j), nil
 }
 
 // Topic apply specific
