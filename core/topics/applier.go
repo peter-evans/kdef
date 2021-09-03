@@ -18,17 +18,6 @@ import (
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
-type PartitionReassignment struct {
-	Partition        int32   `json:"partition"`
-	Replicas         []int32 `json:"replicas"`
-	AddingReplicas   []int32 `json:"addingReplicas"`
-	RemovingReplicas []int32 `json:"removingReplicas"`
-}
-
-type ApplyResultData struct {
-	PartitionReassignments []PartitionReassignment `json:"partitionReassignments"`
-}
-
 // Flags to configure an applier
 type ApplierFlags struct {
 	DeleteMissingConfigs bool
@@ -56,7 +45,7 @@ type applier struct {
 	metadata           *kmsg.MetadataResponse
 	localDef           def.TopicDefinition
 	remoteDef          def.TopicDefinition
-	reassignments      []PartitionReassignment
+	reassignments      res.PartitionReassignments
 }
 
 // Creates a new applier
@@ -79,7 +68,7 @@ func (a *applier) Execute() *res.ApplyResult {
 		log.Error(err)
 	}
 
-	a.res.Data = ApplyResultData{
+	a.res.Data = res.TopicApplyResultData{
 		PartitionReassignments: a.reassignments,
 	}
 
@@ -517,9 +506,9 @@ func (a *applier) fetchPartitionReassignments() error {
 		return err
 	}
 
-	a.reassignments = []PartitionReassignment{}
+	a.reassignments = res.PartitionReassignments{}
 	for _, r := range reassResp {
-		a.reassignments = append(a.reassignments, PartitionReassignment{
+		a.reassignments = append(a.reassignments, res.PartitionReassignment{
 			Partition:        r.Partition,
 			Replicas:         r.Replicas,
 			AddingReplicas:   r.AddingReplicas,

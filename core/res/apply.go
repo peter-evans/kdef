@@ -61,3 +61,21 @@ func (a ApplyResults) ContainsUnappliedChanges() bool {
 	}
 	return false
 }
+
+// Topic apply specific
+
+// A partition reassignment
+type PartitionReassignment struct {
+	Partition        int32   `json:"partition"`
+	Replicas         []int32 `json:"replicas"`
+	AddingReplicas   []int32 `json:"addingReplicas"`
+	RemovingReplicas []int32 `json:"removingReplicas"`
+}
+
+// A collection of partition reassignments
+type PartitionReassignments []PartitionReassignment
+
+// Misc data for a topic apply result
+type TopicApplyResultData struct {
+	PartitionReassignments []PartitionReassignment `json:"partitionReassignments"`
+}
