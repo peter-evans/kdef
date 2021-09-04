@@ -385,7 +385,7 @@ func Test_applier_Execute(t *testing.T) {
 	}
 
 	// TODO: TEMP
-	tests = barTests
+	// tests = barTests
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

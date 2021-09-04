@@ -132,15 +132,13 @@ func (a *applier) apply() error {
 				return err
 			}
 			if len(a.reassignments) > 0 {
-				// TODO: fetch this from spec
-				awaitTimeout := 30
-				if awaitTimeout > 0 {
+				if a.localDef.Spec.Reassignment.AwaitTimeoutSec > 0 {
 					// Wait for reassignments to complete
-					if err := a.awaitReassignments(30); err != nil {
+					if err := a.awaitReassignments(a.localDef.Spec.Reassignment.AwaitTimeoutSec); err != nil {
 						return err
 					}
 				} else if !log.Quiet {
-					// Display of in-progress partition reassignments
+					// Display in-progress partition reassignments
 					a.displayPartitionReassignments()
 				}
 			}
@@ -235,7 +233,8 @@ func (a *applier) updateApplyResult() error {
 		remoteCopy = &c
 	}
 
-	// Modify the remote definition to remove unnecessary properties
+	// Modify the remote definition to remove optional properties not specified in local
+	// Further, add properties that are local only and have no remote state
 	if remoteCopy != nil {
 		// Remove assignments if not specified in local
 		if !a.localDef.Spec.HasAssignments() {
@@ -243,6 +242,7 @@ func (a *applier) updateApplyResult() error {
 		}
 
 		// The only configs we want to see are those specified in local and those in configOps
+		// configOps could contain key deletions that should be shown in the diff
 		for k := range remoteCopy.Spec.Configs {
 			_, existsInLocal := a.localDef.Spec.Configs[k]
 			existsInOps := a.configOps.Contains(k)
@@ -251,6 +251,9 @@ func (a *applier) updateApplyResult() error {
 				delete(remoteCopy.Spec.Configs, k)
 			}
 		}
+
+		// Add properties that are local only and have no remote state
+		remoteCopy.Spec.Reassignment.AwaitTimeoutSec = a.localDef.Spec.Reassignment.AwaitTimeoutSec
 	}
 
 	// Compute diff
