@@ -1,20 +1,68 @@
 package topics
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
 
+	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
 	"github.com/peter-evans/kdef/core/req"
 	"github.com/peter-evans/kdef/test/compose"
 	"github.com/peter-evans/kdef/test/fixtures"
 	"github.com/peter-evans/kdef/test/tutil"
+	"github.com/twmb/franz-go/pkg/kgo"
 )
 
 // go test -run ^Test_applier_Execute$ ./core/topics -v
 func Test_applier_Execute(t *testing.T) {
 	// log.Verbose = true
+
+	type fields struct {
+		cl      *client.Client
+		yamlDoc string
+		flags   ApplierFlags
+	}
+	type testCase struct {
+		name                    string
+		fields                  fields
+		wantErr                 string
+		wantHasUnappliedChanges bool
+	}
+
+	runTests := func(t *testing.T, tests []testCase) {
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				a := NewApplier(tt.fields.cl, tt.fields.yamlDoc, tt.fields.flags)
+				result := a.Execute()
+
+				if log.Verbose {
+					// Output apply result JSON
+					jsonOut, err := json.MarshalIndent(result, "", "  ")
+					if err != nil {
+						t.Errorf("failed to convert apply result to json: %v", err)
+						t.FailNow()
+					}
+					fmt.Println(string(jsonOut))
+				}
+
+				if !tutil.ErrorContains(result.GetErr(), tt.wantErr) {
+					t.Errorf("applier.Execute() error = %v, wantErr %v", result.GetErr(), tt.wantErr)
+				}
+				if result.HasUnappliedChanges() != tt.wantHasUnappliedChanges {
+					t.Errorf("exporter.Execute().HasUnappliedChanges() = %v, want %v",
+						result.HasUnappliedChanges(),
+						tt.wantHasUnappliedChanges,
+					)
+				}
+
+				// Sleep to give Kafka time to update internally
+				time.Sleep(2 * time.Second)
+			})
+		}
+	}
 
 	// Create the test cluster
 	c := compose.Up(
@@ -42,20 +90,8 @@ func Test_applier_Execute(t *testing.T) {
 	fooDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topics/test.core.topics.applier.foo.yml")
 	barDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topics/test.core.topics.applier.bar.yml")
 
-	type fields struct {
-		cl      *client.Client
-		yamlDoc string
-		flags   ApplierFlags
-	}
-	type testCase struct {
-		name                    string
-		fields                  fields
-		wantErr                 string
-		wantHasUnappliedChanges bool
-	}
-
 	// Tests configs and addition of partitions
-	fooTests := []testCase{
+	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
 		{
 			// Create topic
@@ -211,10 +247,10 @@ func Test_applier_Execute(t *testing.T) {
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
-	}
+	})
 
 	// Tests assignments and reassignment cases
-	barTests := []testCase{
+	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
 		{
 			// Create topic
@@ -253,6 +289,29 @@ func Test_applier_Execute(t *testing.T) {
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
+	})
+
+	// Produce records into topic before proceeding with remaining test cases
+	topic := "test.core.topics.applier.bar"
+	t.Logf("Producing records into topic %q before proceeding...", topic)
+	val, _ := tutil.RandomBytes(6000)
+	for i := 0; i < 1500000; i++ {
+		key, _ := tutil.RandomBytes(16)
+		r := &kgo.Record{
+			Topic: topic,
+			Key:   key,
+			Value: val,
+		}
+		cl.Client().Produce(context.Background(), r, func(r *kgo.Record, err error) {})
+	}
+	if err := cl.Client().Flush(context.Background()); err != nil {
+		t.Errorf("failed to produce records: %v", err)
+		t.FailNow()
+	}
+
+	// Tests assignments and reassignment cases (continued)
+	runTests(t, []testCase{
+		// NOTE: Execution of tests is ordered
 		{
 			// Increase replication factor
 			name: "4: Dry-run topic bar version 2",
@@ -279,7 +338,7 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Add partitions
-			name: "6: Dry-run topic bar version 3",
+			name: "7: Dry-run topic bar version 3",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[3],
@@ -292,7 +351,7 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Add partitions
-			name: "7: Apply topic bar version 3",
+			name: "8: Apply topic bar version 3",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[3],
@@ -302,8 +361,8 @@ func Test_applier_Execute(t *testing.T) {
 			wantHasUnappliedChanges: false,
 		},
 		{
-			// Add partitions and decrease replication factor
-			name: "8: Dry-run topic bar version 4",
+			// Add partitions and increase replication factor
+			name: "9: Dry-run topic bar version 4",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[4],
@@ -315,8 +374,8 @@ func Test_applier_Execute(t *testing.T) {
 			wantHasUnappliedChanges: true,
 		},
 		{
-			// Add partitions and decrease replication factor
-			name: "9: Apply topic bar version 4",
+			// Add partitions and increase replication factor
+			name: "10: Apply topic bar version 4",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[4],
@@ -326,44 +385,28 @@ func Test_applier_Execute(t *testing.T) {
 			wantHasUnappliedChanges: false,
 		},
 		{
-			// TEMP
-			name: "10: Dry-run topic bar version 4",
+			// Decrease replication factor
+			name: "11: Dry-run topic bar version 5",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: barDocs[4],
+				yamlDoc: barDocs[5],
 				flags: ApplierFlags{
 					DryRun: true,
 				},
 			},
 			wantErr:                 "",
+			wantHasUnappliedChanges: true,
+		},
+		{
+			// Decrease replication factor
+			name: "12: Apply topic bar version 5",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[5],
+				flags:   ApplierFlags{},
+			},
+			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
-	}
-
-	var tests []testCase
-	for _, tcs := range [][]testCase{
-		fooTests,
-		barTests,
-	} {
-		tests = append(tests, tcs...)
-	}
-
-	// TODO: TEMP
-	// tests = barTests
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			a := NewApplier(tt.fields.cl, tt.fields.yamlDoc, tt.fields.flags)
-			res := a.Execute()
-			if !tutil.ErrorContains(res.GetErr(), tt.wantErr) {
-				t.Errorf("applier.Execute() error = %v, wantErr %v", res.GetErr(), tt.wantErr)
-			}
-			if res.HasUnappliedChanges() != tt.wantHasUnappliedChanges {
-				t.Errorf("exporter.Execute().HasUnappliedChanges() = %v, want %v", res.HasUnappliedChanges(), tt.wantHasUnappliedChanges)
-			}
-
-			// Sleep to give Kafka time to update internally
-			time.Sleep(2 * time.Second)
-		})
-	}
+	})
 }

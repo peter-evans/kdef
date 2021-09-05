@@ -93,6 +93,22 @@ func TestTopicDefinition_Validate(t *testing.T) {
 			wantErr: "a replica assignment cannot contain duplicate brokers",
 		},
 		{
+			name: "Tests invalid reassignment await timeout",
+			topicDef: TopicDefinition{
+				Metadata: TopicMetadataDefinition{
+					Name: "foo",
+				},
+				Spec: TopicSpecDefinition{
+					Partitions:        3,
+					ReplicationFactor: 2,
+					Reassignment: TopicReassignmentDefinition{
+						AwaitTimeoutSec: -10,
+					},
+				},
+			},
+			wantErr: "reassignment await timeout seconds must be greater or equal to 0",
+		},
+		{
 			name: "Tests a valid TopicDefinition",
 			topicDef: TopicDefinition{
 				Metadata: TopicMetadataDefinition{
@@ -105,6 +121,9 @@ func TestTopicDefinition_Validate(t *testing.T) {
 						{1, 2},
 						{2, 3},
 						{3, 1},
+					},
+					Reassignment: TopicReassignmentDefinition{
+						AwaitTimeoutSec: 30,
 					},
 				},
 			},

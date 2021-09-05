@@ -29,10 +29,11 @@ type TopicMetadataLabels map[string]string
 
 // Topic spec definition
 type TopicSpecDefinition struct {
-	Configs           TopicConfigsDefinition     `json:"configs,omitempty"`
-	Partitions        int                        `json:"partitions"`
-	ReplicationFactor int                        `json:"replicationFactor"`
-	Assignments       TopicAssignmentsDefinition `json:"assignments,omitempty"`
+	Configs           TopicConfigsDefinition      `json:"configs,omitempty"`
+	Partitions        int                         `json:"partitions"`
+	ReplicationFactor int                         `json:"replicationFactor"`
+	Assignments       TopicAssignmentsDefinition  `json:"assignments,omitempty"`
+	Reassignment      TopicReassignmentDefinition `json:"reassignment,omitempty"`
 }
 
 // Topic configs definition
@@ -40,6 +41,11 @@ type TopicConfigsDefinition map[string]*string
 
 // Topic assignments definition
 type TopicAssignmentsDefinition [][]int32
+
+// Topic reassignment definition
+type TopicReassignmentDefinition struct {
+	AwaitTimeoutSec int `json:"awaitTimeoutSec"`
+}
 
 // Determines if a spec has assignments
 func (s TopicSpecDefinition) HasAssignments() bool {
@@ -101,6 +107,10 @@ func (t TopicDefinition) Validate() error {
 				return fmt.Errorf("a replica assignment cannot contain duplicate brokers")
 			}
 		}
+	}
+
+	if t.Spec.Reassignment.AwaitTimeoutSec < 0 {
+		return fmt.Errorf("reassignment await timeout seconds must be greater or equal to 0")
 	}
 
 	return nil
