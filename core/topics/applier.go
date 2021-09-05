@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
-	"github.com/fatih/color"
 	"github.com/ghodss/yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -14,7 +14,6 @@ import (
 	"github.com/peter-evans/kdef/core/def"
 	"github.com/peter-evans/kdef/core/req"
 	"github.com/peter-evans/kdef/core/res"
-	"github.com/peter-evans/kdef/util"
 	"github.com/twmb/franz-go/pkg/kerr"
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
@@ -34,6 +33,7 @@ type applier struct {
 	flags   ApplierFlags
 
 	// result
+	// TODO: refactor this to Execute() scope only?
 	res res.ApplyResult
 
 	// internal
@@ -45,6 +45,7 @@ type applier struct {
 	metadata           *kmsg.MetadataResponse
 	localDef           def.TopicDefinition
 	remoteDef          def.TopicDefinition
+	reassignments      res.PartitionReassignments
 }
 
 // Creates a new applier
@@ -65,6 +66,10 @@ func (a *applier) Execute() *res.ApplyResult {
 	if err := a.apply(); err != nil {
 		a.res.Err = err.Error()
 		log.Error(err)
+	}
+
+	a.res.Data = res.TopicApplyResultData{
+		PartitionReassignments: a.reassignments,
 	}
 
 	if !a.flags.DryRun {
@@ -119,6 +124,24 @@ func (a *applier) apply() error {
 		// Execute operations
 		if err := a.executeOperations(); err != nil {
 			return err
+		}
+
+		// Check for in-progress partition reassignments as a result of operations
+		if a.partitionsOp || a.assignmentsOp {
+			if err := a.fetchPartitionReassignments(); err != nil {
+				return err
+			}
+			if len(a.reassignments) > 0 {
+				if a.localDef.Spec.Reassignment.AwaitTimeoutSec > 0 {
+					// Wait for reassignments to complete
+					if err := a.awaitReassignments(a.localDef.Spec.Reassignment.AwaitTimeoutSec); err != nil {
+						return err
+					}
+				} else if !log.Quiet {
+					// Display in-progress partition reassignments
+					a.displayPartitionReassignments()
+				}
+			}
 		}
 
 		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Completed apply for topic %q", a.localDef.Metadata.Name)
@@ -210,7 +233,8 @@ func (a *applier) updateApplyResult() error {
 		remoteCopy = &c
 	}
 
-	// Modify the remote definition to remove unnecessary properties
+	// Modify the remote definition to remove optional properties not specified in local
+	// Further, add properties that are local only and have no remote state
 	if remoteCopy != nil {
 		// Remove assignments if not specified in local
 		if !a.localDef.Spec.HasAssignments() {
@@ -218,6 +242,7 @@ func (a *applier) updateApplyResult() error {
 		}
 
 		// The only configs we want to see are those specified in local and those in configOps
+		// configOps could contain key deletions that should be shown in the diff
 		for k := range remoteCopy.Spec.Configs {
 			_, existsInLocal := a.localDef.Spec.Configs[k]
 			existsInOps := a.configOps.Contains(k)
@@ -226,6 +251,9 @@ func (a *applier) updateApplyResult() error {
 				delete(remoteCopy.Spec.Configs, k)
 			}
 		}
+
+		// Add properties that are local only and have no remote state
+		remoteCopy.Spec.Reassignment.AwaitTimeoutSec = a.localDef.Spec.Reassignment.AwaitTimeoutSec
 	}
 
 	// Compute diff
@@ -349,24 +377,6 @@ func (a *applier) buildConfigOps() {
 	a.configOps.Sort()
 }
 
-// TODO: remove
-// Display alter configs operations
-func (a *applier) displayConfigOps() {
-	log.Info("The following changes will be applied to topic %q configs:", a.localDef.Metadata.Name)
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Key", "Current Value", "New Value", "Operation"})
-	for _, op := range a.configOps {
-		if op.Op == req.DeleteConfigOperation {
-			t.AppendRow([]interface{}{op.Name, util.DerefStr(op.CurrentValue), util.DerefStr(op.Value), color.RedString("DELETE")})
-		} else {
-			t.AppendRow([]interface{}{op.Name, util.DerefStr(op.CurrentValue), util.DerefStr(op.Value), color.CyanString("SET")})
-		}
-	}
-	t.SetStyle(table.StyleLight)
-	t.Render()
-}
-
 // Update topic configs
 func (a *applier) updateConfigs() error {
 	if a.flags.NonIncremental {
@@ -481,13 +491,70 @@ func (a *applier) buildAssignmentsOperation() {
 	}
 }
 
+// Execute a request to list partition reassignments
+func (a *applier) fetchPartitionReassignments() error {
+	log.Debug("Fetching in-progress partition reassignments for topic %q", a.localDef.Metadata.Name)
+
+	partitions := make([]int32, a.localDef.Spec.Partitions)
+	for i := range partitions {
+		partitions[i] = int32(i)
+	}
+
+	reassResp, err := req.RequestListPartitionReassignments(
+		a.cl,
+		a.localDef.Metadata.Name,
+		partitions,
+	)
+	if err != nil {
+		return err
+	}
+
+	a.reassignments = res.PartitionReassignments{}
+	for _, r := range reassResp {
+		a.reassignments = append(a.reassignments, res.PartitionReassignment{
+			Partition:        r.Partition,
+			Replicas:         r.Replicas,
+			AddingReplicas:   r.AddingReplicas,
+			RemovingReplicas: r.RemovingReplicas,
+		})
+	}
+
+	return nil
+}
+
+// Display in-progress partition reassignments
+func (a *applier) displayPartitionReassignments() {
+	log.Info("In-progress partition reassignments for topic %q:", a.localDef.Metadata.Name)
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{"Partition", "Replicas", "Adding Replicas", "Removing Replicas"})
+	for _, r := range a.reassignments {
+		t.AppendRow([]interface{}{
+			fmt.Sprint(r.Partition),
+			fmt.Sprint(r.Replicas),
+			fmt.Sprint(r.AddingReplicas),
+			fmt.Sprint(r.RemovingReplicas),
+		})
+	}
+	t.SetStyle(table.StyleLight)
+	t.Render()
+}
+
 // Execute a request to alter assignments
 func (a *applier) updateAssignments() error {
 	if a.flags.DryRun {
+		// AlterPartitionAssignments has no 'ValidateOnly' for dry-run mode so we check
+		// in-progress partition reassignments and error if found.
+		if err := a.fetchPartitionReassignments(); err != nil {
+			return err
+		}
+		if len(a.reassignments) > 0 {
+			// Kafka would return a very similiar error if we attempted to execute the reassignment
+			return fmt.Errorf("a partition reassignment is in progress for the topic %q", a.localDef.Metadata.Name)
+		}
+
 		log.Info("Skipped altering partition assignments (dry-run not available)")
 	} else {
-		// TODO: Need to check for ongoing assignment ops on this topic(?)
-
 		log.Info("Altering partition assignments...")
 
 		if err := req.RequestAlterPartitionAssignments(
@@ -502,4 +569,35 @@ func (a *applier) updateAssignments() error {
 	}
 
 	return nil
+}
+
+// Await the completion of in-progress partition reassignments
+func (a *applier) awaitReassignments(timeoutSec int) error {
+	log.Info("Awaiting completion of partition reassignments (timeout: %d seconds)...", timeoutSec)
+	timeout := time.After(time.Duration(timeoutSec) * time.Second)
+
+	remaining := 0
+	for {
+		select {
+		case <-timeout:
+			log.Info("Awaiting completion of partition reassignments timed out after %d seconds", timeoutSec)
+			return nil
+		default:
+			if err := a.fetchPartitionReassignments(); err != nil {
+				return err
+			}
+			if len(a.reassignments) > 0 {
+				if !log.Quiet && len(a.reassignments) != remaining {
+					a.displayPartitionReassignments()
+				}
+				remaining = len(a.reassignments)
+			} else {
+				log.Info("Partition reassignments completed")
+				return nil
+			}
+
+			time.Sleep(5 * time.Second)
+			continue
+		}
+	}
 }

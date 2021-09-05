@@ -373,6 +373,37 @@ func RequestAlterPartitionAssignments(
 	return nil
 }
 
+// Execute a request to list partition reassignments (Kafka 2.4.0+)
+func RequestListPartitionReassignments(
+	cl *client.Client,
+	topic string,
+	partitions []int32,
+) ([]kmsg.ListPartitionReassignmentsResponseTopicPartition, error) {
+	t := kmsg.NewListPartitionReassignmentsRequestTopic()
+	t.Topic = topic
+	t.Partitions = partitions
+
+	req := kmsg.NewListPartitionReassignmentsRequest()
+	req.Topics = append(req.Topics, t)
+	req.TimeoutMillis = cl.TimeoutMs()
+
+	kresp, err := cl.Client().Request(context.Background(), &req)
+	if err != nil {
+		return nil, err
+	}
+	resp := kresp.(*kmsg.ListPartitionReassignmentsResponse)
+
+	if err := kerr.ErrorForCode(resp.ErrorCode); err != nil {
+		return nil, fmt.Errorf(*resp.ErrorMessage)
+	}
+
+	if len(resp.Topics) > 0 {
+		return resp.Topics[0].Partitions, nil
+	} else {
+		return []kmsg.ListPartitionReassignmentsResponseTopicPartition{}, nil
+	}
+}
+
 // Execute describe cluster requests until a minimum number of brokers are alive (Kafka 2.8.0+)
 func IsKafkaReady(cl *client.Client, minBrokers int, timeoutSec int) bool {
 	timeout := time.After(time.Duration(timeoutSec) * time.Second)

@@ -31,4 +31,7 @@ func Down(t *testing.T, compose *tc.LocalDockerCompose) {
 		t.Errorf("compose down failed: %v", err)
 		t.FailNow()
 	}
+
+	// TODO: Is it possible to delete the dangling volume?
+	// docker volume rm $(docker volume ls -qf dangling=true)
 }
