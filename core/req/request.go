@@ -296,11 +296,20 @@ func RequestCreatePartitions(
 	cl *client.Client,
 	topic string,
 	partitions int,
+	assignments def.PartitionAssignments,
 	validateOnly bool,
 ) error {
+	var assignment []kmsg.CreatePartitionsRequestTopicAssignment
+	for _, replicas := range assignments {
+		assignment = append(assignment, kmsg.CreatePartitionsRequestTopicAssignment{
+			Replicas: replicas,
+		})
+	}
+
 	t := kmsg.NewCreatePartitionsRequestTopic()
 	t.Topic = topic
 	t.Count = int32(partitions)
+	t.Assignment = assignment
 
 	req := kmsg.NewCreatePartitionsRequest()
 	req.Topics = append(req.Topics, t)
@@ -330,7 +339,7 @@ func RequestCreatePartitions(
 func RequestAlterPartitionAssignments(
 	cl *client.Client,
 	topic string,
-	assignments def.TopicAssignmentsDefinition,
+	assignments def.PartitionAssignments,
 ) error {
 	var partitions []kmsg.AlterPartitionAssignmentsRequestTopicPartition
 	for i, replicas := range assignments {

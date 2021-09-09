@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/peter-evans/kdef/test/tutil"
-	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
 func TestTopicDefinition_Validate(t *testing.T) {
@@ -140,22 +139,10 @@ func TestTopicDefinition_Validate(t *testing.T) {
 }
 
 func TestTopicDefinition_ValidateWithMetadata(t *testing.T) {
-	metadataResp := &kmsg.MetadataResponse{
-		Brokers: []kmsg.MetadataResponseBroker{
-			{
-				NodeID: 1,
-			},
-			{
-				NodeID: 2,
-			},
-			{
-				NodeID: 3,
-			},
-		},
-	}
+	brokers := []int32{1, 2, 3}
 
 	type args struct {
-		metadata *kmsg.MetadataResponse
+		brokers []int32
 	}
 	tests := []struct {
 		name     string
@@ -163,6 +150,22 @@ func TestTopicDefinition_ValidateWithMetadata(t *testing.T) {
 		args     args
 		wantErr  string
 	}{
+		{
+			name: "Tests invalid replication factor",
+			topicDef: TopicDefinition{
+				Metadata: TopicMetadataDefinition{
+					Name: "foo",
+				},
+				Spec: TopicSpecDefinition{
+					Partitions:        3,
+					ReplicationFactor: 4,
+				},
+			},
+			args: args{
+				brokers: brokers,
+			},
+			wantErr: "replication factor cannot exceed the number of available brokers",
+		},
 		{
 			name: "Tests an invalid broker id",
 			topicDef: TopicDefinition{
@@ -180,12 +183,12 @@ func TestTopicDefinition_ValidateWithMetadata(t *testing.T) {
 				},
 			},
 			args: args{
-				metadata: metadataResp,
+				brokers: brokers,
 			},
 			wantErr: "invalid broker id \"4\" in assignments",
 		},
 		{
-			name: "Tests valid broker ids",
+			name: "Tests a valid TopicDefinition",
 			topicDef: TopicDefinition{
 				Metadata: TopicMetadataDefinition{
 					Name: "foo",
@@ -201,14 +204,14 @@ func TestTopicDefinition_ValidateWithMetadata(t *testing.T) {
 				},
 			},
 			args: args{
-				metadata: metadataResp,
+				brokers: brokers,
 			},
 			wantErr: "",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.topicDef.ValidateWithMetadata(tt.args.metadata); !tutil.ErrorContains(err, tt.wantErr) {
+			if err := tt.topicDef.ValidateWithMetadata(tt.args.brokers); !tutil.ErrorContains(err, tt.wantErr) {
 				t.Errorf("TopicDefinition.ValidateWithMetadata() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

@@ -6,7 +6,8 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/gotidy/copy"
-	"github.com/peter-evans/kdef/util"
+	"github.com/peter-evans/kdef/util/i32"
+	"github.com/peter-evans/kdef/util/str"
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
@@ -29,18 +30,18 @@ type TopicMetadataLabels map[string]string
 
 // Topic spec definition
 type TopicSpecDefinition struct {
-	Configs           TopicConfigsDefinition      `json:"configs,omitempty"`
+	Configs           TopicConfigs                `json:"configs,omitempty"`
 	Partitions        int                         `json:"partitions"`
 	ReplicationFactor int                         `json:"replicationFactor"`
-	Assignments       TopicAssignmentsDefinition  `json:"assignments,omitempty"`
+	Assignments       PartitionAssignments        `json:"assignments,omitempty"`
 	Reassignment      TopicReassignmentDefinition `json:"reassignment,omitempty"`
 }
 
 // Topic configs definition
-type TopicConfigsDefinition map[string]*string
+type TopicConfigs map[string]*string
 
 // Topic assignments definition
-type TopicAssignmentsDefinition [][]int32
+type PartitionAssignments [][]int32
 
 // Topic reassignment definition
 type TopicReassignmentDefinition struct {
@@ -103,7 +104,7 @@ func (t TopicDefinition) Validate() error {
 				return fmt.Errorf("number of replicas in each assignment must match replication factor")
 			}
 
-			if util.DuplicateInSlice(replicas) {
+			if i32.ContainsDuplicate(replicas) {
 				return fmt.Errorf("a replica assignment cannot contain duplicate brokers")
 			}
 		}
@@ -117,21 +118,25 @@ func (t TopicDefinition) Validate() error {
 }
 
 // Further topic definition validation using metadata
-func (t TopicDefinition) ValidateWithMetadata(metadata *kmsg.MetadataResponse) error {
+func (t TopicDefinition) ValidateWithMetadata(brokers []int32) error {
 	// Note:
 	// These are validations that are applicable regardless of whether it's a create or update operation
 	// Validation specific to either create or update can remain in the applier
 
+	if t.Spec.ReplicationFactor > len(brokers) {
+		return fmt.Errorf("replication factor cannot exceed the number of available brokers")
+	}
+
 	if t.Spec.HasAssignments() {
 		// Check the broker IDs in the assignments are valid
-		brokerIds := make(map[int32]bool, len(metadata.Brokers))
-		for _, broker := range metadata.Brokers {
-			brokerIds[broker.NodeID] = true
+		brokerIds := make(map[int32]bool, len(brokers))
+		for _, broker := range brokers {
+			brokerIds[broker] = true
 		}
 
 		for _, replicas := range t.Spec.Assignments {
 			for _, id := range replicas {
-				if !brokerIds[id] {
+				if _, exists := brokerIds[id]; !exists {
 					return fmt.Errorf("invalid broker id %q in assignments", fmt.Sprint(id))
 				}
 			}
@@ -143,30 +148,30 @@ func (t TopicDefinition) ValidateWithMetadata(metadata *kmsg.MetadataResponse) e
 
 // Create a topic definition from metadata and config
 func NewTopicDefinition(
-	metadata kmsg.MetadataResponseTopic,
-	topicConfig kmsg.DescribeConfigsResponseResource,
+	metadataResp kmsg.MetadataResponseTopic,
+	topicConfigsResp kmsg.DescribeConfigsResponseResource,
 	forExport bool,
 ) TopicDefinition {
-	topicConfigsDef := TopicConfigsDefinition{}
-	for _, config := range topicConfig.Configs {
-		topicConfigsDef[config.Name] = config.Value
+	topicConfigs := TopicConfigs{}
+	for _, config := range topicConfigsResp.Configs {
+		topicConfigs[config.Name] = config.Value
 	}
 
 	topicDef := TopicDefinition{
 		ApiVersion: "v1",
 		Kind:       "topic",
 		Metadata: TopicMetadataDefinition{
-			Name: *metadata.Topic,
+			Name: *metadataResp.Topic,
 		},
 		Spec: TopicSpecDefinition{
-			Partitions:        len(metadata.Partitions),
-			ReplicationFactor: len(metadata.Partitions[0].Replicas),
-			Configs:           topicConfigsDef,
+			Partitions:        len(metadataResp.Partitions),
+			ReplicationFactor: len(metadataResp.Partitions[0].Replicas),
+			Configs:           topicConfigs,
 		},
 	}
 
 	if !forExport {
-		topicDef.Spec.Assignments = assignmentsDefinitionFromMetadata(metadata.Partitions)
+		topicDef.Spec.Assignments = assignmentsDefinitionFromMetadata(metadataResp.Partitions)
 	}
 
 	return topicDef
@@ -175,8 +180,8 @@ func NewTopicDefinition(
 // Create an assignments definition from metadata
 func assignmentsDefinitionFromMetadata(
 	partitions []kmsg.MetadataResponseTopicPartition,
-) TopicAssignmentsDefinition {
-	assignments := make(TopicAssignmentsDefinition, len(partitions))
+) PartitionAssignments {
+	assignments := make(PartitionAssignments, len(partitions))
 	for _, p := range partitions {
 		assignments[p.Partition] = p.Replicas
 	}
@@ -209,7 +214,7 @@ func DiffTopicDefinitions(a *TopicDefinition, b *TopicDefinition) (string, error
 		return "", err
 	}
 
-	diff, err := util.JsonDiff(
+	diff, err := str.JsonDiff(
 		[]byte(aJson),
 		[]byte(bJson),
 	)
