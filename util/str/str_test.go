@@ -1,10 +1,10 @@
-package util
+package str
 
 import (
 	"testing"
 )
 
-func TestDerefStr(t *testing.T) {
+func TestDeref(t *testing.T) {
 	var str = "foo"
 
 	type args struct {
@@ -32,14 +32,14 @@ func TestDerefStr(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := DerefStr(tt.args.s); got != tt.want {
-				t.Errorf("DerefStr() = %v, want %v", got, tt.want)
+			if got := Deref(tt.args.s); got != tt.want {
+				t.Errorf("Deref() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestNormStr(t *testing.T) {
+func TestNorm(t *testing.T) {
 	type args struct {
 		s string
 	}
@@ -58,14 +58,14 @@ func TestNormStr(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NormStr(tt.args.s); got != tt.want {
-				t.Errorf("NormStr() = %v, want %v", got, tt.want)
+			if got := Norm(tt.args.s); got != tt.want {
+				t.Errorf("Norm() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestStringInList(t *testing.T) {
+func TestContains(t *testing.T) {
 	type args struct {
 		str  string
 		list []string
@@ -94,41 +94,8 @@ func TestStringInList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := StringInList(tt.args.str, tt.args.list); got != tt.want {
-				t.Errorf("StringInList() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_duplicateInSlice(t *testing.T) {
-	type args struct {
-		s []int32
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "Tests when a duplicate is contained in the slice",
-			args: args{
-				s: []int32{1, 2, 3, 4, 2, 5},
-			},
-			want: true,
-		},
-		{
-			name: "Tests when a duplicate is not contained in the slice",
-			args: args{
-				s: []int32{1, 2, 3, 4, 5, 6},
-			},
-			want: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := DuplicateInSlice(tt.args.s); got != tt.want {
-				t.Errorf("duplicateInSlice() = %v, want %v", got, tt.want)
+			if got := Contains(tt.args.str, tt.args.list); got != tt.want {
+				t.Errorf("Contains() = %v, want %v", got, tt.want)
 			}
 		})
 	}

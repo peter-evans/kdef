@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/peter-evans/kdef/cli/log"
-	"github.com/peter-evans/kdef/util"
+	"github.com/peter-evans/kdef/util/str"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 
@@ -128,7 +128,7 @@ func (cl *Client) buildSASLOpt() error {
 		return nil
 	}
 
-	switch util.NormStr(cl.cc.SASL.Method) {
+	switch str.Norm(cl.cc.SASL.Method) {
 	case "", "plain":
 		cl.addOpt(kgo.SASL(plain.Plain(func(context.Context) (plain.Auth, error) {
 			return plain.Auth{
@@ -200,12 +200,12 @@ func (cl *Client) buildTLSOpt() error {
 	if suites := cl.cc.TLS.CipherSuites; len(suites) > 0 {
 		candidates := make(map[string]uint16)
 		for _, suite := range append(tls.CipherSuites(), tls.InsecureCipherSuites()...) {
-			candidates[util.NormStr(suite.Name)] = suite.ID
-			candidates[util.NormStr(strings.TrimPrefix("TLS_", suite.Name))] = suite.ID
+			candidates[str.Norm(suite.Name)] = suite.ID
+			candidates[str.Norm(strings.TrimPrefix("TLS_", suite.Name))] = suite.ID
 		}
 
 		for _, suite := range cl.cc.TLS.CipherSuites {
-			id, exists := candidates[util.NormStr(suite)]
+			id, exists := candidates[str.Norm(suite)]
 			if !exists {
 				return fmt.Errorf("invalid cipher suite %q", suite)
 			}
@@ -223,7 +223,7 @@ func (cl *Client) buildTLSOpt() error {
 		}
 
 		for _, curve := range cl.cc.TLS.CurvePreferences {
-			id, exists := candidates[util.NormStr(curve)]
+			id, exists := candidates[str.Norm(curve)]
 			if !exists {
 				return fmt.Errorf("invalid curve preference %q", curve)
 			}

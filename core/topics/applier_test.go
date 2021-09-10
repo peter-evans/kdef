@@ -86,11 +86,8 @@ func Test_applier_Execute(t *testing.T) {
 		t.FailNow()
 	}
 
-	// Load YAML doc test fixtures
+	// Tests changes to configs
 	fooDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topics/test.core.topics.applier.foo.yml")
-	barDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topics/test.core.topics.applier.bar.yml")
-
-	// Tests configs and addition of partitions
 	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
 		{
@@ -223,33 +220,10 @@ func Test_applier_Execute(t *testing.T) {
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
-		{
-			// Add partitions
-			name: "9: Dry-run topic foo version 5",
-			fields: fields{
-				cl:      cl,
-				yamlDoc: fooDocs[5],
-				flags: ApplierFlags{
-					DryRun: true,
-				},
-			},
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
-		},
-		{
-			// Add partitions
-			name: "10: Apply topic foo version 5",
-			fields: fields{
-				cl:      cl,
-				yamlDoc: fooDocs[5],
-				flags:   ApplierFlags{},
-			},
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
-		},
 	})
 
-	// Tests assignments and reassignment cases
+	// Tests changes to assignments and handling of in-progress reassignments
+	barDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topics/test.core.topics.applier.bar.yml")
 	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
 		{
@@ -309,7 +283,7 @@ func Test_applier_Execute(t *testing.T) {
 		t.FailNow()
 	}
 
-	// Tests assignments and reassignment cases (continued)
+	// Tests changes to assignments and handling of in-progress reassignments (continued)
 	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
 		{
@@ -338,7 +312,7 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Add partitions
-			name: "7: Dry-run topic bar version 3",
+			name: "6: Dry-run topic bar version 3",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[3],
@@ -351,7 +325,7 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Add partitions
-			name: "8: Apply topic bar version 3",
+			name: "7: Apply topic bar version 3",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[3],
@@ -362,7 +336,7 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Add partitions and increase replication factor
-			name: "9: Dry-run topic bar version 4",
+			name: "8: Dry-run topic bar version 4",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[4],
@@ -375,7 +349,7 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Add partitions and increase replication factor
-			name: "10: Apply topic bar version 4",
+			name: "9: Apply topic bar version 4",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[4],
@@ -386,7 +360,7 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Decrease replication factor
-			name: "11: Dry-run topic bar version 5",
+			name: "10: Dry-run topic bar version 5",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[5],
@@ -399,10 +373,136 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Decrease replication factor
-			name: "12: Apply topic bar version 5",
+			name: "11: Apply topic bar version 5",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[5],
+				flags:   ApplierFlags{},
+			},
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
+		},
+	})
+
+	// Tests partition and replication factor changes (without static assignments)
+	bazDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topics/test.core.topics.applier.baz.yml")
+	runTests(t, []testCase{
+		// NOTE: Execution of tests is ordered
+		{
+			// Create topic
+			name: "1: Dry-run topic baz version 0",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[0],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
+		},
+		{
+			// Create topic
+			name: "2: Apply topic baz version 0",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[0],
+				flags:   ApplierFlags{},
+			},
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
+		},
+		{
+			// Increase replication factor
+			name: "3: Dry-run topic baz version 1",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[1],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
+		},
+		{
+			// Increase replication factor
+			name: "4: Apply topic baz version 1",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[1],
+				flags:   ApplierFlags{},
+			},
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
+		},
+		{
+			// Add partitions
+			name: "5: Dry-run topic baz version 2",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[2],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
+		},
+		{
+			// Add partitions
+			name: "6: Apply topic baz version 2",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[2],
+				flags:   ApplierFlags{},
+			},
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
+		},
+		{
+			// Add partitions and increase replication factor
+			name: "7: Dry-run topic baz version 3",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[3],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
+		},
+		{
+			// Add partitions and increase replication factor
+			name: "8: Apply topic baz version 3",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[3],
+				flags:   ApplierFlags{},
+			},
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
+		},
+		{
+			// Decrease replication factor
+			name: "9: Dry-run topic baz version 4",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[4],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
+		},
+		{
+			// Decrease replication factor
+			name: "10: Apply topic baz version 4",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[4],
 				flags:   ApplierFlags{},
 			},
 			wantErr:                 "",

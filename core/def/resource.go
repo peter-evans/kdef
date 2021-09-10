@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ghodss/yaml"
-	"github.com/peter-evans/kdef/util"
+	"github.com/peter-evans/kdef/util/str"
 )
 
 // Top-level definition of a resource
@@ -21,7 +21,7 @@ var definitionKindVersions = map[string][]string{
 // Validate a resource definition
 func (t ResourceDefinition) validate() error {
 	if versions, ok := definitionKindVersions[t.Kind]; ok {
-		if !util.StringInList(t.ApiVersion, versions) {
+		if !str.Contains(t.ApiVersion, versions) {
 			return fmt.Errorf("invalid definition apiVersion %q", t.ApiVersion)
 		}
 	} else {

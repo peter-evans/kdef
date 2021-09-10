@@ -14,6 +14,7 @@ import (
 	"github.com/peter-evans/kdef/core/def"
 	"github.com/peter-evans/kdef/core/req"
 	"github.com/peter-evans/kdef/core/res"
+	"github.com/peter-evans/kdef/core/topics/assignments"
 	"github.com/twmb/franz-go/pkg/kerr"
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
@@ -25,6 +26,22 @@ type ApplierFlags struct {
 	NonIncremental       bool
 }
 
+// Applier operations
+type applierOps struct {
+	create      bool
+	config      req.ConfigOperations
+	partitions  def.PartitionAssignments
+	assignments def.PartitionAssignments
+}
+
+// Determine if there are any pending operations
+func (a applierOps) pending() bool {
+	return a.create ||
+		len(a.config) > 0 ||
+		len(a.partitions) > 0 ||
+		len(a.assignments) > 0
+}
+
 // An applier handling the apply operation
 type applier struct {
 	// constructor params
@@ -32,20 +49,17 @@ type applier struct {
 	yamlDoc string
 	flags   ApplierFlags
 
-	// result
-	// TODO: refactor this to Execute() scope only?
-	res res.ApplyResult
-
 	// internal
-	configOps          req.ConfigOperations
-	createOp           bool
-	partitionsOp       bool
-	assignmentsOp      bool
+	// TODO: can I refactor this out?
 	remoteTopicConfigs kmsg.DescribeConfigsResponseResource
-	metadata           *kmsg.MetadataResponse
+	brokers            []int32
 	localDef           def.TopicDefinition
 	remoteDef          def.TopicDefinition
-	reassignments      res.PartitionReassignments
+	ops                applierOps
+
+	// TODO: refactor this to Execute() scope only?
+	res           res.ApplyResult
+	reassignments res.PartitionReassignments
 }
 
 // Creates a new applier
@@ -99,13 +113,13 @@ func (a *applier) apply() error {
 
 	// Perform further validations with metadata
 	log.Debug("Validating topic definition using cluster metadata")
-	if err := a.localDef.ValidateWithMetadata(a.metadata); err != nil {
+	if err := a.localDef.ValidateWithMetadata(a.brokers); err != nil {
 		return err
 	}
 
-	if !a.createOp {
+	if !a.ops.create {
 		// Build topic update operations and determine if updates are required
-		if err := a.buildOperations(); err != nil {
+		if err := a.buildOps(); err != nil {
 			return err
 		}
 	}
@@ -115,19 +129,19 @@ func (a *applier) apply() error {
 		return err
 	}
 
-	if a.pendingOpsExist() {
+	if a.ops.pending() {
 		// Display diff and pending operations
 		if !log.Quiet {
 			a.displayPendingOps()
 		}
 
 		// Execute operations
-		if err := a.executeOperations(); err != nil {
+		if err := a.executeOps(); err != nil {
 			return err
 		}
 
 		// Check for in-progress partition reassignments as a result of operations
-		if a.partitionsOp || a.assignmentsOp {
+		if len(a.ops.assignments) > 0 {
 			if err := a.fetchPartitionReassignments(); err != nil {
 				return err
 			}
@@ -161,12 +175,19 @@ func (a *applier) tryFetchRemoteTopic() error {
 	if err != nil {
 		return err
 	}
-	a.metadata = metadataResp
+
+	// Store available brokers
+	for _, broker := range metadataResp.Brokers {
+		a.brokers = append(a.brokers, broker.NodeID)
+	}
+
+	// TODO: When I need to fetch racks create a metadata section in 'a'
+	// Maybe define the struct for metadata in req
 
 	// Check if the topic exists
-	topicMetadata := a.metadata.Topics[0]
-	a.createOp = topicMetadata.ErrorCode == kerr.UnknownTopicOrPartition.Code
-	if a.createOp {
+	topicMetadata := metadataResp.Topics[0]
+	a.ops.create = topicMetadata.ErrorCode == kerr.UnknownTopicOrPartition.Code
+	if a.ops.create {
 		log.Debug("Topic %q does not exist", a.localDef.Metadata.Name)
 		return nil
 	}
@@ -191,44 +212,23 @@ func (a *applier) tryFetchRemoteTopic() error {
 }
 
 // Build topic update operations
-func (a *applier) buildOperations() error {
+func (a *applier) buildOps() error {
 	a.buildConfigOps()
 
-	if err := a.buildPartitionsOperation(); err != nil {
+	if err := a.buildPartitionsOp(); err != nil {
 		return err
 	}
 
-	a.buildAssignmentsOperation()
+	a.buildAssignmentsOp()
 
 	return nil
-}
-
-// Determine if pending operations exist
-func (a *applier) pendingOpsExist() bool {
-	if a.createOp {
-		return true
-	}
-
-	if len(a.configOps) > 0 {
-		return true
-	}
-
-	if a.partitionsOp {
-		return true
-	}
-
-	if a.assignmentsOp {
-		return true
-	}
-
-	return false
 }
 
 // Update the apply result with the remote definition and human readable diff
 func (a *applier) updateApplyResult() error {
 	// Copy the remote definition
 	var remoteCopy *def.TopicDefinition
-	if !a.createOp {
+	if !a.ops.create {
 		c := a.remoteDef.Copy()
 		remoteCopy = &c
 	}
@@ -245,7 +245,7 @@ func (a *applier) updateApplyResult() error {
 		// configOps could contain key deletions that should be shown in the diff
 		for k := range remoteCopy.Spec.Configs {
 			_, existsInLocal := a.localDef.Spec.Configs[k]
-			existsInOps := a.configOps.Contains(k)
+			existsInOps := a.ops.config.Contains(k)
 
 			if !existsInLocal && !existsInOps {
 				delete(remoteCopy.Spec.Configs, k)
@@ -263,8 +263,8 @@ func (a *applier) updateApplyResult() error {
 	}
 
 	// Check the diff against the pending operations
-	if diffExists := (len(diff) > 0); diffExists != a.pendingOpsExist() {
-		return fmt.Errorf("existence of diff was %v, but expected %v", diffExists, a.pendingOpsExist())
+	if diffExists := (len(diff) > 0); diffExists != a.ops.pending() {
+		return fmt.Errorf("existence of diff was %v, but expected %v", diffExists, a.ops.pending())
 	}
 
 	// Update the apply result
@@ -276,7 +276,7 @@ func (a *applier) updateApplyResult() error {
 
 // Display pending operations
 func (a *applier) displayPendingOps() {
-	if a.createOp {
+	if a.ops.create {
 		log.Info("Topic %q does not exist and will be created", a.localDef.Metadata.Name)
 	}
 
@@ -284,27 +284,27 @@ func (a *applier) displayPendingOps() {
 	fmt.Print(a.res.Diff)
 }
 
-// Build topic update operations
-func (a *applier) executeOperations() error {
-	if a.createOp {
+// Execute topic update operations
+func (a *applier) executeOps() error {
+	if a.ops.create {
 		if err := a.createTopic(); err != nil {
 			return err
 		}
 	}
 
-	if len(a.configOps) > 0 {
+	if len(a.ops.config) > 0 {
 		if err := a.updateConfigs(); err != nil {
 			return err
 		}
 	}
 
-	if a.partitionsOp {
+	if len(a.ops.partitions) > 0 {
 		if err := a.updatePartitions(); err != nil {
 			return err
 		}
 	}
 
-	if a.assignmentsOp {
+	if len(a.ops.assignments) > 0 {
 		if err := a.updateAssignments(); err != nil {
 			return err
 		}
@@ -336,7 +336,7 @@ func (a *applier) buildConfigOps() {
 			if *v != *cv {
 				// Config value has changed
 				log.Debug("Value of config key %q has changed from %q to %q and will be updated", k, *cv, *v)
-				a.configOps = append(a.configOps, req.ConfigOperation{
+				a.ops.config = append(a.ops.config, req.ConfigOperation{
 					Name:         k,
 					Value:        v,
 					CurrentValue: cv,
@@ -346,7 +346,7 @@ func (a *applier) buildConfigOps() {
 		} else {
 			// Config does not exist
 			log.Debug("Config key %q is missing from remote config and will be added", k)
-			a.configOps = append(a.configOps, req.ConfigOperation{
+			a.ops.config = append(a.ops.config, req.ConfigOperation{
 				Name:  k,
 				Value: v,
 				Op:    req.SetConfigOperation,
@@ -363,7 +363,7 @@ func (a *applier) buildConfigOps() {
 			}
 			if _, ok := a.localDef.Spec.Configs[config.Name]; !ok {
 				log.Debug("Config key %q is missing from local definition and will be deleted", config.Name)
-				a.configOps = append(a.configOps, req.ConfigOperation{
+				a.ops.config = append(a.ops.config, req.ConfigOperation{
 					Name:         config.Name,
 					CurrentValue: config.Value,
 					Op:           req.DeleteConfigOperation,
@@ -374,13 +374,13 @@ func (a *applier) buildConfigOps() {
 
 	// TODO: remove
 	// Sort the config operations
-	a.configOps.Sort()
+	a.ops.config.Sort()
 }
 
 // Update topic configs
 func (a *applier) updateConfigs() error {
 	if a.flags.NonIncremental {
-		if a.configOps.ContainsOp(req.DeleteConfigOperation) && !a.flags.DeleteMissingConfigs {
+		if a.ops.config.ContainsOp(req.DeleteConfigOperation) && !a.flags.DeleteMissingConfigs {
 			return errors.New("cannot apply delete config operations because flag --delete-missing-configs is not set")
 		}
 
@@ -416,7 +416,7 @@ func (a *applier) alterConfigs() error {
 	if err := req.RequestAlterConfigs(
 		a.cl,
 		a.localDef.Metadata.Name,
-		a.configOps,
+		a.ops.config,
 		a.flags.DryRun,
 	); err != nil {
 		return err
@@ -434,7 +434,7 @@ func (a *applier) incrementalAlterConfigs() error {
 	if err := req.RequestIncrementalAlterConfigs(
 		a.cl,
 		a.localDef.Metadata.Name,
-		a.configOps,
+		a.ops.config,
 		a.flags.DryRun,
 	); err != nil {
 		return err
@@ -446,18 +446,22 @@ func (a *applier) incrementalAlterConfigs() error {
 }
 
 // Build partitions operation
-func (a *applier) buildPartitionsOperation() error {
-	a.partitionsOp = a.localDef.Spec.Partitions > a.remoteDef.Spec.Partitions
-	if a.partitionsOp {
+func (a *applier) buildPartitionsOp() error {
+	if a.localDef.Spec.Partitions < a.remoteDef.Spec.Partitions {
+		return fmt.Errorf("decreasing the number of partitions is not supported")
+	}
+
+	if a.localDef.Spec.Partitions > a.remoteDef.Spec.Partitions {
 		log.Debug(
 			"The number of partitions has changed and will be increased from %d to %d",
 			a.remoteDef.Spec.Partitions,
 			a.localDef.Spec.Partitions,
 		)
-	}
-
-	if a.localDef.Spec.Partitions < a.remoteDef.Spec.Partitions {
-		return fmt.Errorf("decreasing the number of partitions is not supported")
+		a.ops.partitions = assignments.AddPartitions(
+			a.remoteDef.Spec.Assignments,
+			a.localDef.Spec.Partitions,
+			a.brokers,
+		)
 	}
 
 	return nil
@@ -471,6 +475,7 @@ func (a *applier) updatePartitions() error {
 		a.cl,
 		a.localDef.Metadata.Name,
 		a.localDef.Spec.Partitions,
+		a.ops.partitions,
 		a.flags.DryRun,
 	); err != nil {
 		return err
@@ -481,13 +486,33 @@ func (a *applier) updatePartitions() error {
 	return nil
 }
 
-// Build partitions operation
-func (a *applier) buildAssignmentsOperation() {
-	a.assignmentsOp = a.localDef.Spec.HasAssignments() &&
-		!cmp.Equal(a.remoteDef.Spec.Assignments, a.localDef.Spec.Assignments)
-
-	if a.assignmentsOp {
-		log.Debug("Partition assignments have changed and will be updated")
+// Build assignments operation
+func (a *applier) buildAssignmentsOp() {
+	if a.localDef.Spec.HasAssignments() {
+		if !cmp.Equal(a.remoteDef.Spec.Assignments, a.localDef.Spec.Assignments) {
+			log.Debug("Partition assignments have changed and will be updated")
+			a.ops.assignments = a.localDef.Spec.Assignments
+		}
+	} else {
+		if a.localDef.Spec.ReplicationFactor != a.remoteDef.Spec.ReplicationFactor {
+			log.Debug("Replication factor has changed and will be updated")
+			if len(a.ops.partitions) > 0 {
+				// Assignments will include new partitions that will be added
+				newAssignments := assignments.Copy(a.remoteDef.Spec.Assignments)
+				newAssignments = append(newAssignments, a.ops.partitions...)
+				a.ops.assignments = assignments.AlterReplicationFactor(
+					newAssignments,
+					a.localDef.Spec.ReplicationFactor,
+					a.brokers,
+				)
+			} else {
+				a.ops.assignments = assignments.AlterReplicationFactor(
+					a.remoteDef.Spec.Assignments,
+					a.localDef.Spec.ReplicationFactor,
+					a.brokers,
+				)
+			}
+		}
 	}
 }
 
@@ -560,7 +585,7 @@ func (a *applier) updateAssignments() error {
 		if err := req.RequestAlterPartitionAssignments(
 			a.cl,
 			a.localDef.Metadata.Name,
-			a.localDef.Spec.Assignments,
+			a.ops.assignments,
 		); err != nil {
 			return err
 		} else {
