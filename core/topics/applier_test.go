@@ -28,6 +28,7 @@ func Test_applier_Execute(t *testing.T) {
 	type testCase struct {
 		name                    string
 		fields                  fields
+		wantDiff                string
 		wantErr                 string
 		wantHasUnappliedChanges bool
 	}
@@ -36,24 +37,28 @@ func Test_applier_Execute(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				a := NewApplier(tt.fields.cl, tt.fields.yamlDoc, tt.fields.flags)
-				result := a.Execute()
+				got := a.Execute()
 
 				if log.Verbose {
 					// Output apply result JSON
-					jsonOut, err := json.MarshalIndent(result, "", "  ")
+					jsonOut, err := json.MarshalIndent(got, "", "  ")
 					if err != nil {
 						t.Errorf("failed to convert apply result to json: %v", err)
 						t.FailNow()
 					}
+					fmt.Println("[test] ApplyResult JSON:")
 					fmt.Println(string(jsonOut))
 				}
 
-				if !tutil.ErrorContains(result.GetErr(), tt.wantErr) {
-					t.Errorf("applier.Execute() error = %v, wantErr %v", result.GetErr(), tt.wantErr)
+				if got.Diff != tt.wantDiff {
+					t.Errorf("applier.Execute().Diff = %v, want %v", got.Diff, tt.wantDiff)
 				}
-				if result.HasUnappliedChanges() != tt.wantHasUnappliedChanges {
-					t.Errorf("exporter.Execute().HasUnappliedChanges() = %v, want %v",
-						result.HasUnappliedChanges(),
+				if !tutil.ErrorContains(got.GetErr(), tt.wantErr) {
+					t.Errorf("applier.Execute() error = %v, wantErr %v", got.GetErr(), tt.wantErr)
+				}
+				if got.HasUnappliedChanges() != tt.wantHasUnappliedChanges {
+					t.Errorf("applier.Execute().HasUnappliedChanges() = %v, want %v",
+						got.HasUnappliedChanges(),
 						tt.wantHasUnappliedChanges,
 					)
 				}
@@ -62,6 +67,15 @@ func Test_applier_Execute(t *testing.T) {
 				time.Sleep(2 * time.Second)
 			})
 		}
+	}
+
+	getDiffsFixture := func(t *testing.T, path string) []string {
+		var diffs []string
+		if err := json.Unmarshal(tutil.Fixture(t, path), &diffs); err != nil {
+			t.Errorf("failed to unmarshal JSON test fixture: %v", err)
+			t.FailNow()
+		}
+		return diffs
 	}
 
 	// Create the test cluster
@@ -88,6 +102,7 @@ func Test_applier_Execute(t *testing.T) {
 
 	// Tests changes to configs
 	fooDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topics/test.core.topics.applier.foo.yml")
+	fooDiffs := getDiffsFixture(t, "../../test/fixtures/topics/test.core.topics.applier.foo.json")
 	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
 		{
@@ -100,6 +115,7 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
+			wantDiff:                fooDiffs[0],
 			wantErr:                 "",
 			wantHasUnappliedChanges: true,
 		},
@@ -111,6 +127,7 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: fooDocs[0],
 				flags:   ApplierFlags{},
 			},
+			wantDiff:                fooDiffs[0],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
@@ -124,6 +141,7 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
+			wantDiff:                fooDiffs[1],
 			wantErr:                 "",
 			wantHasUnappliedChanges: true,
 		},
@@ -135,6 +153,7 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: fooDocs[1],
 				flags:   ApplierFlags{},
 			},
+			wantDiff:                fooDiffs[1],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
@@ -149,6 +168,7 @@ func Test_applier_Execute(t *testing.T) {
 					DeleteMissingConfigs: true,
 				},
 			},
+			wantDiff:                fooDiffs[2],
 			wantErr:                 "",
 			wantHasUnappliedChanges: true,
 		},
@@ -162,6 +182,7 @@ func Test_applier_Execute(t *testing.T) {
 					DeleteMissingConfigs: true,
 				},
 			},
+			wantDiff:                fooDiffs[2],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
@@ -176,6 +197,7 @@ func Test_applier_Execute(t *testing.T) {
 					NonIncremental: true,
 				},
 			},
+			wantDiff:                fooDiffs[3],
 			wantErr:                 "",
 			wantHasUnappliedChanges: true,
 		},
@@ -189,6 +211,7 @@ func Test_applier_Execute(t *testing.T) {
 					NonIncremental: true,
 				},
 			},
+			wantDiff:                fooDiffs[3],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
@@ -203,6 +226,7 @@ func Test_applier_Execute(t *testing.T) {
 					NonIncremental: true,
 				},
 			},
+			wantDiff:                fooDiffs[4],
 			wantErr:                 "cannot apply delete config operations because flag --delete-missing-configs is not set",
 			wantHasUnappliedChanges: true,
 		},
@@ -217,6 +241,7 @@ func Test_applier_Execute(t *testing.T) {
 					DeleteMissingConfigs: true,
 				},
 			},
+			wantDiff:                fooDiffs[4],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
@@ -224,6 +249,7 @@ func Test_applier_Execute(t *testing.T) {
 
 	// Tests changes to assignments and handling of in-progress reassignments
 	barDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topics/test.core.topics.applier.bar.yml")
+	barDiffs := getDiffsFixture(t, "../../test/fixtures/topics/test.core.topics.applier.bar.json")
 	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
 		{
@@ -236,6 +262,7 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
+			wantDiff:                barDiffs[0],
 			wantErr:                 "invalid broker id",
 			wantHasUnappliedChanges: false,
 		},
@@ -249,6 +276,7 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
+			wantDiff:                barDiffs[1],
 			wantErr:                 "",
 			wantHasUnappliedChanges: true,
 		},
@@ -260,6 +288,7 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: barDocs[1],
 				flags:   ApplierFlags{},
 			},
+			wantDiff:                barDiffs[1],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
@@ -296,6 +325,7 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
+			wantDiff:                barDiffs[2],
 			wantErr:                 "",
 			wantHasUnappliedChanges: true,
 		},
@@ -307,6 +337,7 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: barDocs[2],
 				flags:   ApplierFlags{},
 			},
+			wantDiff:                barDiffs[2],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
@@ -320,6 +351,7 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
+			wantDiff:                barDiffs[3],
 			wantErr:                 "",
 			wantHasUnappliedChanges: true,
 		},
@@ -331,6 +363,7 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: barDocs[3],
 				flags:   ApplierFlags{},
 			},
+			wantDiff:                barDiffs[3],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
@@ -344,6 +377,7 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
+			wantDiff:                barDiffs[4],
 			wantErr:                 "",
 			wantHasUnappliedChanges: true,
 		},
@@ -355,6 +389,7 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: barDocs[4],
 				flags:   ApplierFlags{},
 			},
+			wantDiff:                barDiffs[4],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
@@ -368,6 +403,7 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
+			wantDiff:                barDiffs[5],
 			wantErr:                 "",
 			wantHasUnappliedChanges: true,
 		},
@@ -379,6 +415,7 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: barDocs[5],
 				flags:   ApplierFlags{},
 			},
+			wantDiff:                barDiffs[5],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
@@ -386,6 +423,7 @@ func Test_applier_Execute(t *testing.T) {
 
 	// Tests partition and replication factor changes (without static assignments)
 	bazDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topics/test.core.topics.applier.baz.yml")
+	bazDiffs := getDiffsFixture(t, "../../test/fixtures/topics/test.core.topics.applier.baz.json")
 	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
 		{
@@ -398,6 +436,7 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
+			wantDiff:                bazDiffs[0],
 			wantErr:                 "",
 			wantHasUnappliedChanges: true,
 		},
@@ -409,6 +448,7 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: bazDocs[0],
 				flags:   ApplierFlags{},
 			},
+			wantDiff:                bazDiffs[0],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
@@ -422,6 +462,7 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
+			wantDiff:                bazDiffs[1],
 			wantErr:                 "",
 			wantHasUnappliedChanges: true,
 		},
@@ -433,6 +474,7 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: bazDocs[1],
 				flags:   ApplierFlags{},
 			},
+			wantDiff:                bazDiffs[1],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
@@ -446,6 +488,7 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
+			wantDiff:                bazDiffs[2],
 			wantErr:                 "",
 			wantHasUnappliedChanges: true,
 		},
@@ -457,6 +500,7 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: bazDocs[2],
 				flags:   ApplierFlags{},
 			},
+			wantDiff:                bazDiffs[2],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
@@ -470,6 +514,7 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
+			wantDiff:                bazDiffs[3],
 			wantErr:                 "",
 			wantHasUnappliedChanges: true,
 		},
@@ -481,6 +526,7 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: bazDocs[3],
 				flags:   ApplierFlags{},
 			},
+			wantDiff:                bazDiffs[3],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
@@ -494,6 +540,7 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
+			wantDiff:                bazDiffs[4],
 			wantErr:                 "",
 			wantHasUnappliedChanges: true,
 		},
@@ -505,6 +552,7 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: bazDocs[4],
 				flags:   ApplierFlags{},
 			},
+			wantDiff:                bazDiffs[4],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},

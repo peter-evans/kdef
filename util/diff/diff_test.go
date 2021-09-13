@@ -1,19 +1,12 @@
 package diff
 
 import (
-	"io/ioutil"
 	"testing"
+
+	"github.com/peter-evans/kdef/test/tutil"
 )
 
 func TestLineOriented(t *testing.T) {
-	getFixture := func(filepath string) []byte {
-		fileBytes, err := ioutil.ReadFile(filepath)
-		if err != nil {
-			t.FailNow()
-		}
-		return fileBytes
-	}
-
 	type args struct {
 		src string
 		dst string
@@ -26,27 +19,27 @@ func TestLineOriented(t *testing.T) {
 		{
 			name: "1: Test diff of simple changes",
 			args: args{
-				src: string(getFixture("../../test/fixtures/diff/test1-src.json")),
-				dst: string(getFixture("../../test/fixtures/diff/test1-dst.json")),
+				src: string(tutil.Fixture(t, "../../test/fixtures/diff/test1-src.json")),
+				dst: string(tutil.Fixture(t, "../../test/fixtures/diff/test1-dst.json")),
 			},
-			want: string(getFixture("../../test/fixtures/diff/test1.diff")),
+			want: string(tutil.Fixture(t, "../../test/fixtures/diff/test1.diff")),
 		},
 		{
 			name: "2: Test diff of nested array changes",
 			args: args{
-				src: string(getFixture("../../test/fixtures/diff/test2-src.json")),
-				dst: string(getFixture("../../test/fixtures/diff/test2-dst.json")),
+				src: string(tutil.Fixture(t, "../../test/fixtures/diff/test2-src.json")),
+				dst: string(tutil.Fixture(t, "../../test/fixtures/diff/test2-dst.json")),
 			},
-			want: string(getFixture("../../test/fixtures/diff/test2.diff")),
+			want: string(tutil.Fixture(t, "../../test/fixtures/diff/test2.diff")),
 		},
 		{
 			// Fails when some DiffCleanup options are enabled
 			name: "3: Test diff of misc changes",
 			args: args{
-				src: string(getFixture("../../test/fixtures/diff/test3-src.json")),
-				dst: string(getFixture("../../test/fixtures/diff/test3-dst.json")),
+				src: string(tutil.Fixture(t, "../../test/fixtures/diff/test3-src.json")),
+				dst: string(tutil.Fixture(t, "../../test/fixtures/diff/test3-dst.json")),
 			},
-			want: string(getFixture("../../test/fixtures/diff/test3.diff")),
+			want: string(tutil.Fixture(t, "../../test/fixtures/diff/test3.diff")),
 		},
 	}
 	for _, tt := range tests {
