@@ -1,11 +1,7 @@
 package str
 
 import (
-	"encoding/json"
 	"strings"
-
-	diff "github.com/yudai/gojsondiff"
-	"github.com/yudai/gojsondiff/formatter"
 )
 
 // Dereference a string pointer handling nil
@@ -32,33 +28,4 @@ func Contains(str string, list []string) bool {
 		}
 	}
 	return false
-}
-
-// Return the diff of two JSON strings (as []byte)
-func JsonDiff(a []byte, b []byte) (string, error) {
-	differ := diff.New()
-	diff, err := differ.Compare(a, b)
-	if err != nil {
-		return "", err
-	}
-
-	if !diff.Modified() {
-		return "", nil
-	}
-
-	var aJson map[string]interface{}
-	if err := json.Unmarshal(a, &aJson); err != nil {
-		return "", err
-	}
-
-	formatter := formatter.NewAsciiFormatter(aJson, formatter.AsciiFormatterConfig{
-		ShowArrayIndex: true,
-		Coloring:       false,
-	})
-	diffStr, err := formatter.Format(diff)
-	if err != nil {
-		return "", err
-	}
-
-	return diffStr, nil
 }

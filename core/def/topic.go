@@ -6,8 +6,8 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/gotidy/copy"
+	"github.com/peter-evans/kdef/util/diff"
 	"github.com/peter-evans/kdef/util/i32"
-	"github.com/peter-evans/kdef/util/str"
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
@@ -64,7 +64,7 @@ func (t TopicDefinition) YAML() (string, error) {
 
 // Converts a topic definition to JSON
 func (t TopicDefinition) JSON() (string, error) {
-	j, err := json.Marshal(t)
+	j, err := json.MarshalIndent(t, "", "  ")
 	if err != nil {
 		return "", err
 	}
@@ -189,7 +189,7 @@ func assignmentsDefinitionFromMetadata(
 	return assignments
 }
 
-// Compute a JSON diff between two definitions
+// Compute the line-oriented diff between the JSON representation of two definitions
 func DiffTopicDefinitions(a *TopicDefinition, b *TopicDefinition) (string, error) {
 	// Convert definition to JSON handling null pointers
 	toJson := func(t *TopicDefinition) (string, error) {
@@ -214,13 +214,7 @@ func DiffTopicDefinitions(a *TopicDefinition, b *TopicDefinition) (string, error
 		return "", err
 	}
 
-	diff, err := str.JsonDiff(
-		[]byte(aJson),
-		[]byte(bJson),
-	)
-	if err != nil {
-		return "", err
-	}
+	diff := diff.LineOriented(aJson, bJson)
 
 	return diff, nil
 }
