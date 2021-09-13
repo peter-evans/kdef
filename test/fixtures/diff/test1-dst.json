@@ -1,0 +1,17 @@
+{
+  "apiVersion": "v1",
+  "kind": "topic",
+  "metadata": {
+    "name": "test.util.diff.foo"
+  },
+  "spec": {
+    "configs": {
+      "retention.ms": "172800000"
+    },
+    "partitions": 6,
+    "reassignment": {
+      "awaitTimeoutSec": 0
+    },
+    "replicationFactor": 3
+  }
+}
