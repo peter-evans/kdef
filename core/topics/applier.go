@@ -142,7 +142,7 @@ func (a *applier) apply() error {
 
 		// Check for in-progress partition reassignments as a result of operations
 		if len(a.ops.assignments) > 0 {
-			if err := a.fetchPartitionReassignments(); err != nil {
+			if err := a.fetchPartitionReassignments(false); err != nil {
 				return err
 			}
 			if len(a.reassignments) > 0 {
@@ -371,10 +371,6 @@ func (a *applier) buildConfigOps() {
 			}
 		}
 	}
-
-	// TODO: remove
-	// Sort the config operations
-	a.ops.config.Sort()
 }
 
 // Update topic configs
@@ -517,8 +513,10 @@ func (a *applier) buildAssignmentsOp() {
 }
 
 // Execute a request to list partition reassignments
-func (a *applier) fetchPartitionReassignments() error {
-	log.Debug("Fetching in-progress partition reassignments for topic %q", a.localDef.Metadata.Name)
+func (a *applier) fetchPartitionReassignments(suppressLog bool) error {
+	if !(suppressLog) {
+		log.Debug("Fetching in-progress partition reassignments for topic %q", a.localDef.Metadata.Name)
+	}
 
 	partitions := make([]int32, a.localDef.Spec.Partitions)
 	for i := range partitions {
@@ -543,6 +541,8 @@ func (a *applier) fetchPartitionReassignments() error {
 			RemovingReplicas: r.RemovingReplicas,
 		})
 	}
+
+	a.reassignments.Sort()
 
 	return nil
 }
@@ -570,7 +570,7 @@ func (a *applier) updateAssignments() error {
 	if a.flags.DryRun {
 		// AlterPartitionAssignments has no 'ValidateOnly' for dry-run mode so we check
 		// in-progress partition reassignments and error if found.
-		if err := a.fetchPartitionReassignments(); err != nil {
+		if err := a.fetchPartitionReassignments(false); err != nil {
 			return err
 		}
 		if len(a.reassignments) > 0 {
@@ -608,7 +608,7 @@ func (a *applier) awaitReassignments(timeoutSec int) error {
 			log.Info("Awaiting completion of partition reassignments timed out after %d seconds", timeoutSec)
 			return nil
 		default:
-			if err := a.fetchPartitionReassignments(); err != nil {
+			if err := a.fetchPartitionReassignments(true); err != nil {
 				return err
 			}
 			if len(a.reassignments) > 0 {
