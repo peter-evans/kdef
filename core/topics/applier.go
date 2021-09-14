@@ -371,10 +371,6 @@ func (a *applier) buildConfigOps() {
 			}
 		}
 	}
-
-	// TODO: remove
-	// Sort the config operations
-	a.ops.config.Sort()
 }
 
 // Update topic configs
