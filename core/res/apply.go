@@ -3,6 +3,8 @@ package res
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/bradfitz/slice"
 )
 
 // An apply result
@@ -74,6 +76,14 @@ type PartitionReassignment struct {
 
 // A collection of partition reassignments
 type PartitionReassignments []PartitionReassignment
+
+// Sort the collection by partition ID
+func (p PartitionReassignments) Sort() {
+	// TODO: Use sort.Slice in the standard library after upgrading to Go 1.8
+	slice.Sort(p[:], func(i, j int) bool {
+		return p[i].Partition < p[j].Partition
+	})
+}
 
 // Misc data for a topic apply result
 type TopicApplyResultData struct {
