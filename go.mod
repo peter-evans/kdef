@@ -4,7 +4,6 @@ go 1.16
 
 require (
 	github.com/aws/aws-sdk-go v1.40.21
-	github.com/bradfitz/slice v0.0.0-20180809154707-2b758aa73013
 	github.com/fatih/color v1.12.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/google/go-cmp v0.5.6
@@ -18,5 +17,4 @@ require (
 	github.com/testcontainers/testcontainers-go v0.11.1
 	github.com/twmb/franz-go v1.0.0
 	github.com/twmb/franz-go/pkg/kmsg v0.0.0-20210903224147-42dc1034abfa
-	go4.org v0.0.0-20201209231011-d4a079459e60 // indirect
 )

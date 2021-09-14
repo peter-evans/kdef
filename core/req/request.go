@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bradfitz/slice"
 	"github.com/peter-evans/kdef/client"
 	"github.com/peter-evans/kdef/core/def"
 	"github.com/twmb/franz-go/pkg/kerr"
@@ -47,14 +46,6 @@ func (c ConfigOperations) ContainsOp(operation int8) bool {
 		}
 	}
 	return false
-}
-
-// Sort the collection
-func (c ConfigOperations) Sort() {
-	// TODO: Use sort.Slice in the standard library after upgrading to Go 1.8
-	slice.Sort(c[:], func(i, j int) bool {
-		return c[i].Name < c[j].Name
-	})
 }
 
 // Execute a request for metadata (Kafka 0.8.0+)
