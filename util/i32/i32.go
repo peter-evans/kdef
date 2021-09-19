@@ -1,5 +1,15 @@
 package i32
 
+// Determine if a value is contained in a list
+func Contains(i int32, list []int32) bool {
+	for _, item := range list {
+		if item == i {
+			return true
+		}
+	}
+	return false
+}
+
 // Determine if there is a duplicate value in the slice
 func ContainsDuplicate(s []int32) bool {
 	k := make(map[int32]bool, len(s))

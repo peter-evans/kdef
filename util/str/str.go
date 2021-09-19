@@ -20,7 +20,7 @@ func Norm(s string) string {
 	return s
 }
 
-// Determine if a list contains a string
+// Determine if a value is contained in a list
 func Contains(str string, list []string) bool {
 	for _, item := range list {
 		if item == str {

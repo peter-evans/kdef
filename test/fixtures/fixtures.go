@@ -33,7 +33,7 @@ var TopicsApplierTest = ComposeTest{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/multi-broker-docker-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10000,
 	BrokerPort:       brokerPort + 10000,
-	Brokers:          3,
+	Brokers:          6,
 }
 
 var TopicsExporterTest = ComposeTest{

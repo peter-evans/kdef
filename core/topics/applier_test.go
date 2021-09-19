@@ -263,32 +263,18 @@ func Test_applier_Execute(t *testing.T) {
 				},
 			},
 			wantDiff:                barDiffs[0],
-			wantErr:                 "invalid broker id",
-			wantHasUnappliedChanges: false,
-		},
-		{
-			// Create topic
-			name: "2: Dry-run topic bar version 1",
-			fields: fields{
-				cl:      cl,
-				yamlDoc: barDocs[1],
-				flags: ApplierFlags{
-					DryRun: true,
-				},
-			},
-			wantDiff:                barDiffs[1],
 			wantErr:                 "",
 			wantHasUnappliedChanges: true,
 		},
 		{
 			// Create topic
-			name: "3: Apply topic bar version 1",
+			name: "2: Apply topic bar version 0",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: barDocs[1],
+				yamlDoc: barDocs[0],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                barDiffs[1],
+			wantDiff:                barDiffs[0],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
@@ -317,21 +303,47 @@ func Test_applier_Execute(t *testing.T) {
 		// NOTE: Execution of tests is ordered
 		{
 			// Increase replication factor
-			name: "4: Dry-run topic bar version 2",
+			name: "3: Dry-run topic bar version 1",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: barDocs[2],
+				yamlDoc: barDocs[1],
 				flags: ApplierFlags{
 					DryRun: true,
 				},
 			},
-			wantDiff:                barDiffs[2],
+			wantDiff:                barDiffs[1],
 			wantErr:                 "",
 			wantHasUnappliedChanges: true,
 		},
 		{
 			// Increase replication factor
-			name: "5: Apply topic bar version 2",
+			name: "4: Apply topic bar version 1",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[1],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:                barDiffs[1],
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
+		},
+		{
+			// Add partitions
+			name: "5: Dry-run topic bar version 2",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[2],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:                barDiffs[2],
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
+		},
+		{
+			// Add partitions
+			name: "6: Apply topic bar version 2",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[2],
@@ -342,8 +354,8 @@ func Test_applier_Execute(t *testing.T) {
 			wantHasUnappliedChanges: false,
 		},
 		{
-			// Add partitions
-			name: "6: Dry-run topic bar version 3",
+			// Add partitions and increase replication factor
+			name: "7: Dry-run topic bar version 3",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[3],
@@ -356,8 +368,8 @@ func Test_applier_Execute(t *testing.T) {
 			wantHasUnappliedChanges: true,
 		},
 		{
-			// Add partitions
-			name: "7: Apply topic bar version 3",
+			// Add partitions and increase replication factor
+			name: "8: Apply topic bar version 3",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[3],
@@ -368,8 +380,8 @@ func Test_applier_Execute(t *testing.T) {
 			wantHasUnappliedChanges: false,
 		},
 		{
-			// Add partitions and increase replication factor
-			name: "8: Dry-run topic bar version 4",
+			// Decrease replication factor
+			name: "9: Dry-run topic bar version 4",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[4],
@@ -382,40 +394,14 @@ func Test_applier_Execute(t *testing.T) {
 			wantHasUnappliedChanges: true,
 		},
 		{
-			// Add partitions and increase replication factor
-			name: "9: Apply topic bar version 4",
+			// Decrease replication factor
+			name: "10: Apply topic bar version 4",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[4],
 				flags:   ApplierFlags{},
 			},
 			wantDiff:                barDiffs[4],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
-		},
-		{
-			// Decrease replication factor
-			name: "10: Dry-run topic bar version 5",
-			fields: fields{
-				cl:      cl,
-				yamlDoc: barDocs[5],
-				flags: ApplierFlags{
-					DryRun: true,
-				},
-			},
-			wantDiff:                barDiffs[5],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
-		},
-		{
-			// Decrease replication factor
-			name: "11: Apply topic bar version 5",
-			fields: fields{
-				cl:      cl,
-				yamlDoc: barDocs[5],
-				flags:   ApplierFlags{},
-			},
-			wantDiff:                barDiffs[5],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},
@@ -553,6 +539,143 @@ func Test_applier_Execute(t *testing.T) {
 				flags:   ApplierFlags{},
 			},
 			wantDiff:                bazDiffs[4],
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
+		},
+	})
+
+	// Tests rack assignments
+	quxDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topics/test.core.topics.applier.qux.yml")
+	quxDiffs := getDiffsFixture(t, "../../test/fixtures/topics/test.core.topics.applier.qux.json")
+	runTests(t, []testCase{
+		// NOTE: Execution of tests is ordered
+		{
+			// Create topic
+			name: "1: Dry-run topic qux version 0",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[0],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:                quxDiffs[0],
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
+		},
+		{
+			// Create topic
+			name: "2: Apply topic qux version 0",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[0],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:                quxDiffs[0],
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
+		},
+		{
+			// Increase replication factor
+			name: "3: Dry-run topic qux version 1",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[1],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:                quxDiffs[1],
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
+		},
+		{
+			// Increase replication factor
+			name: "4: Apply topic qux version 1",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[1],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:                quxDiffs[1],
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
+		},
+		{
+			// Add partitions
+			name: "5: Dry-run topic qux version 2",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[2],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:                quxDiffs[2],
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
+		},
+		{
+			// Add partitions
+			name: "6: Apply topic qux version 2",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[2],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:                quxDiffs[2],
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
+		},
+		{
+			// Add partitions and increase replication factor
+			name: "7: Dry-run topic qux version 3",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[3],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:                quxDiffs[3],
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
+		},
+		{
+			// Add partitions and increase replication factor
+			name: "8: Apply topic qux version 3",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[3],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:                quxDiffs[3],
+			wantErr:                 "",
+			wantHasUnappliedChanges: false,
+		},
+		{
+			// Decrease replication factor
+			name: "9: Dry-run topic qux version 4",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[4],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:                quxDiffs[4],
+			wantErr:                 "",
+			wantHasUnappliedChanges: true,
+		},
+		{
+			// Decrease replication factor
+			name: "10: Apply topic qux version 4",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[4],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:                quxDiffs[4],
 			wantErr:                 "",
 			wantHasUnappliedChanges: false,
 		},

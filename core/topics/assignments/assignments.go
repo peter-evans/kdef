@@ -76,41 +76,6 @@ func increaseReplicationFactor(
 	replicaCounts map[int32]int,
 	brokers []int32,
 ) [][]int32 {
-	// Find the unused broker with the least replicas of any partition
-	leastPopulousBroker := func(unusedBrokers []int32, brokerCounts map[int32]int, lastUsedBroker int32) int32 {
-		sort.Slice(unusedBrokers, func(i, j int) bool {
-			// Sort priority:
-			// - The least populous broker
-			// - Round robin with increasing broker ID
-			//
-			// To demonstrate why this sort is somewhat complicated, in this example we want the next broker ID to be 2...
-			// {1, ?},
-			// {2,  },
-			// {3,  },
-			// ...but in the very next placement cycle we want the next broker ID to be 3, not 1.
-			// {1, 2},
-			// {2, ?},
-			// {3,  },
-			//
-			// Sort:
-			//   Broker i has less replicas than j
-			//   OR Broker i has the same number of replicas as j
-			//     AND broker ID i and j are both greater than the last used broker for this partition
-			//     AND broker ID i is less than j
-			//   OR Broker i has the same number of replicas as j
-			//     AND either broker ID i or j are less than the last used broker for this partition
-			//     AND the difference between broker ID i and the last used broker is greater than that of j
-			return brokerCounts[unusedBrokers[i]] < brokerCounts[unusedBrokers[j]] ||
-				(brokerCounts[unusedBrokers[i]] == brokerCounts[unusedBrokers[j]] &&
-					unusedBrokers[i] > lastUsedBroker && unusedBrokers[j] > lastUsedBroker &&
-					unusedBrokers[i] < unusedBrokers[j]) ||
-				(brokerCounts[unusedBrokers[i]] == brokerCounts[unusedBrokers[j]] &&
-					(unusedBrokers[i] < lastUsedBroker || unusedBrokers[j] < lastUsedBroker) &&
-					unusedBrokers[i]-lastUsedBroker > unusedBrokers[j]-lastUsedBroker)
-		})
-		return unusedBrokers[0]
-	}
-
 	newAssignments := Copy(assignments)
 	for len(newAssignments[0]) < int(targetReplicationFactor) {
 		for i, replicas := range newAssignments {
@@ -119,11 +84,11 @@ func increaseReplicationFactor(
 
 			// If the replicas are empty then a new partition is being populated
 			// In that case the next broker we add will be the preferred leader
-			nextIsLeader := len(replicas) == 0
+			isLeader := len(replicas) == 0
 
 			// Determine the last used broker ID for this partition
 			var lastUsedBroker int32 = 0
-			if !nextIsLeader {
+			if !isLeader {
 				lastUsedBroker = replicas[len(replicas)-1]
 			}
 			// If there are no usused brokers with an ID greater than the last used then reset to zero
@@ -132,10 +97,10 @@ func increaseReplicationFactor(
 				lastUsedBroker = 0
 			}
 
-			// If the next broker will be the preferred leader we used leader counts to make sure
+			// If the chosen broker will be the preferred leader we use leader counts to make sure
 			// leaders are balanced across partitions in the assignments
 			brokerCounts := replicaCounts
-			if nextIsLeader {
+			if isLeader {
 				brokerCounts = leaderCounts
 			}
 
@@ -149,7 +114,7 @@ func increaseReplicationFactor(
 
 			newAssignments[i] = modifiedReplicas
 			replicaCounts[brokerIdToAdd]++
-			if nextIsLeader {
+			if isLeader {
 				leaderCounts[brokerIdToAdd]++
 			}
 		}
@@ -181,6 +146,70 @@ func AddPartitions(
 	return newPartitionAssignments
 }
 
+// Check partition assignments are in sync with rack assignments, updating if necessary
+func SyncRackAssignments(
+	assignments [][]int32,
+	rackAssignments [][]string,
+	brokersByRack map[string][]int32,
+) [][]int32 {
+	// Modify assignments by the target replication factor
+	targetReplicationFactor := len(rackAssignments[0])
+	newAssignments := make([][]int32, len(assignments))
+	for i, replicas := range assignments {
+		newReplicas := make([]int32, targetReplicationFactor)
+		copy(newReplicas, replicas)
+		newAssignments[i] = newReplicas
+	}
+
+	leaderCounts := make(map[int32]int)
+	replicaCounts := make(map[int32]int)
+
+	// Loop through the assignments and update replicas that are out of sync with the assigned rack
+	for replica := 0; replica < len(newAssignments[0]); replica++ {
+		for partition, replicas := range newAssignments {
+			rack := rackAssignments[partition][replica]
+
+			// Build a list of used brokers for this rack on this partition
+			var usedRackBrokers []int32
+			for r, b := range replicas {
+				if rackAssignments[partition][r] == rack && i32.Contains(b, brokersByRack[rack]) {
+					usedRackBrokers = append(usedRackBrokers, b)
+				}
+			}
+
+			// Check if the assigned broker is out of sync with the defined rack
+			isLeader := replica == 0
+			if !i32.Contains(replicas[replica], brokersByRack[rack]) {
+				// Find unused broker IDs for this rack
+				unusedRackBrokers := i32.Diff(brokersByRack[rack], usedRackBrokers)
+
+				// Last used broker is not used for rack assignments
+				var lastUsedBroker int32 = 0
+
+				// If the chosen broker will be the preferred leader we use leader counts to make sure
+				// leaders are balanced across partitions in the assignments
+				brokerCounts := replicaCounts
+				if isLeader {
+					brokerCounts = leaderCounts
+				}
+
+				// Find the broker ID to add
+				brokerIdToAdd := leastPopulousBroker(unusedRackBrokers, brokerCounts, lastUsedBroker)
+
+				// Replace the broker
+				newAssignments[partition][replica] = brokerIdToAdd
+			}
+			// Update counts
+			replicaCounts[newAssignments[partition][replica]]++
+			if isLeader {
+				leaderCounts[newAssignments[partition][replica]]++
+			}
+		}
+	}
+
+	return newAssignments
+}
+
 // Make a copy of partition assignments
 func Copy(assignments [][]int32) [][]int32 {
 	copy := make([][]int32, len(assignments))
@@ -208,4 +237,39 @@ func leaderCounts(assignments [][]int32) map[int32]int {
 		leaderCounts[replicas[0]]++
 	}
 	return leaderCounts
+}
+
+// Find the unused broker with the least replicas of any partition
+func leastPopulousBroker(unusedBrokers []int32, brokerCounts map[int32]int, lastUsedBroker int32) int32 {
+	sort.Slice(unusedBrokers, func(i, j int) bool {
+		// Sort priority:
+		// - The least populous broker
+		// - Round robin with increasing broker ID
+		//
+		// To demonstrate why this sort is somewhat complicated, in this example we want the next broker ID to be 2...
+		// {1, ?},
+		// {2,  },
+		// {3,  },
+		// ...but in the very next placement cycle we want the next broker ID to be 3, not 1.
+		// {1, 2},
+		// {2, ?},
+		// {3,  },
+		//
+		// Sort:
+		//   Broker i has less replicas than j
+		//   OR Broker i has the same number of replicas as j
+		//     AND broker ID i and j are both greater than the last used broker for this partition
+		//     AND broker ID i is less than j
+		//   OR Broker i has the same number of replicas as j
+		//     AND either broker ID i or j are less than the last used broker for this partition
+		//     AND the difference between broker ID i and the last used broker is greater than that of j
+		return brokerCounts[unusedBrokers[i]] < brokerCounts[unusedBrokers[j]] ||
+			(brokerCounts[unusedBrokers[i]] == brokerCounts[unusedBrokers[j]] &&
+				unusedBrokers[i] > lastUsedBroker && unusedBrokers[j] > lastUsedBroker &&
+				unusedBrokers[i] < unusedBrokers[j]) ||
+			(brokerCounts[unusedBrokers[i]] == brokerCounts[unusedBrokers[j]] &&
+				(unusedBrokers[i] < lastUsedBroker || unusedBrokers[j] < lastUsedBroker) &&
+				unusedBrokers[i]-lastUsedBroker > unusedBrokers[j]-lastUsedBroker)
+	})
+	return unusedBrokers[0]
 }

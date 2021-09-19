@@ -5,6 +5,42 @@ import (
 	"testing"
 )
 
+func TestContains(t *testing.T) {
+	type args struct {
+		i    int32
+		list []int32
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "Tests a list containing a value",
+			args: args{
+				i:    4,
+				list: []int32{3, 7, 2, 4, 9, 1},
+			},
+			want: true,
+		},
+		{
+			name: "Tests a list not containing a value",
+			args: args{
+				i:    8,
+				list: []int32{3, 7, 2, 4, 9, 1},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Contains(tt.args.i, tt.args.list); got != tt.want {
+				t.Errorf("Contains() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_ContainsDuplicate(t *testing.T) {
 	type args struct {
 		s []int32

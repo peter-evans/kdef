@@ -13,6 +13,7 @@ import (
 	"github.com/peter-evans/kdef/client"
 	"github.com/peter-evans/kdef/core/def"
 	"github.com/peter-evans/kdef/core/req"
+	"github.com/peter-evans/kdef/util/str"
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
@@ -95,6 +96,15 @@ func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 		return nil, err
 	}
 
+	// Build broker/rack metadata
+	var brokers def.Brokers
+	for _, broker := range metadata.Brokers {
+		brokers = append(brokers, def.Broker{
+			Id:   broker.NodeID,
+			Rack: str.Deref(broker.Rack),
+		})
+	}
+
 	topicNames := []string{}
 	for _, t := range metadata.Topics {
 		topicNames = append(topicNames, *t.Topic)
@@ -138,6 +148,7 @@ func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 			def.NewTopicDefinition(
 				t,
 				topicConfigsMap[topic],
+				brokers,
 				true,
 			),
 		)
