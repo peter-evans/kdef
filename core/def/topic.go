@@ -6,8 +6,10 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/gotidy/copy"
+	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/util/diff"
 	"github.com/peter-evans/kdef/util/i32"
+	"github.com/peter-evans/kdef/util/str"
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
@@ -34,14 +36,18 @@ type TopicSpecDefinition struct {
 	Partitions        int                         `json:"partitions"`
 	ReplicationFactor int                         `json:"replicationFactor"`
 	Assignments       PartitionAssignments        `json:"assignments,omitempty"`
+	RackAssignments   PartitionRackAssignments    `json:"rackAssignments,omitempty"`
 	Reassignment      TopicReassignmentDefinition `json:"reassignment,omitempty"`
 }
 
-// Topic configs definition
+// Topic configs
 type TopicConfigs map[string]*string
 
-// Topic assignments definition
+// Topic assignments
 type PartitionAssignments [][]int32
+
+// Topic rack assignments
+type PartitionRackAssignments [][]string
 
 // Topic reassignment definition
 type TopicReassignmentDefinition struct {
@@ -51,6 +57,11 @@ type TopicReassignmentDefinition struct {
 // Determines if a spec has assignments
 func (s TopicSpecDefinition) HasAssignments() bool {
 	return len(s.Assignments) > 0
+}
+
+// Determines if a spec has rack assignments
+func (s TopicSpecDefinition) HasRackAssignments() bool {
+	return len(s.RackAssignments) > 0
 }
 
 // Converts a topic definition to YAML
@@ -94,6 +105,10 @@ func (t TopicDefinition) Validate() error {
 		return fmt.Errorf("replication factor must be greater than 0")
 	}
 
+	if t.Spec.HasAssignments() && t.Spec.HasRackAssignments() {
+		return fmt.Errorf("assignments and rack assignments cannot be specified together")
+	}
+
 	if t.Spec.HasAssignments() {
 		if len(t.Spec.Assignments) != t.Spec.Partitions {
 			return fmt.Errorf("number of replica assignments must match partitions")
@@ -110,6 +125,24 @@ func (t TopicDefinition) Validate() error {
 		}
 	}
 
+	if t.Spec.HasRackAssignments() {
+		if len(t.Spec.RackAssignments) != t.Spec.Partitions {
+			return fmt.Errorf("number of rack assignments must match partitions")
+		}
+
+		for _, replicas := range t.Spec.RackAssignments {
+			if len(replicas) != t.Spec.ReplicationFactor {
+				return fmt.Errorf("number of replicas in each rack assignment must match replication factor")
+			}
+
+			for _, rackId := range replicas {
+				if len(rackId) == 0 {
+					return fmt.Errorf("rack ids cannot be an empty string")
+				}
+			}
+		}
+	}
+
 	if t.Spec.Reassignment.AwaitTimeoutSec < 0 {
 		return fmt.Errorf("reassignment await timeout seconds must be greater or equal to 0")
 	}
@@ -118,7 +151,7 @@ func (t TopicDefinition) Validate() error {
 }
 
 // Further topic definition validation using metadata
-func (t TopicDefinition) ValidateWithMetadata(brokers []int32) error {
+func (t TopicDefinition) ValidateWithMetadata(brokers Brokers) error {
 	// Note:
 	// These are validations that are applicable regardless of whether it's a create or update operation
 	// Validation specific to either create or update can remain in the applier
@@ -129,15 +162,49 @@ func (t TopicDefinition) ValidateWithMetadata(brokers []int32) error {
 
 	if t.Spec.HasAssignments() {
 		// Check the broker IDs in the assignments are valid
-		brokerIds := make(map[int32]bool, len(brokers))
-		for _, broker := range brokers {
-			brokerIds[broker] = true
-		}
-
 		for _, replicas := range t.Spec.Assignments {
 			for _, id := range replicas {
-				if _, exists := brokerIds[id]; !exists {
+				if !i32.Contains(id, brokers.Ids()) {
 					return fmt.Errorf("invalid broker id %q in assignments", fmt.Sprint(id))
+				}
+			}
+		}
+	}
+
+	if t.Spec.HasRackAssignments() {
+		// Warn if the cluster has no rack ID set on brokers
+		for _, broker := range brokers {
+			if len(broker.Rack) == 0 {
+				log.Warn("unable to use broker id %q in rack assignments because it has no rack id", fmt.Sprint(broker.Id))
+			}
+		}
+
+		// Build a map of brokers by rack ID
+		brokersByRack := brokers.BrokersByRack()
+
+		// Check the rack IDs in the rack assignments are valid
+		for partition, replicas := range t.Spec.RackAssignments {
+			rackIdCounts := make(map[string]int)
+			for _, rackId := range replicas {
+				if !str.Contains(rackId, brokers.Racks()) {
+					return fmt.Errorf("invalid rack id %q in rack assignments", rackId)
+				}
+				rackIdCounts[rackId]++
+			}
+
+			// Check there are enough available brokers for the number of times a rack ID has been used in this partition
+			// e.g. if rack id "zone-a" is specified for three replicas in the same partition, but "zone-a" only contains
+			// two brokers, then the assignment is not possible.
+			for rackId, count := range rackIdCounts {
+				rackBrokerCount := len(brokersByRack[rackId])
+				if count > rackBrokerCount {
+					return fmt.Errorf(
+						"rack id %q contains %d brokers, but is specified for %d replicas in partition %d",
+						rackId,
+						rackBrokerCount,
+						count,
+						partition,
+					)
 				}
 			}
 		}
@@ -150,6 +217,7 @@ func (t TopicDefinition) ValidateWithMetadata(brokers []int32) error {
 func NewTopicDefinition(
 	metadataResp kmsg.MetadataResponseTopic,
 	topicConfigsResp kmsg.DescribeConfigsResponseResource,
+	brokers Brokers,
 	forExport bool,
 ) TopicDefinition {
 	topicConfigs := TopicConfigs{}
@@ -172,6 +240,7 @@ func NewTopicDefinition(
 
 	if !forExport {
 		topicDef.Spec.Assignments = assignmentsDefinitionFromMetadata(metadataResp.Partitions)
+		topicDef.Spec.RackAssignments = rackAssignmentsDefinitionFromMetadata(topicDef.Spec.Assignments, brokers)
 	}
 
 	return topicDef
@@ -187,6 +256,24 @@ func assignmentsDefinitionFromMetadata(
 	}
 
 	return assignments
+}
+
+// Create a rack assignments definition from assignments and broker metadata
+func rackAssignmentsDefinitionFromMetadata(
+	assignments PartitionAssignments,
+	brokers Brokers,
+) PartitionRackAssignments {
+	racksByBroker := brokers.RacksByBroker()
+	rackAssignments := make(PartitionRackAssignments, len(assignments))
+	for i, p := range assignments {
+		replicas := make([]string, len(p))
+		for j, r := range p {
+			replicas[j] = racksByBroker[r]
+		}
+		rackAssignments[i] = replicas
+	}
+
+	return rackAssignments
 }
 
 // Compute the line-oriented diff between the JSON representation of two definitions

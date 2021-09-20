@@ -15,7 +15,6 @@ import (
 	"github.com/peter-evans/kdef/core/req"
 	"github.com/peter-evans/kdef/core/res"
 	"github.com/peter-evans/kdef/core/topics/assignments"
-	"github.com/twmb/franz-go/pkg/kerr"
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
@@ -28,10 +27,11 @@ type ApplierFlags struct {
 
 // Applier operations
 type applierOps struct {
-	create      bool
-	config      req.ConfigOperations
-	partitions  def.PartitionAssignments
-	assignments def.PartitionAssignments
+	create            bool
+	createAssignments def.PartitionAssignments
+	config            req.ConfigOperations
+	partitions        def.PartitionAssignments
+	assignments       def.PartitionAssignments
 }
 
 // Determine if there are any pending operations
@@ -50,11 +50,10 @@ type applier struct {
 	flags   ApplierFlags
 
 	// internal
-	// TODO: can I refactor this out?
-	remoteTopicConfigs kmsg.DescribeConfigsResponseResource
-	brokers            []int32
 	localDef           def.TopicDefinition
-	remoteDef          def.TopicDefinition
+	remoteDef          *def.TopicDefinition
+	remoteTopicConfigs *kmsg.DescribeConfigsResponseResource
+	brokers            def.Brokers
 	ops                applierOps
 
 	// TODO: refactor this to Execute() scope only?
@@ -117,11 +116,9 @@ func (a *applier) apply() error {
 		return err
 	}
 
-	if !a.ops.create {
-		// Build topic update operations and determine if updates are required
-		if err := a.buildOps(); err != nil {
-			return err
-		}
+	// Build topic operations
+	if err := a.buildOps(); err != nil {
+		return err
 	}
 
 	// Update the apply result with the remote definition and human readable diff
@@ -166,61 +163,34 @@ func (a *applier) apply() error {
 	return nil
 }
 
-// Fetch metadata and config for a topic if it exists
+// Fetch remote topic definition if it exists, plus cluster metadata
 func (a *applier) tryFetchRemoteTopic() error {
 	log.Info("Checking if topic %q exists...", a.localDef.Metadata.Name)
-
-	// Fetch and store metadata
-	metadataResp, err := req.RequestMetadata(a.cl, []string{a.localDef.Metadata.Name}, false)
+	var err error
+	a.remoteDef, a.remoteTopicConfigs, a.brokers, err = req.TryRequestTopic(a.cl, a.localDef.Metadata.Name)
 	if err != nil {
 		return err
 	}
 
-	// Store available brokers
-	for _, broker := range metadataResp.Brokers {
-		a.brokers = append(a.brokers, broker.NodeID)
-	}
-
-	// TODO: When I need to fetch racks create a metadata section in 'a'
-	// Maybe define the struct for metadata in req
-
-	// Check if the topic exists
-	topicMetadata := metadataResp.Topics[0]
-	a.ops.create = topicMetadata.ErrorCode == kerr.UnknownTopicOrPartition.Code
+	a.ops.create = (a.remoteDef == nil)
 	if a.ops.create {
 		log.Debug("Topic %q does not exist", a.localDef.Metadata.Name)
-		return nil
 	}
-
-	// Fetch and store remote topic configs
-	log.Info("Fetching configs for remote topic %q...", a.localDef.Metadata.Name)
-	topicConfigsResp, err := req.RequestDescribeTopicConfigs(a.cl, []string{a.localDef.Metadata.Name})
-	if err != nil {
-		return err
-	}
-	a.remoteTopicConfigs = topicConfigsResp[0]
-
-	// Build remote topic definition
-	var remoteDef = def.NewTopicDefinition(
-		topicMetadata,
-		a.remoteTopicConfigs,
-		false,
-	)
-	a.remoteDef = remoteDef
 
 	return nil
 }
 
-// Build topic update operations
+// Build topic operations
 func (a *applier) buildOps() error {
-	a.buildConfigOps()
-
-	if err := a.buildPartitionsOp(); err != nil {
-		return err
+	if a.ops.create {
+		a.buildCreateOp()
+	} else {
+		a.buildConfigOps()
+		if err := a.buildPartitionsOp(); err != nil {
+			return err
+		}
+		a.buildAssignmentsOp()
 	}
-
-	a.buildAssignmentsOp()
-
 	return nil
 }
 
@@ -239,6 +209,9 @@ func (a *applier) updateApplyResult() error {
 		// Remove assignments if not specified in local
 		if !a.localDef.Spec.HasAssignments() {
 			remoteCopy.Spec.Assignments = nil
+		}
+		if !a.localDef.Spec.HasRackAssignments() {
+			remoteCopy.Spec.RackAssignments = nil
 		}
 
 		// The only configs we want to see are those specified in local and those in configOps
@@ -313,11 +286,35 @@ func (a *applier) executeOps() error {
 	return nil
 }
 
+// Build create operation
+func (a *applier) buildCreateOp() {
+	if a.localDef.Spec.HasRackAssignments() {
+		// Make an empty set of assignments
+		newAssignments := make([][]int32, len(a.localDef.Spec.RackAssignments))
+		for i := range newAssignments {
+			newAssignments[i] = make([]int32, len(a.localDef.Spec.RackAssignments[0]))
+		}
+		// Populate local assignments from defined rack assignments
+		a.ops.createAssignments = assignments.SyncRackAssignments(
+			newAssignments,
+			a.localDef.Spec.RackAssignments,
+			a.brokers.BrokersByRack(),
+		)
+	} else {
+		a.ops.createAssignments = a.localDef.Spec.Assignments
+	}
+}
+
 // Execute a request to create a topic
 func (a *applier) createTopic() error {
 	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Creating topic %q...", a.localDef.Metadata.Name)
 
-	if err := req.RequestCreateTopic(a.cl, a.localDef, a.flags.DryRun); err != nil {
+	if err := req.RequestCreateTopic(
+		a.cl,
+		a.localDef,
+		a.ops.createAssignments,
+		a.flags.DryRun,
+	); err != nil {
 		return err
 	} else {
 		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Created topic %q", a.localDef.Metadata.Name)
@@ -453,10 +450,12 @@ func (a *applier) buildPartitionsOp() error {
 			a.remoteDef.Spec.Partitions,
 			a.localDef.Spec.Partitions,
 		)
+		// Note: It's not necessary to cater specifically for rack assignments here because any miss-placements
+		// will be reassigned and migrate to the correct broker very quickly in the cluster.
 		a.ops.partitions = assignments.AddPartitions(
 			a.remoteDef.Spec.Assignments,
 			a.localDef.Spec.Partitions,
-			a.brokers,
+			a.brokers.Ids(),
 		)
 	}
 
@@ -489,25 +488,37 @@ func (a *applier) buildAssignmentsOp() {
 			log.Debug("Partition assignments have changed and will be updated")
 			a.ops.assignments = a.localDef.Spec.Assignments
 		}
+	} else if a.localDef.Spec.HasRackAssignments() {
+		var newAssignments [][]int32
+		newAssignments = assignments.Copy(a.remoteDef.Spec.Assignments)
+		if len(a.ops.partitions) > 0 {
+			// Assignments will include new partitions that will be added
+			newAssignments = append(newAssignments, a.ops.partitions...)
+		}
+		// Sync remote assignments with local rack assignments
+		newAssignments = assignments.SyncRackAssignments(
+			newAssignments,
+			a.localDef.Spec.RackAssignments,
+			a.brokers.BrokersByRack(),
+		)
+		if !cmp.Equal(a.remoteDef.Spec.Assignments, newAssignments) {
+			log.Debug("Partition assignments are out of sync with defined racks and will be updated")
+			a.ops.assignments = newAssignments
+		}
 	} else {
 		if a.localDef.Spec.ReplicationFactor != a.remoteDef.Spec.ReplicationFactor {
 			log.Debug("Replication factor has changed and will be updated")
+			var newAssignments [][]int32
+			newAssignments = assignments.Copy(a.remoteDef.Spec.Assignments)
 			if len(a.ops.partitions) > 0 {
 				// Assignments will include new partitions that will be added
-				newAssignments := assignments.Copy(a.remoteDef.Spec.Assignments)
 				newAssignments = append(newAssignments, a.ops.partitions...)
-				a.ops.assignments = assignments.AlterReplicationFactor(
-					newAssignments,
-					a.localDef.Spec.ReplicationFactor,
-					a.brokers,
-				)
-			} else {
-				a.ops.assignments = assignments.AlterReplicationFactor(
-					a.remoteDef.Spec.Assignments,
-					a.localDef.Spec.ReplicationFactor,
-					a.brokers,
-				)
 			}
+			a.ops.assignments = assignments.AlterReplicationFactor(
+				newAssignments,
+				a.localDef.Spec.ReplicationFactor,
+				a.brokers.Ids(),
+			)
 		}
 	}
 }
