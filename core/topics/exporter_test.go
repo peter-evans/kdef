@@ -2,9 +2,11 @@ package topics
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
+	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
 	"github.com/peter-evans/kdef/core/req"
 	"github.com/peter-evans/kdef/test/compose"
@@ -61,7 +63,7 @@ func Test_exporter_Execute(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		want    int
+		wantIds []string
 		wantErr bool
 	}{
 		{
@@ -73,7 +75,12 @@ func Test_exporter_Execute(t *testing.T) {
 					Exclude: ".^",
 				},
 			},
-			want:    4,
+			wantIds: []string{
+				"test.core.topics.exporter.bar1",
+				"test.core.topics.exporter.bar2",
+				"test.core.topics.exporter.foo1",
+				"test.core.topics.exporter.foo2",
+			},
 			wantErr: false,
 		},
 		{
@@ -86,7 +93,13 @@ func Test_exporter_Execute(t *testing.T) {
 					IncludeInternal: true,
 				},
 			},
-			want:    5,
+			wantIds: []string{
+				"__test.core.topics.exporter.baz1",
+				"test.core.topics.exporter.bar1",
+				"test.core.topics.exporter.bar2",
+				"test.core.topics.exporter.foo1",
+				"test.core.topics.exporter.foo2",
+			},
 			wantErr: false,
 		},
 		{
@@ -98,7 +111,10 @@ func Test_exporter_Execute(t *testing.T) {
 					Exclude: ".^",
 				},
 			},
-			want:    2,
+			wantIds: []string{
+				"test.core.topics.exporter.foo1",
+				"test.core.topics.exporter.foo2",
+			},
 			wantErr: false,
 		},
 		{
@@ -110,7 +126,40 @@ func Test_exporter_Execute(t *testing.T) {
 					Exclude: "test.core.topics.exporter.bar.*",
 				},
 			},
-			want:    2,
+			wantIds: []string{
+				"test.core.topics.exporter.foo1",
+				"test.core.topics.exporter.foo2",
+			},
+			wantErr: false,
+		},
+		{
+			name: "Test export of topics including broker assignments",
+			fields: fields{
+				cl: cl,
+				flags: ExporterFlags{
+					Match:       "test.core.topics.exporter.foo1",
+					Exclude:     ".^",
+					Assignments: "broker",
+				},
+			},
+			wantIds: []string{
+				"test.core.topics.exporter.foo1",
+			},
+			wantErr: false,
+		},
+		{
+			name: "Test export of topics including rack assignments",
+			fields: fields{
+				cl: cl,
+				flags: ExporterFlags{
+					Match:       "test.core.topics.exporter.foo1",
+					Exclude:     ".^",
+					Assignments: "rack",
+				},
+			},
+			wantIds: []string{
+				"test.core.topics.exporter.foo1",
+			},
 			wantErr: false,
 		},
 	}
@@ -122,8 +171,18 @@ func Test_exporter_Execute(t *testing.T) {
 				t.Errorf("exporter.Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("exporter.Execute() = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(got.Ids(), tt.wantIds) {
+				t.Errorf("exporter.Execute().Ids() = %v, want %v", got.Ids(), tt.wantIds)
+			}
+
+			if log.Verbose {
+				j, err := got.JSON()
+				if err != nil {
+					t.Errorf("failed to convert export result to json: %v", err)
+					t.FailNow()
+				}
+				fmt.Println("[test] ExportResults JSON:")
+				fmt.Println(j)
 			}
 		})
 	}

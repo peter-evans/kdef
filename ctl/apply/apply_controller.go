@@ -34,7 +34,7 @@ type applyController struct {
 	flags ApplyControllerFlags
 }
 
-// Creates a new apply controller
+// Create a new apply controller
 func NewApplyController(
 	cl *client.Client,
 	args []string,
@@ -47,7 +47,7 @@ func NewApplyController(
 	}
 }
 
-// Executes the apply controller
+// Execute the apply controller
 func (a *applyController) Execute() error {
 	var results res.ApplyResults
 

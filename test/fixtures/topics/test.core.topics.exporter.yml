@@ -4,7 +4,7 @@ kind: topic
 metadata:
   name: test.core.topics.exporter.foo1
 spec:
-  partitions: 1
+  partitions: 3
   replicationFactor: 1
 ---
 apiVersion: v1

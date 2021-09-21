@@ -1,11 +1,6 @@
 package topics
 
 import (
-	"errors"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -13,17 +8,20 @@ import (
 	"github.com/peter-evans/kdef/client"
 	"github.com/peter-evans/kdef/core/def"
 	"github.com/peter-evans/kdef/core/req"
+	"github.com/peter-evans/kdef/core/res"
 	"github.com/peter-evans/kdef/util/str"
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
+// Valid values for the assignments flag
+var AssignmentsValidValues = []string{"none", "broker", "rack"}
+
 // Flags to configure an exporter
 type ExporterFlags struct {
-	OutputDir       string
-	Overwrite       bool
 	Match           string
 	Exclude         string
 	IncludeInternal bool
+	Assignments     string
 }
 
 // An exporter handling the export operation
@@ -33,7 +31,7 @@ type exporter struct {
 	flags ExporterFlags
 }
 
-// Creates a new exporter
+// Create a new exporter
 func NewExporter(
 	cl *client.Client,
 	flags ExporterFlags,
@@ -44,52 +42,32 @@ func NewExporter(
 	}
 }
 
-// Executes the export operation
-func (e *exporter) Execute() (int, error) {
+// Execute the export operation
+func (e *exporter) Execute() (res.ExportResults, error) {
 	log.Info("Fetching topics...")
 	topicDefs, err := e.getTopicDefinitions()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	topicCount := len(topicDefs)
-	if topicCount == 0 {
-		log.Info("No topics found")
-		return 0, nil
+	if len(topicDefs) == 0 {
+		return nil, nil
 	}
 
-	log.Info("Exporting %d topic definitions...", topicCount)
-
-	for _, topicDef := range topicDefs {
-		yaml, err := topicDef.YAML()
-		if err != nil {
-			return 0, err
-		}
-
-		if len(e.flags.OutputDir) > 0 {
-			outputPath := filepath.Join(e.flags.OutputDir, fmt.Sprintf("%s.yml", topicDef.Metadata.Name))
-
-			if !e.flags.Overwrite {
-				if _, err := os.Stat(outputPath); !errors.Is(err, os.ErrNotExist) {
-					log.Info("Skipping overwrite of existing file %q", outputPath)
-					continue
-				}
-			}
-
-			log.Info("Writing topic definition file %q", outputPath)
-			if err = ioutil.WriteFile(outputPath, []byte(yaml), 0644); err != nil {
-				return 0, err
-			}
-		} else {
-			// Ignores --quiet
-			fmt.Printf("---\n%s", yaml)
+	results := make(res.ExportResults, len(topicDefs))
+	for i, topicDef := range topicDefs {
+		results[i] = res.ExportResult{
+			Id:  topicDef.Metadata.Name,
+			Def: topicDef,
 		}
 	}
 
-	return topicCount, nil
+	results.Sort()
+
+	return results, nil
 }
 
-// Returns topic definitions for existing topics in a cluster
+// Return topic definitions for existing topics in a cluster
 func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 	metadata, err := req.RequestMetadata(e.cl, []string{}, true)
 	if err != nil {
@@ -149,7 +127,8 @@ func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 				t,
 				topicConfigsMap[topic],
 				brokers,
-				true,
+				e.flags.Assignments == "broker",
+				e.flags.Assignments == "rack",
 			),
 		)
 	}

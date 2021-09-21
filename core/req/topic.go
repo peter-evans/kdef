@@ -54,7 +54,8 @@ func TryRequestTopic(cl *client.Client, topic string) (
 		topicMetadata,
 		topicConfigs,
 		brokers,
-		false,
+		true,
+		true,
 	)
 
 	return &topicDef, &topicConfigs, brokers, nil

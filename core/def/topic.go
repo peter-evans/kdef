@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ghodss/yaml"
 	"github.com/gotidy/copy"
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/util/diff"
@@ -54,26 +53,17 @@ type TopicReassignmentDefinition struct {
 	AwaitTimeoutSec int `json:"awaitTimeoutSec"`
 }
 
-// Determines if a spec has assignments
+// Determine if a spec has assignments
 func (s TopicSpecDefinition) HasAssignments() bool {
 	return len(s.Assignments) > 0
 }
 
-// Determines if a spec has rack assignments
+// Determine if a spec has rack assignments
 func (s TopicSpecDefinition) HasRackAssignments() bool {
 	return len(s.RackAssignments) > 0
 }
 
-// Converts a topic definition to YAML
-func (t TopicDefinition) YAML() (string, error) {
-	y, err := yaml.Marshal(t)
-	if err != nil {
-		return "", err
-	}
-	return string(y), nil
-}
-
-// Converts a topic definition to JSON
+// Convert a topic definition to JSON
 func (t TopicDefinition) JSON() (string, error) {
 	j, err := json.MarshalIndent(t, "", "  ")
 	if err != nil {
@@ -82,7 +72,7 @@ func (t TopicDefinition) JSON() (string, error) {
 	return string(j), nil
 }
 
-// Creates a copy of this TopicDefinition
+// Create a copy of this TopicDefinition
 func (t TopicDefinition) Copy() TopicDefinition {
 	copiers := copy.New()
 	copier := copiers.Get(&TopicDefinition{}, &TopicDefinition{})
@@ -150,7 +140,7 @@ func (t TopicDefinition) Validate() error {
 	return nil
 }
 
-// Further topic definition validation using metadata
+// Further validate a topic definition using metadata
 func (t TopicDefinition) ValidateWithMetadata(brokers Brokers) error {
 	// Note:
 	// These are validations that are applicable regardless of whether it's a create or update operation
@@ -218,7 +208,8 @@ func NewTopicDefinition(
 	metadataResp kmsg.MetadataResponseTopic,
 	topicConfigsResp kmsg.DescribeConfigsResponseResource,
 	brokers Brokers,
-	forExport bool,
+	includeAssignments bool,
+	includeRackAssignments bool,
 ) TopicDefinition {
 	topicConfigs := TopicConfigs{}
 	for _, config := range topicConfigsResp.Configs {
@@ -238,9 +229,14 @@ func NewTopicDefinition(
 		},
 	}
 
-	if !forExport {
+	if includeAssignments {
 		topicDef.Spec.Assignments = assignmentsDefinitionFromMetadata(metadataResp.Partitions)
-		topicDef.Spec.RackAssignments = rackAssignmentsDefinitionFromMetadata(topicDef.Spec.Assignments, brokers)
+	}
+	if includeRackAssignments {
+		topicDef.Spec.RackAssignments = rackAssignmentsDefinitionFromMetadata(
+			assignmentsDefinitionFromMetadata(metadataResp.Partitions),
+			brokers,
+		)
 	}
 
 	return topicDef
