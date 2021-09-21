@@ -61,7 +61,7 @@ type applier struct {
 	reassignments res.PartitionReassignments
 }
 
-// Creates a new applier
+// Create a new applier
 func NewApplier(
 	cl *client.Client,
 	yamlDoc string,
@@ -74,7 +74,7 @@ func NewApplier(
 	}
 }
 
-// Executes the applier
+// Execute the applier
 func (a *applier) Execute() *res.ApplyResult {
 	if err := a.apply(); err != nil {
 		a.res.Err = err.Error()
@@ -92,7 +92,7 @@ func (a *applier) Execute() *res.ApplyResult {
 	return &a.res
 }
 
-// Performs the apply operation sequence
+// Perform the apply operation sequence
 func (a *applier) apply() error {
 	log.Debug("Validating topic definition")
 	if err := yaml.Unmarshal([]byte(a.yamlDoc), &a.localDef); err != nil {
