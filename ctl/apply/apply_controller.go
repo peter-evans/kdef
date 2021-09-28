@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/ghodss/yaml"
 	"github.com/peter-evans/kdef/cli/in"
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
-	"github.com/peter-evans/kdef/core/def"
-	"github.com/peter-evans/kdef/core/res"
-	"github.com/peter-evans/kdef/core/topics"
+	"github.com/peter-evans/kdef/core/model/def"
+	"github.com/peter-evans/kdef/core/model/res"
+	"github.com/peter-evans/kdef/core/operators/brokers"
+	"github.com/peter-evans/kdef/core/operators/topic"
 )
 
 // Flags to configure an apply controller
@@ -58,7 +60,7 @@ func (a *applyController) Execute() error {
 			return err
 		}
 
-		resourceDefs, err := def.GetResourceDefinitions(yamlDocs)
+		resourceDefs, err := getResourceDefinitions(yamlDocs)
 		if err != nil {
 			return err
 		}
@@ -83,7 +85,7 @@ func (a *applyController) Execute() error {
 					return err
 				}
 
-				resourceDefs, err := def.GetResourceDefinitions(yamlDocs)
+				resourceDefs, err := getResourceDefinitions(yamlDocs)
 				if err != nil {
 					return err
 				}
@@ -123,6 +125,26 @@ func (a *applyController) Execute() error {
 	return nil
 }
 
+// Get resource definitions contained in yaml documents
+func getResourceDefinitions(yamlDocs []string) ([]def.ResourceDefinition, error) {
+	kinds := make([]def.ResourceDefinition, len(yamlDocs))
+
+	for i, yamlDoc := range yamlDocs {
+		var resourceDef def.ResourceDefinition
+		if err := yaml.Unmarshal([]byte(yamlDoc), &resourceDef); err != nil {
+			return nil, err
+		}
+
+		if err := resourceDef.ValidateResource(); err != nil {
+			return nil, err
+		}
+
+		kinds[i] = resourceDef
+	}
+
+	return kinds, nil
+}
+
 // Apply YAML resource documents using an applier
 func applyYamlDocs(
 	cl *client.Client,
@@ -134,8 +156,19 @@ func applyYamlDocs(
 
 	for i, resourceDef := range resourceDefs {
 		switch resourceDef.Kind {
+		case "brokers":
+			applier := brokers.NewApplier(cl, yamlDocs[i], brokers.ApplierFlags{
+				DeleteMissingConfigs: flags.DeleteMissingConfigs,
+				DryRun:               flags.DryRun,
+				NonIncremental:       flags.NonIncremental,
+			})
+			res := applier.Execute()
+			results = append(results, res)
+			if err := res.GetErr(); err != nil && !flags.ContinueOnError {
+				return results
+			}
 		case "topic":
-			applier := topics.NewApplier(cl, yamlDocs[i], topics.ApplierFlags{
+			applier := topic.NewApplier(cl, yamlDocs[i], topic.ApplierFlags{
 				DeleteMissingConfigs: flags.DeleteMissingConfigs,
 				DryRun:               flags.DryRun,
 				NonIncremental:       flags.NonIncremental,

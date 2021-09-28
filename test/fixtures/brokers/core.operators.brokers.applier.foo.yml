@@ -1,0 +1,55 @@
+---
+# Version 0
+# Add configs
+apiVersion: v1
+kind: brokers
+metadata:
+  name: core.operators.brokers.applier.foo
+spec:
+  configs:
+    leader.replication.throttled.rate: "700000000"
+    follower.replication.throttled.rate: "700000000"
+---
+# Version 1
+# Update configs
+apiVersion: v1
+kind: brokers
+metadata:
+  name: core.operators.brokers.applier.foo
+spec:
+  configs:
+    leader.replication.throttled.rate: "700000000"
+    follower.replication.throttled.rate: "600000000"
+---
+# Version 2
+# Delete configs
+apiVersion: v1
+kind: brokers
+metadata:
+  name: core.operators.brokers.applier.foo
+spec:
+  configs:
+    leader.replication.throttled.rate: "700000000"
+    # follower.replication.throttled.rate: "600000000" # deleted
+---
+# Version 3
+# Update configs using non-incremental method
+apiVersion: v1
+kind: brokers
+metadata:
+  name: core.operators.brokers.applier.foo
+spec:
+  configs:
+    leader.replication.throttled.rate: "700000000"
+    follower.replication.throttled.rate: "700000000"
+---
+# Version 4
+# Delete configs using non-incremental method
+apiVersion: v1
+kind: brokers
+metadata:
+  name: core.operators.brokers.applier.foo
+spec:
+  configs:
+    # leader.replication.throttled.rate: "700000000" # deleted
+    # follower.replication.throttled.rate: "700000000" # deleted

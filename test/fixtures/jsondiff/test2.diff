@@ -1,0 +1,11 @@
+-null
++{
++  "foo": "def",
++  "bar": "xyz",
++  "baz": 8,
++  "qux": [
++    "foo",
++    "bar",
++    "baz"
++  ]
++}

@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/cmd/export/brokers"
 	"github.com/peter-evans/kdef/cmd/export/topics"
 )
 
@@ -17,6 +18,7 @@ func Command(cl *client.Client) *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		brokers.Command(cl),
 		topics.Command(cl),
 	)
 

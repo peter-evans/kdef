@@ -10,8 +10,9 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
-	"github.com/peter-evans/kdef/core/res"
-	"github.com/peter-evans/kdef/core/topics"
+	"github.com/peter-evans/kdef/core/model/res"
+	"github.com/peter-evans/kdef/core/operators/brokers"
+	"github.com/peter-evans/kdef/core/operators/topic"
 )
 
 // Flags to configure an export controller
@@ -58,11 +59,11 @@ func (e *exportController) Execute() error {
 		return err
 	}
 	if results == nil {
-		log.Info("No %ss found", e.kind)
+		log.Info("No %s(s) found", e.kind)
 		return nil
 	}
 
-	log.Info("Exporting %d %s definitions...", len(results), e.kind)
+	log.Info("Exporting %d %s definition(s)...", len(results), e.kind)
 	for _, result := range results {
 		// Marshal to yaml
 		defDocBytes, err := yaml.Marshal(result.Def)
@@ -99,8 +100,11 @@ func (e *exportController) exportResources() (res.ExportResults, error) {
 	var err error
 
 	switch e.kind {
+	case "brokers":
+		exporter := brokers.NewExporter(e.cl)
+		results, err = exporter.Execute()
 	case "topic":
-		exporter := topics.NewExporter(e.cl, topics.ExporterFlags{
+		exporter := topic.NewExporter(e.cl, topic.ExporterFlags{
 			Match:           e.flags.Match,
 			Exclude:         e.flags.Exclude,
 			IncludeInternal: e.flags.IncludeInternal,

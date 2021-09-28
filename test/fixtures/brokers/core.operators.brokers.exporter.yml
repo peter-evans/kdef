@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: brokers
+metadata:
+  name: core.operators.brokers.exporter.foo
+spec:
+  configs:
+    leader.replication.throttled.rate: "700000000"
+    follower.replication.throttled.rate: "700000000"

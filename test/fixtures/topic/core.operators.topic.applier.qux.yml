@@ -1,0 +1,98 @@
+---
+# Version 0
+# Create topic
+apiVersion: v1
+kind: topic
+metadata:
+  name: core.operators.topic.applier.qux
+spec:
+  configs:
+    retention.ms: "172800000"
+  partitions: 3
+  replicationFactor: 1
+  rackAssignments:
+    - ["zone-a"]
+    - ["zone-b"]
+    - ["zone-c"]
+  reassignment:
+    awaitTimeoutSec: 30
+---
+# Version 1
+# Increase replication factor
+apiVersion: v1
+kind: topic
+metadata:
+  name: core.operators.topic.applier.qux
+spec:
+  configs:
+    retention.ms: "172800000"
+  partitions: 3
+  replicationFactor: 2
+  rackAssignments:
+    - ["zone-a", "zone-b"]
+    - ["zone-b", "zone-c"]
+    - ["zone-c", "zone-a"]
+  reassignment:
+    awaitTimeoutSec: 30
+---
+# Version 2
+# Add partitions
+apiVersion: v1
+kind: topic
+metadata:
+  name: core.operators.topic.applier.qux
+spec:
+  configs:
+    retention.ms: "172800000"
+  partitions: 5
+  replicationFactor: 2
+  rackAssignments:
+    - ["zone-a", "zone-b"]
+    - ["zone-b", "zone-c"]
+    - ["zone-c", "zone-a"]
+    - ["zone-a", "zone-b"]
+    - ["zone-b", "zone-c"]
+  reassignment:
+    awaitTimeoutSec: 30
+---
+# Version 3
+# Add partitions and increase replication factor
+apiVersion: v1
+kind: topic
+metadata:
+  name: core.operators.topic.applier.qux
+spec:
+  configs:
+    retention.ms: "172800000"
+  partitions: 6
+  replicationFactor: 3
+  rackAssignments:
+    - ["zone-a", "zone-b", "zone-c"]
+    - ["zone-b", "zone-c", "zone-a"]
+    - ["zone-c", "zone-a", "zone-b"]
+    - ["zone-a", "zone-b", "zone-c"]
+    - ["zone-b", "zone-c", "zone-a"]
+    - ["zone-c", "zone-a", "zone-b"]
+  reassignment:
+    awaitTimeoutSec: 30
+---
+# Version 4
+# Decrease replication factor
+apiVersion: v1
+kind: topic
+metadata:
+  name: core.operators.topic.applier.qux
+spec:
+  configs:
+    retention.ms: "172800000"
+  partitions: 6
+  replicationFactor: 2
+  rackAssignments:
+    - ["zone-a", "zone-b"]
+    - ["zone-b", "zone-c"]
+    - ["zone-c", "zone-a"]
+    - ["zone-a", "zone-b"]
+    - ["zone-b", "zone-c"]
+    - ["zone-c", "zone-a"]
+  reassignment:
+    awaitTimeoutSec: 30

@@ -27,18 +27,32 @@ func (t ComposeTest) Env() map[string]string {
 	return env
 }
 
-// Offset ports in use by tests to allow parallel execution
+// *** Offset ports in use by tests to allow parallel execution ***
 
-var TopicsApplierTest = ComposeTest{
-	ComposeFilePaths: []string{"../../test/fixtures/compose/multi-broker-docker-compose.yml"},
+var BrokersApplierTest = ComposeTest{
+	ComposeFilePaths: []string{"../../../test/fixtures/compose/single-broker-docker-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10000,
 	BrokerPort:       brokerPort + 10000,
+	Brokers:          1,
+}
+
+var BrokersExporterTest = ComposeTest{
+	ComposeFilePaths: []string{"../../../test/fixtures/compose/single-broker-docker-compose.yml"},
+	ZookeeperPort:    zookeeperPort + 10100,
+	BrokerPort:       brokerPort + 10100,
+	Brokers:          1,
+}
+
+var TopicsApplierTest = ComposeTest{
+	ComposeFilePaths: []string{"../../../test/fixtures/compose/multi-broker-docker-compose.yml"},
+	ZookeeperPort:    zookeeperPort + 10200,
+	BrokerPort:       brokerPort + 10200,
 	Brokers:          6,
 }
 
 var TopicsExporterTest = ComposeTest{
-	ComposeFilePaths: []string{"../../test/fixtures/compose/single-broker-docker-compose.yml"},
-	ZookeeperPort:    zookeeperPort + 10100,
-	BrokerPort:       brokerPort + 10100,
+	ComposeFilePaths: []string{"../../../test/fixtures/compose/single-broker-docker-compose.yml"},
+	ZookeeperPort:    zookeeperPort + 10300,
+	BrokerPort:       brokerPort + 10300,
 	Brokers:          1,
 }
