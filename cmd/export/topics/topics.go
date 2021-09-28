@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/peter-evans/kdef/client"
-	"github.com/peter-evans/kdef/core/topics"
+	"github.com/peter-evans/kdef/core/operators/topic"
 	"github.com/peter-evans/kdef/ctl/export"
 	"github.com/peter-evans/kdef/util/str"
 )
@@ -32,8 +32,8 @@ kdef export topics --match "myapp.*"`,
 		SilenceErrors:         true,
 		DisableFlagsInUseLine: true,
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			if !str.Contains(flags.Assignments, topics.AssignmentsValidValues) {
-				return fmt.Errorf("flag \"assignments\" must be one of %q", strings.Join(topics.AssignmentsValidValues, "|"))
+			if !str.Contains(flags.Assignments, topic.AssignmentsValidValues) {
+				return fmt.Errorf("flag \"assignments\" must be one of %q", strings.Join(topic.AssignmentsValidValues, "|"))
 			}
 			return nil
 		},
@@ -55,7 +55,7 @@ kdef export topics --match "myapp.*"`,
 		&flags.Assignments,
 		"assignments",
 		"none",
-		fmt.Sprintf("partition assignments to include in topic definitions [%s]", strings.Join(topics.AssignmentsValidValues, "|")),
+		fmt.Sprintf("partition assignments to include in topic definitions [%s]", strings.Join(topic.AssignmentsValidValues, "|")),
 	)
 
 	return cmd

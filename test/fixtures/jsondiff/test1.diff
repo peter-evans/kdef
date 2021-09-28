@@ -1,0 +1,12 @@
+ {
+-  "foo": "abc",
++  "foo": "def",
+   "bar": "xyz",
+   "baz": 8,
+   "qux": [
+     "foo",
+-    "bar"
++    "bar",
++    "baz"
+   ]
+ }
