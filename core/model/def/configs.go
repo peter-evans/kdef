@@ -3,7 +3,7 @@ package def
 // Map of resource configs
 type ConfigsMap map[string]*string
 
-// The source of a config item
+// The source of a config key
 type ConfigSource int8
 
 // Config sources
@@ -17,8 +17,8 @@ const (
 	ConfigSourceDynamicBrokerLoggerConfig  ConfigSource = 6
 )
 
-// A config item
-type ConfigItem struct {
+// A config key
+type ConfigKey struct {
 	Name        string
 	Value       *string
 	IsSensitive bool
@@ -26,14 +26,33 @@ type ConfigItem struct {
 	Source      ConfigSource
 }
 
-// An array of ConfigItem
-type Configs []ConfigItem
+// Determines if the config key is dynamic
+func (c ConfigKey) IsDynamic() bool {
+	return c.Source == ConfigSourceDynamicTopicConfig ||
+		c.Source == ConfigSourceDynamicBrokerConfig ||
+		c.Source == ConfigSourceDynamicDefaultBrokerConfig ||
+		c.Source == ConfigSourceDynamicBrokerLoggerConfig
+}
+
+// An array of ConfigKey
+type Configs []ConfigKey
 
 // A map of the configs
 func (c Configs) ToMap() ConfigsMap {
 	configsMap := ConfigsMap{}
 	for _, config := range c {
 		configsMap[config.Name] = config.Value
+	}
+	return configsMap
+}
+
+// An exportable map of the configs (sensitive keys filtered out)
+func (c Configs) ToExportableMap() ConfigsMap {
+	configsMap := ConfigsMap{}
+	for _, config := range c {
+		if !config.IsSensitive {
+			configsMap[config.Name] = config.Value
+		}
 	}
 	return configsMap
 }

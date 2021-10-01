@@ -11,6 +11,7 @@ import (
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
 	"github.com/peter-evans/kdef/core/model/res"
+	"github.com/peter-evans/kdef/core/operators/broker"
 	"github.com/peter-evans/kdef/core/operators/brokers"
 	"github.com/peter-evans/kdef/core/operators/topic"
 )
@@ -100,6 +101,9 @@ func (e *exportController) exportResources() (res.ExportResults, error) {
 	var err error
 
 	switch e.kind {
+	case "broker":
+		exporter := broker.NewExporter(e.cl)
+		results, err = exporter.Execute()
 	case "brokers":
 		exporter := brokers.NewExporter(e.cl)
 		results, err = exporter.Execute()

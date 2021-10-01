@@ -1,7 +1,6 @@
 package def
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/gotidy/copy"
@@ -48,15 +47,6 @@ func (s TopicSpecDefinition) HasRackAssignments() bool {
 	return len(s.RackAssignments) > 0
 }
 
-// Convert a topic definition to JSON
-func (t TopicDefinition) JSON() (string, error) {
-	j, err := json.MarshalIndent(t, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(j), nil
-}
-
 // Create a copy of this TopicDefinition
 func (t TopicDefinition) Copy() TopicDefinition {
 	copiers := copy.New()
@@ -66,7 +56,7 @@ func (t TopicDefinition) Copy() TopicDefinition {
 	return topicDefCopy
 }
 
-// Validate a topic definition
+// Validate definition
 func (t TopicDefinition) Validate() error {
 	if err := t.ValidateResource(); err != nil {
 		return err
@@ -125,7 +115,7 @@ func (t TopicDefinition) Validate() error {
 	return nil
 }
 
-// Further validate a topic definition using metadata
+// Further validate definition using metadata
 func (t TopicDefinition) ValidateWithMetadata(brokers meta.Brokers) error {
 	// Note:
 	// These are validations that are applicable regardless of whether it's a create or update operation

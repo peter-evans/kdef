@@ -135,3 +135,44 @@ func TestMax(t *testing.T) {
 		})
 	}
 }
+
+func TestParseStr(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    int32
+		wantErr bool
+	}{
+		{
+			name: "Tests successfully parsing a string to int32",
+			args: args{
+				s: "1",
+			},
+			want:    1,
+			wantErr: false,
+		},
+		{
+			name: "Tests failing to parse a string to int32",
+			args: args{
+				s: "a",
+			},
+			want:    -1,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ParseStr(tt.args.s)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ParseStr() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("ParseStr() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

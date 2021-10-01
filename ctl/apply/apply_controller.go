@@ -11,9 +11,14 @@ import (
 	"github.com/peter-evans/kdef/client"
 	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/res"
+	"github.com/peter-evans/kdef/core/operators/broker"
 	"github.com/peter-evans/kdef/core/operators/brokers"
 	"github.com/peter-evans/kdef/core/operators/topic"
 )
+
+type applier interface {
+	Execute() *res.ApplyResult
+}
 
 // Flags to configure an apply controller
 type ApplyControllerFlags struct {
@@ -155,29 +160,33 @@ func applyYamlDocs(
 	var results res.ApplyResults
 
 	for i, resourceDef := range resourceDefs {
+		var applier applier
+
 		switch resourceDef.Kind {
+		case "broker":
+			applier = broker.NewApplier(cl, yamlDocs[i], broker.ApplierFlags{
+				DeleteMissingConfigs: flags.DeleteMissingConfigs,
+				DryRun:               flags.DryRun,
+				NonIncremental:       flags.NonIncremental,
+			})
 		case "brokers":
-			applier := brokers.NewApplier(cl, yamlDocs[i], brokers.ApplierFlags{
+			applier = brokers.NewApplier(cl, yamlDocs[i], brokers.ApplierFlags{
 				DeleteMissingConfigs: flags.DeleteMissingConfigs,
 				DryRun:               flags.DryRun,
 				NonIncremental:       flags.NonIncremental,
 			})
-			res := applier.Execute()
-			results = append(results, res)
-			if err := res.GetErr(); err != nil && !flags.ContinueOnError {
-				return results
-			}
 		case "topic":
-			applier := topic.NewApplier(cl, yamlDocs[i], topic.ApplierFlags{
+			applier = topic.NewApplier(cl, yamlDocs[i], topic.ApplierFlags{
 				DeleteMissingConfigs: flags.DeleteMissingConfigs,
 				DryRun:               flags.DryRun,
 				NonIncremental:       flags.NonIncremental,
 			})
-			res := applier.Execute()
-			results = append(results, res)
-			if err := res.GetErr(); err != nil && !flags.ContinueOnError {
-				return results
-			}
+		}
+
+		res := applier.Execute()
+		results = append(results, res)
+		if err := res.GetErr(); err != nil && !flags.ContinueOnError {
+			return results
 		}
 	}
 

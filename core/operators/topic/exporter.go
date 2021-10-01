@@ -86,7 +86,7 @@ func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 
 	topicConfigsMapMap := map[string]def.ConfigsMap{}
 	for _, resource := range resourceConfigs {
-		topicConfigsMapMap[resource.ResourceName] = resource.Configs.ToMap()
+		topicConfigsMapMap[resource.ResourceName] = resource.Configs.ToExportableMap()
 	}
 
 	matchRegExp, err := regexp.Compile(e.flags.Match)

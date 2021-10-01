@@ -24,11 +24,12 @@ type ResourceMetadataLabels map[string]string
 
 // Definition kinds and associated versions
 var definitionKindVersions = map[string][]string{
+	"broker":  {"v1"},
 	"brokers": {"v1"},
 	"topic":   {"v1"},
 }
 
-// Validate a resource definition
+// Validate resource definition
 func (r ResourceDefinition) ValidateResource() error {
 	if versions, ok := definitionKindVersions[r.Kind]; ok {
 		if !str.Contains(r.ApiVersion, versions) {

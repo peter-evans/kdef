@@ -29,30 +29,44 @@ func (t ComposeTest) Env() map[string]string {
 
 // *** Offset ports in use by tests to allow parallel execution ***
 
-var BrokersApplierTest = ComposeTest{
-	ComposeFilePaths: []string{"../../../test/fixtures/compose/single-broker-docker-compose.yml"},
+var BrokerApplierTest = ComposeTest{
+	ComposeFilePaths: []string{"../../../test/fixtures/compose/1-broker-docker-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10000,
 	BrokerPort:       brokerPort + 10000,
 	Brokers:          1,
 }
 
-var BrokersExporterTest = ComposeTest{
-	ComposeFilePaths: []string{"../../../test/fixtures/compose/single-broker-docker-compose.yml"},
+var BrokerExporterTest = ComposeTest{
+	ComposeFilePaths: []string{"../../../test/fixtures/compose/2-broker-docker-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10100,
 	BrokerPort:       brokerPort + 10100,
+	Brokers:          2,
+}
+
+var BrokersApplierTest = ComposeTest{
+	ComposeFilePaths: []string{"../../../test/fixtures/compose/1-broker-docker-compose.yml"},
+	ZookeeperPort:    zookeeperPort + 10200,
+	BrokerPort:       brokerPort + 10200,
+	Brokers:          1,
+}
+
+var BrokersExporterTest = ComposeTest{
+	ComposeFilePaths: []string{"../../../test/fixtures/compose/1-broker-docker-compose.yml"},
+	ZookeeperPort:    zookeeperPort + 10300,
+	BrokerPort:       brokerPort + 10300,
 	Brokers:          1,
 }
 
 var TopicsApplierTest = ComposeTest{
-	ComposeFilePaths: []string{"../../../test/fixtures/compose/multi-broker-docker-compose.yml"},
-	ZookeeperPort:    zookeeperPort + 10200,
-	BrokerPort:       brokerPort + 10200,
+	ComposeFilePaths: []string{"../../../test/fixtures/compose/6-broker-docker-compose.yml"},
+	ZookeeperPort:    zookeeperPort + 10400,
+	BrokerPort:       brokerPort + 10400,
 	Brokers:          6,
 }
 
 var TopicsExporterTest = ComposeTest{
-	ComposeFilePaths: []string{"../../../test/fixtures/compose/single-broker-docker-compose.yml"},
-	ZookeeperPort:    zookeeperPort + 10300,
-	BrokerPort:       brokerPort + 10300,
+	ComposeFilePaths: []string{"../../../test/fixtures/compose/1-broker-docker-compose.yml"},
+	ZookeeperPort:    zookeeperPort + 10500,
+	BrokerPort:       brokerPort + 10500,
 	Brokers:          1,
 }

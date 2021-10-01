@@ -1,4 +1,4 @@
-package brokers
+package broker
 
 import (
 	"errors"
@@ -38,8 +38,8 @@ type applier struct {
 	flags   ApplierFlags
 
 	// internal
-	localDef      def.BrokersDefinition
-	remoteDef     def.BrokersDefinition
+	localDef      def.BrokerDefinition
+	remoteDef     def.BrokerDefinition
 	remoteConfigs def.Configs
 	ops           applierOps
 
@@ -77,7 +77,7 @@ func (a *applier) Execute() *res.ApplyResult {
 
 // Perform the apply operation sequence
 func (a *applier) apply() error {
-	log.Debug("Validating brokers definition")
+	log.Debug("Validating broker definition")
 	if err := yaml.Unmarshal([]byte(a.yamlDoc), &a.localDef); err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func (a *applier) apply() error {
 		return err
 	}
 
-	// Build brokers operations
+	// Build broker operations
 	if err := a.buildOps(); err != nil {
 		return err
 	}
@@ -114,29 +114,29 @@ func (a *applier) apply() error {
 			return err
 		}
 
-		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Completed apply for brokers %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Completed apply for broker %q", a.localDef.Metadata.Name)
 	} else {
-		log.Info("No changes to apply for brokers %q", a.localDef.Metadata.Name)
+		log.Info("No changes to apply for broker %q", a.localDef.Metadata.Name)
 	}
 
 	return nil
 }
 
-// Fetch remote brokers definition
+// Fetch remote broker definition
 func (a *applier) fetchRemote() error {
-	log.Info("Fetching brokers configuration...")
+	log.Info("Fetching broker configuration...")
 	var err error
-	a.remoteConfigs, err = service.DescribeAllBrokerConfigs(a.cl)
+	a.remoteConfigs, err = service.DescribeBrokerConfigs(a.cl, a.localDef.Metadata.Name)
 	if err != nil {
 		return err
 	}
 
-	a.remoteDef = def.NewBrokersDefinition(a.remoteConfigs.ToMap())
+	a.remoteDef = def.NewBrokerDefinition(a.localDef.Metadata.Name, a.remoteConfigs.ToMap())
 
 	return nil
 }
 
-// Build brokers operations
+// Build broker operations
 func (a *applier) buildOps() error {
 	a.buildConfigOps()
 	return nil
@@ -184,11 +184,11 @@ func (a *applier) updateApplyResult() error {
 
 // Display pending operations
 func (a *applier) displayPendingOps() {
-	log.Info("Brokers %q diff (local -> remote):", a.localDef.Metadata.Name)
+	log.Info("Broker %q diff (local -> remote):", a.localDef.Metadata.Name)
 	fmt.Print(a.res.Diff)
 }
 
-// Execute brokers update operations
+// Execute broker update operations
 func (a *applier) executeOps() error {
 	if len(a.ops.config) > 0 {
 		if err := a.updateConfigs(); err != nil {
@@ -201,7 +201,7 @@ func (a *applier) executeOps() error {
 
 // Build alter configs operations
 func (a *applier) buildConfigOps() {
-	log.Debug("Comparing local and remote definition configs for brokers %q", a.localDef.Metadata.Name)
+	log.Debug("Comparing local and remote definition configs for broker %q", a.localDef.Metadata.Name)
 
 	a.ops.config = service.NewConfigOps(
 		a.localDef.Spec.Configs,
@@ -212,7 +212,7 @@ func (a *applier) buildConfigOps() {
 	)
 }
 
-// Update brokers configs
+// Update broker configs
 func (a *applier) updateConfigs() error {
 	if a.flags.NonIncremental {
 		if a.ops.config.ContainsOp(service.DeleteConfigOperation) && !a.flags.DeleteMissingConfigs {
@@ -247,14 +247,15 @@ func (a *applier) updateConfigs() error {
 func (a *applier) alterConfigs() error {
 	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altering configs (non-incremental)...")
 
-	if err := service.AlterAllBrokerConfigs(
+	if err := service.AlterBrokerConfigs(
 		a.cl,
+		a.remoteDef.Metadata.Name,
 		a.ops.config,
 		a.flags.DryRun,
 	); err != nil {
 		return err
 	} else {
-		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altered configs for brokers %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altered configs for broker %q", a.localDef.Metadata.Name)
 	}
 
 	return nil
@@ -264,14 +265,15 @@ func (a *applier) alterConfigs() error {
 func (a *applier) incrementalAlterConfigs() error {
 	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altering configs...")
 
-	if err := service.IncrementalAlterAllBrokerConfigs(
+	if err := service.IncrementalAlterBrokerConfigs(
 		a.cl,
+		a.remoteDef.Metadata.Name,
 		a.ops.config,
 		a.flags.DryRun,
 	); err != nil {
 		return err
 	} else {
-		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altered configs for brokers %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altered configs for broker %q", a.localDef.Metadata.Name)
 	}
 
 	return nil

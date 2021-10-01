@@ -23,6 +23,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTER
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:${ZOOKEEPER_PORT}
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_PASSWORD_ENCODER_SECRET: 123foo
 
   broker2:
     image: confluentinc/cp-kafka:6.2.0 # Kafka 2.8.0
@@ -39,6 +40,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTER
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:${ZOOKEEPER_PORT}
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_PASSWORD_ENCODER_SECRET: 123foo
 
   broker3:
     image: confluentinc/cp-kafka:6.2.0 # Kafka 2.8.0
@@ -55,6 +57,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTER
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:${ZOOKEEPER_PORT}
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_PASSWORD_ENCODER_SECRET: 123foo
 
   broker4:
     image: confluentinc/cp-kafka:6.2.0 # Kafka 2.8.0
@@ -71,6 +74,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTER
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:${ZOOKEEPER_PORT}
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_PASSWORD_ENCODER_SECRET: 123foo
 
   broker5:
     image: confluentinc/cp-kafka:6.2.0 # Kafka 2.8.0
@@ -87,6 +91,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTER
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:${ZOOKEEPER_PORT}
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_PASSWORD_ENCODER_SECRET: 123foo
 
   broker6:
     image: confluentinc/cp-kafka:6.2.0 # Kafka 2.8.0
@@ -103,3 +108,4 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTER
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:${ZOOKEEPER_PORT}
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_PASSWORD_ENCODER_SECRET: 123foo

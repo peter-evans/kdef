@@ -70,6 +70,33 @@ func TestDiff(t *testing.T) {
 			want:    string(tutil.Fixture(t, "../../../test/fixtures/jsondiff/test2.diff")),
 			wantErr: false,
 		},
+		{
+			name: "2: Test returning an empty string when both sides are identical",
+			args: args{
+				a: &testObject{
+					Foo: "abc",
+					Bar: "xyz",
+					Baz: 8,
+					Qux: []string{
+						"foo",
+						"bar",
+					},
+					internal: "foo",
+				},
+				b: &testObject{
+					Foo: "abc",
+					Bar: "xyz",
+					Baz: 8,
+					Qux: []string{
+						"foo",
+						"bar",
+					},
+					internal: "foo",
+				},
+			},
+			want:    "",
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

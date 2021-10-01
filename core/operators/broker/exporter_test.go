@@ -1,10 +1,9 @@
-package brokers
+package broker
 
 import (
 	"fmt"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
@@ -14,15 +13,15 @@ import (
 	"github.com/peter-evans/kdef/test/tutil"
 )
 
-// VERBOSE_TESTS=1 go test -run ^Test_exporter_Execute$ ./core/operators/brokers -v
+// VERBOSE_TESTS=1 go test -run ^Test_exporter_Execute$ ./core/operators/broker -v
 func Test_exporter_Execute(t *testing.T) {
 	_, log.Verbose = os.LookupEnv("VERBOSE_TESTS")
 
 	// Create the test cluster
 	c := compose.Up(
 		t,
-		fixtures.BrokersExporterTest.ComposeFilePaths,
-		fixtures.BrokersExporterTest.Env(),
+		fixtures.BrokerExporterTest.ComposeFilePaths,
+		fixtures.BrokerExporterTest.Env(),
 	)
 	defer compose.Down(t, c)
 
@@ -30,31 +29,15 @@ func Test_exporter_Execute(t *testing.T) {
 	cl := client.New(&client.ClientFlags{
 		ConfigPath: "does-not-exist",
 		FlagConfigOpts: []string{
-			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.BrokersExporterTest.BrokerPort),
+			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.BrokerExporterTest.BrokerPort),
 		},
 	})
 
 	// Wait for Kafka to be ready
-	if !service.IsKafkaReady(cl, fixtures.BrokersExporterTest.Brokers, 90) {
+	if !service.IsKafkaReady(cl, fixtures.BrokerExporterTest.Brokers, 90) {
 		t.Errorf("kafka failed to be ready within timeout")
 		t.FailNow()
 	}
-
-	// Load YAML doc test fixtures
-	yamlDocs := tutil.FileToYamlDocs(t, "../../../test/fixtures/brokers/core.operators.brokers.exporter.yml")
-
-	// Apply the fixtures
-	for _, yamlDoc := range yamlDocs {
-		applier := NewApplier(cl, yamlDoc, ApplierFlags{})
-		res := applier.Execute()
-		if err := res.GetErr(); err != nil {
-			t.Errorf("failed to apply fixture: %v", err)
-			t.FailNow()
-		}
-	}
-
-	// Sleep to give Kafka time to update internally
-	time.Sleep(2 * time.Second)
 
 	type fields struct {
 		cl *client.Client
@@ -66,11 +49,11 @@ func Test_exporter_Execute(t *testing.T) {
 		wantErr  bool
 	}{
 		{
-			name: "1: Test export of brokers definition",
+			name: "1: Test export of broker definitions",
 			fields: fields{
 				cl: cl,
 			},
-			wantJson: string(tutil.Fixture(t, "../../../test/fixtures/brokers/core.operators.brokers.exporter.1.json")),
+			wantJson: string(tutil.Fixture(t, "../../../test/fixtures/broker/core.operators.broker.exporter.1.json")),
 			wantErr:  false,
 		},
 	}

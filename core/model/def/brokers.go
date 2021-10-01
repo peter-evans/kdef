@@ -1,8 +1,6 @@
 package def
 
 import (
-	"encoding/json"
-
 	"github.com/gotidy/copy"
 )
 
@@ -17,15 +15,6 @@ type BrokersSpecDefinition struct {
 	Configs ConfigsMap `json:"configs,omitempty"`
 }
 
-// Convert a brokers definition to JSON
-func (b BrokersDefinition) JSON() (string, error) {
-	j, err := json.MarshalIndent(b, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(j), nil
-}
-
 // Create a copy of this BrokersDefinition
 func (b BrokersDefinition) Copy() BrokersDefinition {
 	copiers := copy.New()
@@ -35,7 +24,7 @@ func (b BrokersDefinition) Copy() BrokersDefinition {
 	return brokersDefCopy
 }
 
-// Validate a brokers definition
+// Validate definition
 func (b BrokersDefinition) Validate() error {
 	if err := b.ValidateResource(); err != nil {
 		return err
@@ -45,16 +34,13 @@ func (b BrokersDefinition) Validate() error {
 }
 
 // Create a brokers definition from metadata and config
-func NewBrokersDefinition(
-	name string,
-	configsMap ConfigsMap,
-) BrokersDefinition {
+func NewBrokersDefinition(configsMap ConfigsMap) BrokersDefinition {
 	brokersDef := BrokersDefinition{
 		ResourceDefinition: ResourceDefinition{
 			ApiVersion: "v1",
 			Kind:       "brokers",
 			Metadata: ResourceMetadataDefinition{
-				Name: name,
+				Name: "brokers",
 			},
 		},
 		Spec: BrokersSpecDefinition{

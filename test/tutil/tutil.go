@@ -2,7 +2,9 @@ package tutil
 
 import (
 	"crypto/rand"
+	"encoding/json"
 	"io/ioutil"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -38,6 +40,22 @@ func FileToYamlDocs(t *testing.T, path string) []string {
 		t.FailNow()
 	}
 	return yamlDocs
+}
+
+// Determine if two strings are equal JSON
+func EqualJSON(t *testing.T, s1 string, s2 string) bool {
+	toInterface := func(s string) interface{} {
+		var i interface{}
+		if err := json.Unmarshal([]byte(s), &i); err != nil {
+			t.Errorf("json unmarshal failed: %v", err)
+			t.FailNow()
+		}
+		return i
+	}
+	return reflect.DeepEqual(
+		toInterface(s1),
+		toInterface(s2),
+	)
 }
 
 // Produces random bytes of length n

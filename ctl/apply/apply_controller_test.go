@@ -47,16 +47,17 @@ func Test_getResourceDefinitions(t *testing.T) {
 			name: "Tests return of resource definitions",
 			args: args{
 				yamlDocs: []string{
-					"apiVersion: v1\nkind: topic\nmetadata:\n  name: topic_foo",
+					"apiVersion: v1\nkind: broker\nmetadata:\n  name: \"1\"",
 					"apiVersion: v1\nkind: brokers\nmetadata:\n  name: brokers_foo",
+					"apiVersion: v1\nkind: topic\nmetadata:\n  name: topic_foo",
 				},
 			},
 			want: []def.ResourceDefinition{
 				{
 					ApiVersion: "v1",
-					Kind:       "topic",
+					Kind:       "broker",
 					Metadata: def.ResourceMetadataDefinition{
-						Name: "topic_foo",
+						Name: "1",
 					},
 				},
 				{
@@ -64,6 +65,13 @@ func Test_getResourceDefinitions(t *testing.T) {
 					Kind:       "brokers",
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "brokers_foo",
+					},
+				},
+				{
+					ApiVersion: "v1",
+					Kind:       "topic",
+					Metadata: def.ResourceMetadataDefinition{
+						Name: "topic_foo",
 					},
 				},
 			},

@@ -4,8 +4,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/cmd/export/broker"
 	"github.com/peter-evans/kdef/cmd/export/brokers"
-	"github.com/peter-evans/kdef/cmd/export/topics"
+	"github.com/peter-evans/kdef/cmd/export/topic"
 )
 
 // Creates the export command
@@ -18,8 +19,9 @@ func Command(cl *client.Client) *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		broker.Command(cl),
 		brokers.Command(cl),
-		topics.Command(cl),
+		topic.Command(cl),
 	)
 
 	return cmd

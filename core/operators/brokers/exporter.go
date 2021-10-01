@@ -25,7 +25,7 @@ func NewExporter(
 
 // Execute the export operation
 func (e *exporter) Execute() (res.ExportResults, error) {
-	log.Info("Fetching broker configuration...")
+	log.Info("Fetching cluster-wide broker configuration...")
 	brokersDef, err := e.getBrokersDefinition()
 	if err != nil {
 		return nil, err
@@ -42,22 +42,12 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 
 // Return the brokers definition
 func (e *exporter) getBrokersDefinition() (*def.BrokersDefinition, error) {
-	metadata, err := service.DescribeMetadata(e.cl, []string{}, true)
-	if err != nil {
-		return nil, err
-	}
-
-	name := metadata.ClusterId
-	if len(name) == 0 {
-		name = "brokers"
-	}
-
 	brokerConfigs, err := service.DescribeAllBrokerConfigs(e.cl)
 	if err != nil {
 		return nil, err
 	}
 
-	brokersDef := def.NewBrokersDefinition(name, brokerConfigs.ToMap())
+	brokersDef := def.NewBrokersDefinition(brokerConfigs.ToExportableMap())
 
 	return &brokersDef, nil
 }
