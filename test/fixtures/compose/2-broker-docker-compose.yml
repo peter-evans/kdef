@@ -1,0 +1,43 @@
+version: "3"
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.2.0
+    ports:
+      - "${ZOOKEEPER_PORT}:${ZOOKEEPER_PORT}"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_PORT}
+      ZOOKEEPER_TICK_TIME: 2000
+
+  broker1:
+    image: confluentinc/cp-kafka:6.2.0 # Kafka 2.8.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "${BROKER1_PORT}:${BROKER1_PORT}"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_BROKER_RACK: zone-a
+      KAFKA_LISTENERS: LISTENER_INTER://broker1:9092,LISTENER_HOST://broker1:${BROKER1_PORT}
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_INTER://broker1:9092,LISTENER_HOST://localhost:${BROKER1_PORT}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_INTER:PLAINTEXT,LISTENER_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTER
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:${ZOOKEEPER_PORT}
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_PASSWORD_ENCODER_SECRET: 123foo
+
+  broker2:
+    image: confluentinc/cp-kafka:6.2.0 # Kafka 2.8.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "${BROKER2_PORT}:${BROKER2_PORT}"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_BROKER_RACK: zone-a
+      KAFKA_LISTENERS: LISTENER_INTER://broker2:9092,LISTENER_HOST://broker2:${BROKER2_PORT}
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_INTER://broker2:9092,LISTENER_HOST://localhost:${BROKER2_PORT}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_INTER:PLAINTEXT,LISTENER_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTER
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:${ZOOKEEPER_PORT}
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_PASSWORD_ENCODER_SECRET: 123foo

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "brokers",
+    "definition": {
+      "apiVersion": "v1",
+      "kind": "brokers",
+      "metadata": { "name": "brokers" },
+      "spec": {
+        "configs": {
+          "background.threads": "12",
+          "follower.replication.throttled.rate": "700000000",
+          "leader.replication.throttled.rate": "700000000"
+        }
+      }
+    }
+  }
+]

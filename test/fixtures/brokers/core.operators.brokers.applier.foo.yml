@@ -7,6 +7,7 @@ metadata:
   name: core.operators.brokers.applier.foo
 spec:
   configs:
+    background.threads: 12
     leader.replication.throttled.rate: "700000000"
     follower.replication.throttled.rate: "700000000"
 ---
@@ -18,6 +19,7 @@ metadata:
   name: core.operators.brokers.applier.foo
 spec:
   configs:
+    background.threads: 12
     leader.replication.throttled.rate: "700000000"
     follower.replication.throttled.rate: "600000000"
 ---
@@ -29,6 +31,7 @@ metadata:
   name: core.operators.brokers.applier.foo
 spec:
   configs:
+    background.threads: 12
     leader.replication.throttled.rate: "700000000"
     # follower.replication.throttled.rate: "600000000" # deleted
 ---
@@ -40,6 +43,7 @@ metadata:
   name: core.operators.brokers.applier.foo
 spec:
   configs:
+    background.threads: 12
     leader.replication.throttled.rate: "700000000"
     follower.replication.throttled.rate: "700000000"
 ---
@@ -51,5 +55,6 @@ metadata:
   name: core.operators.brokers.applier.foo
 spec:
   configs:
+    background.threads: 12
     # leader.replication.throttled.rate: "700000000" # deleted
     # follower.replication.throttled.rate: "700000000" # deleted

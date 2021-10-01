@@ -59,10 +59,17 @@ func NewConfigOps(
 	for k, v := range localConfigs {
 		if cv, ok := remoteConfigsMap[k]; ok {
 			// Config exists
-			// TODO: handle nil for sensitive values (applies to single broker target)
-			if *v != *cv {
+			vv := "null"
+			if v != nil {
+				vv = *v
+			}
+			cvv := "null"
+			if cv != nil {
+				cvv = *cv
+			}
+			if vv != cvv {
 				// Config value has changed
-				log.Debug("Value of config key %q has changed from %q to %q and will be updated", k, *cv, *v)
+				log.Debug("Value of config key %q has changed from %q to %q and will be updated", k, cvv, vv)
 				configOps = append(configOps, ConfigOperation{
 					Name:  k,
 					Value: v,
@@ -110,12 +117,13 @@ func NewConfigOps(
 	return configOps
 }
 
-// Execute a request to describe all broker configs (Kafka 0.11.0+)
-func DescribeAllBrokerConfigs(cl *client.Client) (def.Configs, error) {
+// Execute a request to describe broker configs (Kafka 0.11.0+)
+func DescribeBrokerConfigs(cl *client.Client, brokerId string) (def.Configs, error) {
 	req := kmsg.NewDescribeConfigsRequest()
 
 	res := kmsg.NewDescribeConfigsRequestResource()
 	res.ResourceType = kmsg.ConfigResourceTypeBroker
+	res.ResourceName = brokerId
 	req.Resources = append(req.Resources, res)
 
 	resp, err := describeConfigs(cl, req)
@@ -124,6 +132,12 @@ func DescribeAllBrokerConfigs(cl *client.Client) (def.Configs, error) {
 	}
 
 	return newConfigs(resp[0].Configs), nil
+}
+
+// Execute a request to describe all broker configs (Kafka 0.11.0+)
+func DescribeAllBrokerConfigs(cl *client.Client) (def.Configs, error) {
+	// Empty brokerId returns dynamic config for all brokers (cluster-wide)
+	return DescribeBrokerConfigs(cl, "")
 }
 
 // Configs for a named resource
@@ -163,13 +177,25 @@ func DescribeTopicConfigs(cl *client.Client, topics []string) ([]ResourceConfigs
 func newConfigs(configsResp []kmsg.DescribeConfigsResponseResourceConfig) def.Configs {
 	var configs def.Configs
 	for _, c := range configsResp {
-		configs = append(configs, def.ConfigItem{
+		configKey := def.ConfigKey{
 			Name:        c.Name,
 			Value:       c.Value,
 			IsSensitive: c.IsSensitive,
 			ReadOnly:    c.ReadOnly,
 			Source:      def.ConfigSource(c.Source),
-		})
+		}
+
+		// Kafka has a category of dynamic configs that have no physical manifestation in the
+		// server.properties file and can only be set dynamically. For some reason Kafka marks
+		// these keys as read-only, even though they most certainly are not. For this reason
+		// it's necessary to additionally check the config key is not dynamic.
+		// See https://github.com/twmb/franz-go/issues/91#issuecomment-929872304
+		if configKey.ReadOnly && !configKey.IsDynamic() {
+			// Ignore all keys that are read-only and not dynamic
+			continue
+		}
+
+		configs = append(configs, configKey)
 	}
 	return configs
 }
@@ -199,14 +225,16 @@ func describeConfigs(cl *client.Client, req kmsg.DescribeConfigsRequest) ([]kmsg
 	return resp.Resources, nil
 }
 
-// Execute a request to perform a non-incremental alter all broker configs (Kafka 0.11.0+)
-func AlterAllBrokerConfigs(
+// Execute a request to perform a non-incremental alter broker configs (Kafka 0.11.0+)
+func AlterBrokerConfigs(
 	cl *client.Client,
+	brokerId string,
 	configOps ConfigOperations,
 	validateOnly bool,
 ) error {
 	reqR := kmsg.NewAlterConfigsRequestResource()
 	reqR.ResourceType = kmsg.ConfigResourceTypeBroker
+	reqR.ResourceName = brokerId
 	reqR.Configs = buildAlterConfigsResourceConfig(configOps)
 
 	if err := alterConfigs(
@@ -218,6 +246,16 @@ func AlterAllBrokerConfigs(
 	}
 
 	return nil
+}
+
+// Execute a request to perform a non-incremental alter all broker configs (Kafka 0.11.0+)
+func AlterAllBrokerConfigs(
+	cl *client.Client,
+	configOps ConfigOperations,
+	validateOnly bool,
+) error {
+	// Empty brokerId alters config for all brokers (cluster-wide)
+	return AlterBrokerConfigs(cl, "", configOps, validateOnly)
 }
 
 // Execute a request to perform a non-incremental alter topic configs (Kafka 0.11.0+)
@@ -292,14 +330,16 @@ func alterConfigs(
 	return nil
 }
 
-// Execute a request to perform an incremental alter all broker configs (Kafka 2.3.0+)
-func IncrementalAlterAllBrokerConfigs(
+// Execute a request to perform an incremental alter broker configs (Kafka 2.3.0+)
+func IncrementalAlterBrokerConfigs(
 	cl *client.Client,
+	brokerId string,
 	configOps ConfigOperations,
 	validateOnly bool,
 ) error {
 	reqR := kmsg.NewIncrementalAlterConfigsRequestResource()
 	reqR.ResourceType = kmsg.ConfigResourceTypeBroker
+	reqR.ResourceName = brokerId
 	reqR.Configs = buildIncrementalAlterConfigsResourceConfig(configOps)
 
 	if err := incrementalAlterConfigs(
@@ -311,6 +351,16 @@ func IncrementalAlterAllBrokerConfigs(
 	}
 
 	return nil
+}
+
+// Execute a request to perform an incremental alter all broker configs (Kafka 2.3.0+)
+func IncrementalAlterAllBrokerConfigs(
+	cl *client.Client,
+	configOps ConfigOperations,
+	validateOnly bool,
+) error {
+	// Empty brokerId alters config for all brokers (cluster-wide)
+	return IncrementalAlterBrokerConfigs(cl, "", configOps, validateOnly)
 }
 
 // Execute a request to perform an incremental alter topic configs (Kafka 2.3.0+)

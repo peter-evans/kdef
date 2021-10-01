@@ -1,5 +1,7 @@
 package i32
 
+import "strconv"
+
 // Determine if a value is contained in a list
 func Contains(i int32, list []int32) bool {
 	for _, item := range list {
@@ -47,4 +49,13 @@ func Max(s []int32) int32 {
 		}
 	}
 	return max
+}
+
+// Parse a string to int32
+func ParseStr(s string) (int32, error) {
+	i, err := strconv.ParseInt(s, 10, 32)
+	if err != nil {
+		return -1, err
+	}
+	return int32(i), nil
 }

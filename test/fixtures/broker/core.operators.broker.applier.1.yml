@@ -1,0 +1,73 @@
+---
+# Version 0
+# Add configs
+apiVersion: v1
+kind: broker
+metadata:
+  name: "1"
+spec:
+  configs:
+    background.threads: 12
+    log.retention.ms: 604800000
+    listener.name.listener_host.ssl.keystore.password: "123foo"
+    listener.name.listener_host.ssl.truststore.password: "123foo"
+    leader.replication.throttled.rate: "700000000"
+    follower.replication.throttled.rate: "700000000"
+---
+# Version 1
+# Update configs
+apiVersion: v1
+kind: broker
+metadata:
+  name: "1"
+spec:
+  configs:
+    background.threads: 12
+    log.retention.ms: 604800000
+    listener.name.listener_host.ssl.keystore.password: "123foo"
+    listener.name.listener_host.ssl.truststore.password: "123foo"
+    leader.replication.throttled.rate: "700000000"
+    follower.replication.throttled.rate: "600000000"
+---
+# Version 2
+# Delete configs
+apiVersion: v1
+kind: broker
+metadata:
+  name: "1"
+spec:
+  configs:
+    background.threads: 12
+    # log.retention.ms: 604800000 # deleted
+    listener.name.listener_host.ssl.keystore.password: "123foo"
+    # listener.name.listener_host.ssl.truststore.password: "123foo" # deleted
+    leader.replication.throttled.rate: "700000000"
+    follower.replication.throttled.rate: "600000000"
+---
+# Version 3
+# Update configs using non-incremental method
+apiVersion: v1
+kind: broker
+metadata:
+  name: "1"
+spec:
+  configs:
+    background.threads: 12
+    log.retention.ms: 604800000
+    listener.name.listener_host.ssl.keystore.password: "123foo"
+    leader.replication.throttled.rate: "600000000"
+    follower.replication.throttled.rate: "600000000"
+---
+# Version 4
+# Delete configs using non-incremental method
+apiVersion: v1
+kind: broker
+metadata:
+  name: "1"
+spec:
+  configs:
+    # background.threads: 12 # deleted
+    log.retention.ms: 604800000
+    # listener.name.listener_host.ssl.keystore.password: "123foo" # deleted
+    leader.replication.throttled.rate: "600000000"
+    # follower.replication.throttled.rate: "600000000" # deleted

@@ -80,14 +80,15 @@ func (a *applier) Execute() *res.ApplyResult {
 	if err := a.apply(); err != nil {
 		a.res.Err = err.Error()
 		log.Error(err)
+	} else {
+		// Consider the definition applied if there were ops and this is not a dry run
+		if a.ops.pending() && !a.flags.DryRun {
+			a.res.Applied = true
+		}
 	}
 
 	a.res.Data = res.TopicApplyResultData{
 		PartitionReassignments: a.reassignments,
-	}
-
-	if !a.flags.DryRun {
-		a.res.Applied = true
 	}
 
 	return &a.res

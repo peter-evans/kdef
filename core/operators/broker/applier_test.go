@@ -1,4 +1,4 @@
-package brokers
+package broker
 
 import (
 	"encoding/json"
@@ -15,7 +15,7 @@ import (
 	"github.com/peter-evans/kdef/test/tutil"
 )
 
-// VERBOSE_TESTS=1 go test -run ^Test_applier_Execute$ ./core/operators/brokers -v
+// VERBOSE_TESTS=1 go test -run ^Test_applier_Execute$ ./core/operators/broker -v
 func Test_applier_Execute(t *testing.T) {
 	_, log.Verbose = os.LookupEnv("VERBOSE_TESTS")
 
@@ -77,8 +77,8 @@ func Test_applier_Execute(t *testing.T) {
 	// Create the test cluster
 	c := compose.Up(
 		t,
-		fixtures.BrokersApplierTest.ComposeFilePaths,
-		fixtures.BrokersApplierTest.Env(),
+		fixtures.BrokerApplierTest.ComposeFilePaths,
+		fixtures.BrokerApplierTest.Env(),
 	)
 	defer compose.Down(t, c)
 
@@ -86,172 +86,158 @@ func Test_applier_Execute(t *testing.T) {
 	cl := client.New(&client.ClientFlags{
 		ConfigPath: "does-not-exist",
 		FlagConfigOpts: []string{
-			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.BrokersApplierTest.BrokerPort),
+			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.BrokerApplierTest.BrokerPort),
 		},
 	})
 
 	// Wait for Kafka to be ready
-	if !service.IsKafkaReady(cl, fixtures.BrokersApplierTest.Brokers, 90) {
+	if !service.IsKafkaReady(cl, fixtures.BrokerApplierTest.Brokers, 90) {
 		t.Errorf("kafka failed to be ready within timeout")
 		t.FailNow()
 	}
 
 	// Tests changes to configs
-	fooDocs := tutil.FileToYamlDocs(t, "../../../test/fixtures/brokers/core.operators.brokers.applier.foo.yml")
-	fooDiffs := getDiffsFixture(t, "../../../test/fixtures/brokers/core.operators.brokers.applier.foo.json")
+	broker1Docs := tutil.FileToYamlDocs(t, "../../../test/fixtures/broker/core.operators.broker.applier.1.yml")
+	broker1Diffs := getDiffsFixture(t, "../../../test/fixtures/broker/core.operators.broker.applier.1.json")
 	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
 		{
 			// Add configs
-			name: "1: Dry-run brokers config foo version 0",
+			name: "1: Dry-run broker config foo version 0",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: fooDocs[0],
+				yamlDoc: broker1Docs[0],
 				flags: ApplierFlags{
 					DryRun: true,
 				},
 			},
-			wantDiff:    fooDiffs[0],
+			wantDiff:    broker1Diffs[0],
 			wantErr:     "",
 			wantApplied: false,
 		},
 		{
 			// Add configs
-			name: "2: Apply brokers config foo version 0",
+			name: "2: Apply broker config foo version 0",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: fooDocs[0],
+				yamlDoc: broker1Docs[0],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:    fooDiffs[0],
+			wantDiff:    broker1Diffs[0],
 			wantErr:     "",
 			wantApplied: true,
 		},
 		{
-			// No diff check
-			name: "3: Dry-run brokers config foo version 0",
+			// Update configs
+			name: "3: Dry-run broker foo version 1",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: fooDocs[0],
+				yamlDoc: broker1Docs[1],
 				flags: ApplierFlags{
 					DryRun: true,
 				},
 			},
-			wantDiff:    "",
+			wantDiff:    broker1Diffs[1],
 			wantErr:     "",
 			wantApplied: false,
 		},
 		{
 			// Update configs
-			name: "4: Dry-run brokers foo version 1",
+			name: "4: Apply broker foo version 1",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: fooDocs[1],
-				flags: ApplierFlags{
-					DryRun: true,
-				},
-			},
-			wantDiff:    fooDiffs[1],
-			wantErr:     "",
-			wantApplied: false,
-		},
-		{
-			// Update configs
-			name: "5: Apply brokers foo version 1",
-			fields: fields{
-				cl:      cl,
-				yamlDoc: fooDocs[1],
+				yamlDoc: broker1Docs[1],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:    fooDiffs[1],
+			wantDiff:    broker1Diffs[1],
 			wantErr:     "",
 			wantApplied: true,
 		},
 		{
 			// Delete configs
-			name: "6: Dry-run brokers foo version 2",
+			name: "5: Dry-run broker foo version 2",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: fooDocs[2],
+				yamlDoc: broker1Docs[2],
 				flags: ApplierFlags{
 					DryRun:               true,
 					DeleteMissingConfigs: true,
 				},
 			},
-			wantDiff:    fooDiffs[2],
+			wantDiff:    broker1Diffs[2],
 			wantErr:     "",
 			wantApplied: false,
 		},
 		{
 			// Delete configs
-			name: "7: Apply brokers foo version 2",
+			name: "6: Apply broker foo version 2",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: fooDocs[2],
+				yamlDoc: broker1Docs[2],
 				flags: ApplierFlags{
 					DeleteMissingConfigs: true,
 				},
 			},
-			wantDiff:    fooDiffs[2],
+			wantDiff:    broker1Diffs[2],
 			wantErr:     "",
 			wantApplied: true,
 		},
 		{
 			// Update configs (non-incremental)
-			name: "8: Dry-run brokers foo version 3",
+			name: "7: Dry-run broker foo version 3",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: fooDocs[3],
+				yamlDoc: broker1Docs[3],
 				flags: ApplierFlags{
 					DryRun:         true,
 					NonIncremental: true,
 				},
 			},
-			wantDiff:    fooDiffs[3],
+			wantDiff:    broker1Diffs[3],
 			wantErr:     "",
 			wantApplied: false,
 		},
 		{
 			// Update configs (non-incremental)
-			name: "9: Apply brokers foo version 3",
+			name: "7: Apply broker foo version 3",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: fooDocs[3],
+				yamlDoc: broker1Docs[3],
 				flags: ApplierFlags{
 					NonIncremental: true,
 				},
 			},
-			wantDiff:    fooDiffs[3],
+			wantDiff:    broker1Diffs[3],
 			wantErr:     "",
 			wantApplied: true,
 		},
 		{
 			// Delete configs (non-incremental)
-			name: "10: Dry-run brokers foo version 4",
+			name: "7: Dry-run broker foo version 4",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: fooDocs[4],
+				yamlDoc: broker1Docs[4],
 				flags: ApplierFlags{
 					DryRun:         true,
 					NonIncremental: true,
 				},
 			},
-			wantDiff:    fooDiffs[4],
+			wantDiff:    broker1Diffs[4],
 			wantErr:     "cannot apply delete config operations because flag --delete-missing-configs is not set",
 			wantApplied: false,
 		},
 		{
 			// Delete configs (non-incremental)
-			name: "11: Apply brokers foo version 4",
+			name: "8: Apply broker foo version 4",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: fooDocs[4],
+				yamlDoc: broker1Docs[4],
 				flags: ApplierFlags{
 					NonIncremental:       true,
 					DeleteMissingConfigs: true,
 				},
 			},
-			wantDiff:    fooDiffs[4],
+			wantDiff:    broker1Diffs[4],
 			wantErr:     "",
 			wantApplied: true,
 		},

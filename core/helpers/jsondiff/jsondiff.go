@@ -31,7 +31,9 @@ func Diff(a interface{}, b interface{}) (string, error) {
 		return "", err
 	}
 
-	diff := diff.LineOriented(aJson, bJson)
-
-	return diff, nil
+	if aJson != bJson {
+		return diff.LineOriented(aJson, bJson), nil
+	} else {
+		return "", nil
+	}
 }

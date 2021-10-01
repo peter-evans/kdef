@@ -1,4 +1,4 @@
-package brokers
+package broker
 
 import (
 	"github.com/spf13/cobra"
@@ -7,23 +7,23 @@ import (
 	"github.com/peter-evans/kdef/ctl/export"
 )
 
-// Creates the export brokers command
+// Creates the export broker command
 func Command(cl *client.Client) *cobra.Command {
 	flags := export.ExportControllerFlags{}
 	cmd := &cobra.Command{
-		Use:   "brokers",
-		Short: "Export cluster-wide broker configuration to a YAML definition",
-		Long:  "Export cluster-wide broker configuration to a YAML definition (Kafka 0.11.0+).",
-		Example: `# export brokers definition to the directory "brokers"
-kdef export brokers --output-dir "brokers"
+		Use:   "broker",
+		Short: "Export per-broker configuration to YAML definitions",
+		Long:  "Export per-broker configuration to YAML definitions (Kafka 0.11.0+).",
+		Example: `# export broker definitions to the directory "broker"
+kdef export broker --output-dir "broker"
 
-# export brokers definition to stdout
-kdef export brokers --quiet`,
+# export broker definitions to stdout
+kdef export broker --quiet`,
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		DisableFlagsInUseLine: true,
 		RunE: func(_ *cobra.Command, args []string) error {
-			controller := export.NewExportController(cl, args, flags, "brokers")
+			controller := export.NewExportController(cl, args, flags, "broker")
 			if err := controller.Execute(); err != nil {
 				return err
 			}

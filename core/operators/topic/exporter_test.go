@@ -3,7 +3,6 @@ package topic
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"testing"
 	"time"
 
@@ -62,13 +61,13 @@ func Test_exporter_Execute(t *testing.T) {
 		flags ExporterFlags
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		wantIds []string
-		wantErr bool
+		name     string
+		fields   fields
+		wantJson string
+		wantErr  bool
 	}{
 		{
-			name: "Test export of all topics",
+			name: "1: Test export of all topics",
 			fields: fields{
 				cl: cl,
 				flags: ExporterFlags{
@@ -76,16 +75,11 @@ func Test_exporter_Execute(t *testing.T) {
 					Exclude: ".^",
 				},
 			},
-			wantIds: []string{
-				"core.operators.topic.exporter.bar1",
-				"core.operators.topic.exporter.bar2",
-				"core.operators.topic.exporter.foo1",
-				"core.operators.topic.exporter.foo2",
-			},
-			wantErr: false,
+			wantJson: string(tutil.Fixture(t, "../../../test/fixtures/topic/core.operators.topic.exporter.1.json")),
+			wantErr:  false,
 		},
 		{
-			name: "Test export of all topics including internal",
+			name: "2: Test export of all topics including internal",
 			fields: fields{
 				cl: cl,
 				flags: ExporterFlags{
@@ -94,17 +88,11 @@ func Test_exporter_Execute(t *testing.T) {
 					IncludeInternal: true,
 				},
 			},
-			wantIds: []string{
-				"__core.operators.topic.exporter.baz1",
-				"core.operators.topic.exporter.bar1",
-				"core.operators.topic.exporter.bar2",
-				"core.operators.topic.exporter.foo1",
-				"core.operators.topic.exporter.foo2",
-			},
-			wantErr: false,
+			wantJson: string(tutil.Fixture(t, "../../../test/fixtures/topic/core.operators.topic.exporter.2.json")),
+			wantErr:  false,
 		},
 		{
-			name: "Test export of topics with match regexp",
+			name: "3: Test export of topics with match regexp",
 			fields: fields{
 				cl: cl,
 				flags: ExporterFlags{
@@ -112,14 +100,11 @@ func Test_exporter_Execute(t *testing.T) {
 					Exclude: ".^",
 				},
 			},
-			wantIds: []string{
-				"core.operators.topic.exporter.foo1",
-				"core.operators.topic.exporter.foo2",
-			},
-			wantErr: false,
+			wantJson: string(tutil.Fixture(t, "../../../test/fixtures/topic/core.operators.topic.exporter.3.json")),
+			wantErr:  false,
 		},
 		{
-			name: "Test export of topics with exclude regexp",
+			name: "4: Test export of topics with exclude regexp",
 			fields: fields{
 				cl: cl,
 				flags: ExporterFlags{
@@ -127,14 +112,11 @@ func Test_exporter_Execute(t *testing.T) {
 					Exclude: "core.operators.topic.exporter.bar.*",
 				},
 			},
-			wantIds: []string{
-				"core.operators.topic.exporter.foo1",
-				"core.operators.topic.exporter.foo2",
-			},
-			wantErr: false,
+			wantJson: string(tutil.Fixture(t, "../../../test/fixtures/topic/core.operators.topic.exporter.4.json")),
+			wantErr:  false,
 		},
 		{
-			name: "Test export of topics including broker assignments",
+			name: "5: Test export of topics including broker assignments",
 			fields: fields{
 				cl: cl,
 				flags: ExporterFlags{
@@ -143,13 +125,11 @@ func Test_exporter_Execute(t *testing.T) {
 					Assignments: "broker",
 				},
 			},
-			wantIds: []string{
-				"core.operators.topic.exporter.foo1",
-			},
-			wantErr: false,
+			wantJson: string(tutil.Fixture(t, "../../../test/fixtures/topic/core.operators.topic.exporter.5.json")),
+			wantErr:  false,
 		},
 		{
-			name: "Test export of topics including rack assignments",
+			name: "6: Test export of topics including rack assignments",
 			fields: fields{
 				cl: cl,
 				flags: ExporterFlags{
@@ -158,10 +138,8 @@ func Test_exporter_Execute(t *testing.T) {
 					Assignments: "rack",
 				},
 			},
-			wantIds: []string{
-				"core.operators.topic.exporter.foo1",
-			},
-			wantErr: false,
+			wantJson: string(tutil.Fixture(t, "../../../test/fixtures/topic/core.operators.topic.exporter.6.json")),
+			wantErr:  false,
 		},
 	}
 	for _, tt := range tests {
@@ -172,16 +150,16 @@ func Test_exporter_Execute(t *testing.T) {
 				t.Errorf("exporter.Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got.Ids(), tt.wantIds) {
-				t.Errorf("exporter.Execute().Ids() = %v, want %v", got.Ids(), tt.wantIds)
+			j, err := got.JSON()
+			if err != nil {
+				t.Errorf("failed to convert export result to json: %v", err)
+				t.FailNow()
+			}
+			if !tutil.EqualJSON(t, j, tt.wantJson) {
+				t.Errorf("exporter.Execute().JSON() = %v, want %v", j, tt.wantJson)
 			}
 
 			if log.Verbose {
-				j, err := got.JSON()
-				if err != nil {
-					t.Errorf("failed to convert export result to json: %v", err)
-					t.FailNow()
-				}
 				fmt.Println("[test] ExportResults JSON:")
 				fmt.Println(j)
 			}

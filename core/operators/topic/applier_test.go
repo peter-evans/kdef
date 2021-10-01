@@ -27,11 +27,11 @@ func Test_applier_Execute(t *testing.T) {
 		flags   ApplierFlags
 	}
 	type testCase struct {
-		name                    string
-		fields                  fields
-		wantDiff                string
-		wantErr                 string
-		wantHasUnappliedChanges bool
+		name        string
+		fields      fields
+		wantDiff    string
+		wantErr     string
+		wantApplied bool
 	}
 
 	runTests := func(t *testing.T, tests []testCase) {
@@ -57,11 +57,8 @@ func Test_applier_Execute(t *testing.T) {
 				if !tutil.ErrorContains(got.GetErr(), tt.wantErr) {
 					t.Errorf("applier.Execute() error = %v, wantErr %v", got.GetErr(), tt.wantErr)
 				}
-				if got.HasUnappliedChanges() != tt.wantHasUnappliedChanges {
-					t.Errorf("applier.Execute().HasUnappliedChanges() = %v, want %v",
-						got.HasUnappliedChanges(),
-						tt.wantHasUnappliedChanges,
-					)
+				if got.Applied != tt.wantApplied {
+					t.Errorf("applier.Execute().Applied = %v, want %v", got.Applied, tt.wantApplied)
 				}
 
 				// Sleep to give Kafka time to update internally
@@ -116,9 +113,9 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                fooDiffs[0],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    fooDiffs[0],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Create topic
@@ -128,13 +125,27 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: fooDocs[0],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                fooDiffs[0],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    fooDiffs[0],
+			wantErr:     "",
+			wantApplied: true,
+		},
+		{
+			// No diff check
+			name: "3: Dry-run topic foo version 0",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: fooDocs[0],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    "",
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Update configs
-			name: "3: Dry-run topic foo version 1",
+			name: "4: Dry-run topic foo version 1",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: fooDocs[1],
@@ -142,25 +153,25 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                fooDiffs[1],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    fooDiffs[1],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Update configs
-			name: "4: Apply topic foo version 1",
+			name: "5: Apply topic foo version 1",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: fooDocs[1],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                fooDiffs[1],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    fooDiffs[1],
+			wantErr:     "",
+			wantApplied: true,
 		},
 		{
 			// Delete configs
-			name: "5: Dry-run topic foo version 2",
+			name: "6: Dry-run topic foo version 2",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: fooDocs[2],
@@ -169,13 +180,13 @@ func Test_applier_Execute(t *testing.T) {
 					DeleteMissingConfigs: true,
 				},
 			},
-			wantDiff:                fooDiffs[2],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    fooDiffs[2],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Delete configs
-			name: "6: Apply topic foo version 2",
+			name: "7: Apply topic foo version 2",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: fooDocs[2],
@@ -183,13 +194,13 @@ func Test_applier_Execute(t *testing.T) {
 					DeleteMissingConfigs: true,
 				},
 			},
-			wantDiff:                fooDiffs[2],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    fooDiffs[2],
+			wantErr:     "",
+			wantApplied: true,
 		},
 		{
 			// Update configs (non-incremental)
-			name: "7: Dry-run topic foo version 3",
+			name: "8: Dry-run topic foo version 3",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: fooDocs[3],
@@ -198,13 +209,13 @@ func Test_applier_Execute(t *testing.T) {
 					NonIncremental: true,
 				},
 			},
-			wantDiff:                fooDiffs[3],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    fooDiffs[3],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Update configs (non-incremental)
-			name: "7: Apply topic foo version 3",
+			name: "9: Apply topic foo version 3",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: fooDocs[3],
@@ -212,13 +223,13 @@ func Test_applier_Execute(t *testing.T) {
 					NonIncremental: true,
 				},
 			},
-			wantDiff:                fooDiffs[3],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    fooDiffs[3],
+			wantErr:     "",
+			wantApplied: true,
 		},
 		{
 			// Delete configs (non-incremental)
-			name: "7: Dry-run topic foo version 4",
+			name: "10: Dry-run topic foo version 4",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: fooDocs[4],
@@ -227,13 +238,13 @@ func Test_applier_Execute(t *testing.T) {
 					NonIncremental: true,
 				},
 			},
-			wantDiff:                fooDiffs[4],
-			wantErr:                 "cannot apply delete config operations because flag --delete-missing-configs is not set",
-			wantHasUnappliedChanges: true,
+			wantDiff:    fooDiffs[4],
+			wantErr:     "cannot apply delete config operations because flag --delete-missing-configs is not set",
+			wantApplied: false,
 		},
 		{
 			// Delete configs (non-incremental)
-			name: "8: Apply topic foo version 4",
+			name: "11: Apply topic foo version 4",
 			fields: fields{
 				cl:      cl,
 				yamlDoc: fooDocs[4],
@@ -242,9 +253,9 @@ func Test_applier_Execute(t *testing.T) {
 					DeleteMissingConfigs: true,
 				},
 			},
-			wantDiff:                fooDiffs[4],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    fooDiffs[4],
+			wantErr:     "",
+			wantApplied: true,
 		},
 	})
 
@@ -263,9 +274,9 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                barDiffs[0],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    barDiffs[0],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Create topic
@@ -275,9 +286,9 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: barDocs[0],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                barDiffs[0],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    barDiffs[0],
+			wantErr:     "",
+			wantApplied: true,
 		},
 	})
 
@@ -312,9 +323,9 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                barDiffs[1],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    barDiffs[1],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Increase replication factor
@@ -324,9 +335,9 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: barDocs[1],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                barDiffs[1],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    barDiffs[1],
+			wantErr:     "",
+			wantApplied: true,
 		},
 		{
 			// Add partitions
@@ -338,9 +349,9 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                barDiffs[2],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    barDiffs[2],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Add partitions
@@ -350,9 +361,9 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: barDocs[2],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                barDiffs[2],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    barDiffs[2],
+			wantErr:     "",
+			wantApplied: true,
 		},
 		{
 			// Add partitions and increase replication factor
@@ -364,9 +375,9 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                barDiffs[3],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    barDiffs[3],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Add partitions and increase replication factor
@@ -376,9 +387,9 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: barDocs[3],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                barDiffs[3],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    barDiffs[3],
+			wantErr:     "",
+			wantApplied: true,
 		},
 		{
 			// Decrease replication factor
@@ -390,9 +401,9 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                barDiffs[4],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    barDiffs[4],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Decrease replication factor
@@ -402,9 +413,9 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: barDocs[4],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                barDiffs[4],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    barDiffs[4],
+			wantErr:     "",
+			wantApplied: true,
 		},
 	})
 
@@ -423,9 +434,9 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                bazDiffs[0],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    bazDiffs[0],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Create topic
@@ -435,9 +446,9 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: bazDocs[0],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                bazDiffs[0],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    bazDiffs[0],
+			wantErr:     "",
+			wantApplied: true,
 		},
 		{
 			// Increase replication factor
@@ -449,9 +460,9 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                bazDiffs[1],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    bazDiffs[1],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Increase replication factor
@@ -461,9 +472,9 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: bazDocs[1],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                bazDiffs[1],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    bazDiffs[1],
+			wantErr:     "",
+			wantApplied: true,
 		},
 		{
 			// Add partitions
@@ -475,9 +486,9 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                bazDiffs[2],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    bazDiffs[2],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Add partitions
@@ -487,9 +498,9 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: bazDocs[2],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                bazDiffs[2],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    bazDiffs[2],
+			wantErr:     "",
+			wantApplied: true,
 		},
 		{
 			// Add partitions and increase replication factor
@@ -501,9 +512,9 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                bazDiffs[3],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    bazDiffs[3],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Add partitions and increase replication factor
@@ -513,9 +524,9 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: bazDocs[3],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                bazDiffs[3],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    bazDiffs[3],
+			wantErr:     "",
+			wantApplied: true,
 		},
 		{
 			// Decrease replication factor
@@ -527,9 +538,9 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                bazDiffs[4],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    bazDiffs[4],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Decrease replication factor
@@ -539,9 +550,9 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: bazDocs[4],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                bazDiffs[4],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    bazDiffs[4],
+			wantErr:     "",
+			wantApplied: true,
 		},
 	})
 
@@ -560,9 +571,9 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                quxDiffs[0],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    quxDiffs[0],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Create topic
@@ -572,9 +583,9 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: quxDocs[0],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                quxDiffs[0],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    quxDiffs[0],
+			wantErr:     "",
+			wantApplied: true,
 		},
 		{
 			// Increase replication factor
@@ -586,9 +597,9 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                quxDiffs[1],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    quxDiffs[1],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Increase replication factor
@@ -598,9 +609,9 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: quxDocs[1],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                quxDiffs[1],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    quxDiffs[1],
+			wantErr:     "",
+			wantApplied: true,
 		},
 		{
 			// Add partitions
@@ -612,9 +623,9 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                quxDiffs[2],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    quxDiffs[2],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Add partitions
@@ -624,9 +635,9 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: quxDocs[2],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                quxDiffs[2],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    quxDiffs[2],
+			wantErr:     "",
+			wantApplied: true,
 		},
 		{
 			// Add partitions and increase replication factor
@@ -638,9 +649,9 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                quxDiffs[3],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    quxDiffs[3],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Add partitions and increase replication factor
@@ -650,9 +661,9 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: quxDocs[3],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                quxDiffs[3],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    quxDiffs[3],
+			wantErr:     "",
+			wantApplied: true,
 		},
 		{
 			// Decrease replication factor
@@ -664,9 +675,9 @@ func Test_applier_Execute(t *testing.T) {
 					DryRun: true,
 				},
 			},
-			wantDiff:                quxDiffs[4],
-			wantErr:                 "",
-			wantHasUnappliedChanges: true,
+			wantDiff:    quxDiffs[4],
+			wantErr:     "",
+			wantApplied: false,
 		},
 		{
 			// Decrease replication factor
@@ -676,9 +687,9 @@ func Test_applier_Execute(t *testing.T) {
 				yamlDoc: quxDocs[4],
 				flags:   ApplierFlags{},
 			},
-			wantDiff:                quxDiffs[4],
-			wantErr:                 "",
-			wantHasUnappliedChanges: false,
+			wantDiff:    quxDiffs[4],
+			wantErr:     "",
+			wantApplied: true,
 		},
 	})
 }

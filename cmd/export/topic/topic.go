@@ -1,4 +1,4 @@
-package topics
+package topic
 
 import (
 	"fmt"
@@ -16,18 +16,17 @@ import (
 func Command(cl *client.Client) *cobra.Command {
 	flags := export.ExportControllerFlags{}
 	cmd := &cobra.Command{
-		Use:     "topics",
-		Aliases: []string{"topic"},
-		Short:   "Export cluster topics to YAML definitions",
-		Long:    "Export cluster topics to YAML definitions (Kafka 0.11.0+).",
+		Use:   "topic",
+		Short: "Export topics to YAML definitions",
+		Long:  "Export topics to YAML definitions (Kafka 0.11.0+).",
 		Example: `# export all topics to the directory "topics"
-kdef export topics --output-dir "topics"
+kdef export topic --output-dir "topics"
 
 # export all topics to stdout
-kdef export topics --quiet
+kdef export topic --quiet
 
 # export all topics starting with "myapp"
-kdef export topics --match "myapp.*"`,
+kdef export topic --match "myapp.*"`,
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		DisableFlagsInUseLine: true,
