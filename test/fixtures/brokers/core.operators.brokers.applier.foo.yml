@@ -10,6 +10,7 @@ spec:
     background.threads: 12
     leader.replication.throttled.rate: "700000000"
     follower.replication.throttled.rate: "700000000"
+  deleteMissingConfigs: true
 ---
 # Version 1
 # Update configs
@@ -22,6 +23,7 @@ spec:
     background.threads: 12
     leader.replication.throttled.rate: "700000000"
     follower.replication.throttled.rate: "600000000"
+  deleteMissingConfigs: true
 ---
 # Version 2
 # Delete configs
@@ -34,6 +36,7 @@ spec:
     background.threads: 12
     leader.replication.throttled.rate: "700000000"
     # follower.replication.throttled.rate: "600000000" # deleted
+  deleteMissingConfigs: true
 ---
 # Version 3
 # Update configs using non-incremental method
@@ -46,8 +49,23 @@ spec:
     background.threads: 12
     leader.replication.throttled.rate: "700000000"
     follower.replication.throttled.rate: "700000000"
+  deleteMissingConfigs: true
 ---
 # Version 4
+# Delete configs using non-incremental method
+# Fail due to deletion of missing configs being not enabled
+apiVersion: v1
+kind: brokers
+metadata:
+  name: core.operators.brokers.applier.foo
+spec:
+  configs:
+    background.threads: 12
+    # leader.replication.throttled.rate: "700000000" # deleted
+    # follower.replication.throttled.rate: "700000000" # deleted
+  # deleteMissingConfigs: true
+---
+# Version 5
 # Delete configs using non-incremental method
 apiVersion: v1
 kind: brokers
@@ -58,3 +76,4 @@ spec:
     background.threads: 12
     # leader.replication.throttled.rate: "700000000" # deleted
     # follower.replication.throttled.rate: "700000000" # deleted
+  deleteMissingConfigs: true

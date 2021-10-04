@@ -21,9 +21,8 @@ import (
 
 // Flags to configure an applier
 type ApplierFlags struct {
-	DeleteMissingConfigs bool
-	DryRun               bool
-	NonIncremental       bool
+	DryRun         bool
+	NonIncremental bool
 }
 
 // Applier operations
@@ -206,7 +205,7 @@ func (a *applier) updateApplyResult() error {
 	}
 
 	// Modify the remote definition to remove optional properties not specified in local
-	// Further, add properties that are local only and have no remote state
+	// Further, set properties that are local only and have no remote state
 	if remoteCopy != nil {
 		// Remove assignments if not specified in local
 		if !a.localDef.Spec.HasAssignments() {
@@ -227,7 +226,8 @@ func (a *applier) updateApplyResult() error {
 			}
 		}
 
-		// Add properties that are local only and have no remote state
+		// Set properties that are local only and have no remote state
+		remoteCopy.Spec.DeleteMissingConfigs = a.localDef.Spec.DeleteMissingConfigs
 		remoteCopy.Spec.Reassignment.AwaitTimeoutSec = a.localDef.Spec.Reassignment.AwaitTimeoutSec
 	}
 
@@ -333,7 +333,7 @@ func (a *applier) buildConfigOps() {
 		a.localDef.Spec.Configs,
 		a.remoteDef.Spec.Configs,
 		a.remoteConfigs,
-		a.flags.DeleteMissingConfigs,
+		a.localDef.Spec.DeleteMissingConfigs,
 		a.flags.NonIncremental,
 	)
 }
@@ -341,8 +341,8 @@ func (a *applier) buildConfigOps() {
 // Update topic configs
 func (a *applier) updateConfigs() error {
 	if a.flags.NonIncremental {
-		if a.ops.config.ContainsOp(service.DeleteConfigOperation) && !a.flags.DeleteMissingConfigs {
-			return errors.New("cannot apply delete config operations because flag --delete-missing-configs is not set")
+		if a.ops.config.ContainsOp(service.DeleteConfigOperation) && !a.localDef.Spec.DeleteMissingConfigs {
+			return errors.New("cannot apply configs because deletion of missing configs is not enabled")
 		}
 
 		if err := a.alterConfigs(); err != nil {

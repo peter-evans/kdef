@@ -33,6 +33,7 @@ spec:
     segment.jitter.ms: "0"
     segment.ms: "604800000"
     unclean.leader.election.enable: "false"
+  deleteMissingConfigs: true
   partitions: 3
   replicationFactor: 3
 ---
@@ -70,6 +71,7 @@ spec:
     segment.jitter.ms: "0"
     segment.ms: "604800000"
     unclean.leader.election.enable: "false"
+  deleteMissingConfigs: true
   partitions: 3
   replicationFactor: 3
 ---
@@ -107,6 +109,7 @@ spec:
     segment.jitter.ms: "0"
     segment.ms: "604800000"
     unclean.leader.election.enable: "false"
+  deleteMissingConfigs: true
   partitions: 3
   replicationFactor: 3
 ---
@@ -144,10 +147,50 @@ spec:
     segment.jitter.ms: "0"
     segment.ms: "604800000"
     unclean.leader.election.enable: "false"
+  deleteMissingConfigs: true
   partitions: 3
   replicationFactor: 3
 ---
 # Version 4
+# Delete configs using non-incremental method
+# Fail due to deletion of missing configs being not enabled
+apiVersion: v1
+kind: topic
+metadata:
+  name: core.operators.topic.applier.foo
+spec:
+  configs:
+    cleanup.policy: delete
+    compression.type: producer
+    delete.retention.ms: "86400001"
+    file.delete.delay.ms: "60000"
+    flush.messages: "9223372036854775807"
+    flush.ms: "9223372036854775807"
+    follower.replication.throttled.replicas: ""
+    index.interval.bytes: "4096"
+    leader.replication.throttled.replicas: ""
+    max.compaction.lag.ms: "9223372036854775807"
+    max.message.bytes: "1048588"
+    message.downconversion.enable: "true"
+    message.format.version: 2.8-IV1
+    message.timestamp.difference.max.ms: "9223372036854775807"
+    message.timestamp.type: CreateTime
+    min.cleanable.dirty.ratio: "0.5"
+    min.compaction.lag.ms: "0"
+    # min.insync.replicas: "2" # deleted
+    preallocate: "false"
+    retention.bytes: "-1"
+    retention.ms: "604800000"
+    segment.bytes: "1073741824"
+    segment.index.bytes: "10485760"
+    segment.jitter.ms: "0"
+    segment.ms: "604800000"
+    unclean.leader.election.enable: "false"
+  # deleteMissingConfigs: true
+  partitions: 3
+  replicationFactor: 3
+---
+# Version 5
 # Delete configs using non-incremental method
 apiVersion: v1
 kind: topic
@@ -181,5 +224,6 @@ spec:
     segment.jitter.ms: "0"
     segment.ms: "604800000"
     unclean.leader.election.enable: "false"
+  deleteMissingConfigs: true
   partitions: 3
   replicationFactor: 3

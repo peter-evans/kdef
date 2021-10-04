@@ -10,7 +10,8 @@
           "background.threads": "12",
           "follower.replication.throttled.rate": "700000000",
           "leader.replication.throttled.rate": "700000000"
-        }
+        },
+        "deleteMissingConfigs": false
       }
     }
   }

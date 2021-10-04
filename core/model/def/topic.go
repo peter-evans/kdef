@@ -18,12 +18,13 @@ type TopicDefinition struct {
 
 // Topic spec definition
 type TopicSpecDefinition struct {
-	Configs           ConfigsMap                  `json:"configs,omitempty"`
-	Partitions        int                         `json:"partitions"`
-	ReplicationFactor int                         `json:"replicationFactor"`
-	Assignments       PartitionAssignments        `json:"assignments,omitempty"`
-	RackAssignments   PartitionRackAssignments    `json:"rackAssignments,omitempty"`
-	Reassignment      TopicReassignmentDefinition `json:"reassignment,omitempty"`
+	Configs              ConfigsMap                  `json:"configs,omitempty"`
+	DeleteMissingConfigs bool                        `json:"deleteMissingConfigs"`
+	Partitions           int                         `json:"partitions"`
+	ReplicationFactor    int                         `json:"replicationFactor"`
+	Assignments          PartitionAssignments        `json:"assignments,omitempty"`
+	RackAssignments      PartitionRackAssignments    `json:"rackAssignments,omitempty"`
+	Reassignment         TopicReassignmentDefinition `json:"reassignment,omitempty"`
 }
 
 // Topic assignments

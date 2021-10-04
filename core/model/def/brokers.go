@@ -12,7 +12,8 @@ type BrokersDefinition struct {
 
 // Brokers spec definition
 type BrokersSpecDefinition struct {
-	Configs ConfigsMap `json:"configs,omitempty"`
+	Configs              ConfigsMap `json:"configs,omitempty"`
+	DeleteMissingConfigs bool       `json:"deleteMissingConfigs"`
 }
 
 // Create a copy of this BrokersDefinition

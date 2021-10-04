@@ -23,9 +23,8 @@ type applier interface {
 // Flags to configure an apply controller
 type ApplyControllerFlags struct {
 	// ApplierFlags
-	DeleteMissingConfigs bool
-	DryRun               bool
-	NonIncremental       bool
+	DryRun         bool
+	NonIncremental bool
 
 	// Apply controller specific
 	ContinueOnError bool
@@ -165,21 +164,18 @@ func applyYamlDocs(
 		switch resourceDef.Kind {
 		case "broker":
 			applier = broker.NewApplier(cl, yamlDocs[i], broker.ApplierFlags{
-				DeleteMissingConfigs: flags.DeleteMissingConfigs,
-				DryRun:               flags.DryRun,
-				NonIncremental:       flags.NonIncremental,
+				DryRun:         flags.DryRun,
+				NonIncremental: flags.NonIncremental,
 			})
 		case "brokers":
 			applier = brokers.NewApplier(cl, yamlDocs[i], brokers.ApplierFlags{
-				DeleteMissingConfigs: flags.DeleteMissingConfigs,
-				DryRun:               flags.DryRun,
-				NonIncremental:       flags.NonIncremental,
+				DryRun:         flags.DryRun,
+				NonIncremental: flags.NonIncremental,
 			})
 		case "topic":
 			applier = topic.NewApplier(cl, yamlDocs[i], topic.ApplierFlags{
-				DeleteMissingConfigs: flags.DeleteMissingConfigs,
-				DryRun:               flags.DryRun,
-				NonIncremental:       flags.NonIncremental,
+				DryRun:         flags.DryRun,
+				NonIncremental: flags.NonIncremental,
 			})
 		}
 
