@@ -13,6 +13,7 @@ spec:
     listener.name.listener_host.ssl.truststore.password: "123foo"
     leader.replication.throttled.rate: "700000000"
     follower.replication.throttled.rate: "700000000"
+  deleteMissingConfigs: true
 ---
 # Version 1
 # Update configs
@@ -28,6 +29,7 @@ spec:
     listener.name.listener_host.ssl.truststore.password: "123foo"
     leader.replication.throttled.rate: "700000000"
     follower.replication.throttled.rate: "600000000"
+  deleteMissingConfigs: true
 ---
 # Version 2
 # Delete configs
@@ -43,6 +45,7 @@ spec:
     # listener.name.listener_host.ssl.truststore.password: "123foo" # deleted
     leader.replication.throttled.rate: "700000000"
     follower.replication.throttled.rate: "600000000"
+  deleteMissingConfigs: true
 ---
 # Version 3
 # Update configs using non-incremental method
@@ -57,8 +60,25 @@ spec:
     listener.name.listener_host.ssl.keystore.password: "123foo"
     leader.replication.throttled.rate: "600000000"
     follower.replication.throttled.rate: "600000000"
+  deleteMissingConfigs: true
 ---
 # Version 4
+# Delete configs using non-incremental method
+# Fail due to deletion of missing configs being not enabled
+apiVersion: v1
+kind: broker
+metadata:
+  name: "1"
+spec:
+  configs:
+    # background.threads: 12 # deleted
+    log.retention.ms: 604800000
+    # listener.name.listener_host.ssl.keystore.password: "123foo" # deleted
+    leader.replication.throttled.rate: "600000000"
+    # follower.replication.throttled.rate: "600000000" # deleted
+  # deleteMissingConfigs: true
+---
+# Version 5
 # Delete configs using non-incremental method
 apiVersion: v1
 kind: broker
@@ -71,3 +91,4 @@ spec:
     # listener.name.listener_host.ssl.keystore.password: "123foo" # deleted
     leader.replication.throttled.rate: "600000000"
     # follower.replication.throttled.rate: "600000000" # deleted
+  deleteMissingConfigs: true

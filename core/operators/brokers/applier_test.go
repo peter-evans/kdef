@@ -174,8 +174,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: fooDocs[2],
 				flags: ApplierFlags{
-					DryRun:               true,
-					DeleteMissingConfigs: true,
+					DryRun: true,
 				},
 			},
 			wantDiff:    fooDiffs[2],
@@ -188,9 +187,7 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: fooDocs[2],
-				flags: ApplierFlags{
-					DeleteMissingConfigs: true,
-				},
+				flags:   ApplierFlags{},
 			},
 			wantDiff:    fooDiffs[2],
 			wantErr:     "",
@@ -227,6 +224,7 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Delete configs (non-incremental)
+			// Fail due to deletion of missing configs being not enabled
 			name: "10: Dry-run brokers foo version 4",
 			fields: fields{
 				cl:      cl,
@@ -237,21 +235,20 @@ func Test_applier_Execute(t *testing.T) {
 				},
 			},
 			wantDiff:    fooDiffs[4],
-			wantErr:     "cannot apply delete config operations because flag --delete-missing-configs is not set",
+			wantErr:     "cannot apply configs because deletion of missing configs is not enabled",
 			wantApplied: false,
 		},
 		{
 			// Delete configs (non-incremental)
-			name: "11: Apply brokers foo version 4",
+			name: "11: Apply brokers foo version 5",
 			fields: fields{
 				cl:      cl,
-				yamlDoc: fooDocs[4],
+				yamlDoc: fooDocs[5],
 				flags: ApplierFlags{
-					NonIncremental:       true,
-					DeleteMissingConfigs: true,
+					NonIncremental: true,
 				},
 			},
-			wantDiff:    fooDiffs[4],
+			wantDiff:    fooDiffs[5],
 			wantErr:     "",
 			wantApplied: true,
 		},

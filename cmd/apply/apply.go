@@ -44,8 +44,6 @@ cat topics/my_topic.yml | kdef apply - --dry-run`,
 		},
 	}
 
-	cmd.Flags().BoolVar(&flags.DeleteMissingConfigs, "delete-missing-configs", false, `allow deletion of dynamic config keys not present in the definition
-CAUTION: this will permanently delete configuration keys — always confirm with --dry-run`)
 	cmd.Flags().BoolVarP(&flags.DryRun, "dry-run", "d", false, "validate and review the operation only")
 	cmd.Flags().BoolVarP(&flags.ExitCode, "exit-code", "e", false, "implies --dry-run and causes the program to exit with 1 if there are unapplied changes and 0 otherwise")
 	cmd.Flags().BoolVar(&flags.JsonOutput, "json-output", false, "implies --quiet and outputs JSON apply results")

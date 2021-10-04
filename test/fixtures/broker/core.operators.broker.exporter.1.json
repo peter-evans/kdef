@@ -76,7 +76,8 @@
           "ssl.truststore.location": null,
           "ssl.truststore.type": "JKS",
           "unclean.leader.election.enable": "false"
-        }
+        },
+        "deleteMissingConfigs": false
       }
     }
   },
@@ -157,7 +158,8 @@
           "ssl.truststore.location": null,
           "ssl.truststore.type": "JKS",
           "unclean.leader.election.enable": "false"
-        }
+        },
+        "deleteMissingConfigs": false
       }
     }
   }

@@ -15,9 +15,8 @@ import (
 
 // Flags to configure an applier
 type ApplierFlags struct {
-	DeleteMissingConfigs bool
-	DryRun               bool
-	NonIncremental       bool
+	DryRun         bool
+	NonIncremental bool
 }
 
 // Applier operations
@@ -148,7 +147,7 @@ func (a *applier) updateApplyResult() error {
 	remoteCopy := a.remoteDef.Copy()
 
 	// Modify the remote definition to remove optional properties not specified in local
-	// Further, add properties that are local only and have no remote state
+	// Further, set properties that are local only and have no remote state
 
 	// The only configs we want to see are those specified in local and those in configOps
 	// configOps could contain key deletions that should be shown in the diff
@@ -161,8 +160,8 @@ func (a *applier) updateApplyResult() error {
 		}
 	}
 
-	// Set metadata name to match local and remove it from the diff
-	remoteCopy.Metadata.Name = a.localDef.Metadata.Name
+	// Set properties that are local only and have no remote state
+	remoteCopy.Spec.DeleteMissingConfigs = a.localDef.Spec.DeleteMissingConfigs
 
 	// Compute diff
 	diff, err := jsondiff.Diff(&remoteCopy, &a.localDef)
@@ -207,7 +206,7 @@ func (a *applier) buildConfigOps() {
 		a.localDef.Spec.Configs,
 		a.remoteDef.Spec.Configs,
 		a.remoteConfigs,
-		a.flags.DeleteMissingConfigs,
+		a.localDef.Spec.DeleteMissingConfigs,
 		a.flags.NonIncremental,
 	)
 }
@@ -215,8 +214,8 @@ func (a *applier) buildConfigOps() {
 // Update broker configs
 func (a *applier) updateConfigs() error {
 	if a.flags.NonIncremental {
-		if a.ops.config.ContainsOp(service.DeleteConfigOperation) && !a.flags.DeleteMissingConfigs {
-			return errors.New("cannot apply delete config operations because flag --delete-missing-configs is not set")
+		if a.ops.config.ContainsOp(service.DeleteConfigOperation) && !a.localDef.Spec.DeleteMissingConfigs {
+			return errors.New("cannot apply configs because deletion of missing configs is not enabled")
 		}
 
 		if err := a.alterConfigs(); err != nil {
