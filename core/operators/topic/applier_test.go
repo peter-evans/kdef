@@ -1,6 +1,7 @@
 package topic
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"github.com/peter-evans/kdef/test/compose"
 	"github.com/peter-evans/kdef/test/fixtures"
 	"github.com/peter-evans/kdef/test/tutil"
+	"github.com/twmb/franz-go/pkg/kgo"
 )
 
 // VERBOSE_TESTS=1 go test -run ^Test_applier_Execute$ ./core/operators/topic -v
@@ -115,576 +117,576 @@ func Test_applier_Execute(t *testing.T) {
 			wantErr:     "",
 			wantApplied: false,
 		},
-		// {
-		// 	// Create topic
-		// 	name: "2: Apply topic foo version 0",
-		// 	fields: fields{
-		// 		cl:      cl,
-		// 		yamlDoc: fooDocs[0],
-		// 		flags:   ApplierFlags{},
-		// 	},
-		// 	wantDiff:    fooDiffs[0],
-		// 	wantErr:     "",
-		// 	wantApplied: true,
-		// },
-		// {
-		// 	// No diff check
-		// 	name: "3: Dry-run topic foo version 0",
-		// 	fields: fields{
-		// 		cl:      cl,
-		// 		yamlDoc: fooDocs[0],
-		// 		flags: ApplierFlags{
-		// 			DryRun: true,
-		// 		},
-		// 	},
-		// 	wantDiff:    "",
-		// 	wantErr:     "",
-		// 	wantApplied: false,
-		// },
-		// {
-		// 	// Update configs
-		// 	name: "4: Dry-run topic foo version 1",
-		// 	fields: fields{
-		// 		cl:      cl,
-		// 		yamlDoc: fooDocs[1],
-		// 		flags: ApplierFlags{
-		// 			DryRun: true,
-		// 		},
-		// 	},
-		// 	wantDiff:    fooDiffs[1],
-		// 	wantErr:     "",
-		// 	wantApplied: false,
-		// },
-		// {
-		// 	// Update configs
-		// 	name: "5: Apply topic foo version 1",
-		// 	fields: fields{
-		// 		cl:      cl,
-		// 		yamlDoc: fooDocs[1],
-		// 		flags:   ApplierFlags{},
-		// 	},
-		// 	wantDiff:    fooDiffs[1],
-		// 	wantErr:     "",
-		// 	wantApplied: true,
-		// },
-		// {
-		// 	// Delete configs
-		// 	name: "6: Dry-run topic foo version 2",
-		// 	fields: fields{
-		// 		cl:      cl,
-		// 		yamlDoc: fooDocs[2],
-		// 		flags: ApplierFlags{
-		// 			DryRun: true,
-		// 		},
-		// 	},
-		// 	wantDiff:    fooDiffs[2],
-		// 	wantErr:     "",
-		// 	wantApplied: false,
-		// },
-		// {
-		// 	// Delete configs
-		// 	name: "7: Apply topic foo version 2",
-		// 	fields: fields{
-		// 		cl:      cl,
-		// 		yamlDoc: fooDocs[2],
-		// 		flags:   ApplierFlags{},
-		// 	},
-		// 	wantDiff:    fooDiffs[2],
-		// 	wantErr:     "",
-		// 	wantApplied: true,
-		// },
-		// {
-		// 	// Update configs (non-incremental)
-		// 	name: "8: Dry-run topic foo version 3",
-		// 	fields: fields{
-		// 		cl:      cl,
-		// 		yamlDoc: fooDocs[3],
-		// 		flags: ApplierFlags{
-		// 			DryRun:         true,
-		// 			NonIncremental: true,
-		// 		},
-		// 	},
-		// 	wantDiff:    fooDiffs[3],
-		// 	wantErr:     "",
-		// 	wantApplied: false,
-		// },
-		// {
-		// 	// Update configs (non-incremental)
-		// 	name: "9: Apply topic foo version 3",
-		// 	fields: fields{
-		// 		cl:      cl,
-		// 		yamlDoc: fooDocs[3],
-		// 		flags: ApplierFlags{
-		// 			NonIncremental: true,
-		// 		},
-		// 	},
-		// 	wantDiff:    fooDiffs[3],
-		// 	wantErr:     "",
-		// 	wantApplied: true,
-		// },
-		// {
-		// 	// Delete configs (non-incremental)
-		// 	// Fail due to deletion of missing configs being not enabled
-		// 	name: "10: Dry-run topic foo version 4",
-		// 	fields: fields{
-		// 		cl:      cl,
-		// 		yamlDoc: fooDocs[4],
-		// 		flags: ApplierFlags{
-		// 			DryRun:         true,
-		// 			NonIncremental: true,
-		// 		},
-		// 	},
-		// 	wantDiff:    fooDiffs[4],
-		// 	wantErr:     "cannot apply configs because deletion of missing configs is not enabled",
-		// 	wantApplied: false,
-		// },
-		// {
-		// 	// Delete configs (non-incremental)
-		// 	name: "11: Apply topic foo version 5",
-		// 	fields: fields{
-		// 		cl:      cl,
-		// 		yamlDoc: fooDocs[5],
-		// 		flags: ApplierFlags{
-		// 			NonIncremental: true,
-		// 		},
-		// 	},
-		// 	wantDiff:    fooDiffs[5],
-		// 	wantErr:     "",
-		// 	wantApplied: true,
-		// },
+		{
+			// Create topic
+			name: "2: Apply topic foo version 0",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: fooDocs[0],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    fooDiffs[0],
+			wantErr:     "",
+			wantApplied: true,
+		},
+		{
+			// No diff check
+			name: "3: Dry-run topic foo version 0",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: fooDocs[0],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    "",
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Update configs
+			name: "4: Dry-run topic foo version 1",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: fooDocs[1],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    fooDiffs[1],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Update configs
+			name: "5: Apply topic foo version 1",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: fooDocs[1],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    fooDiffs[1],
+			wantErr:     "",
+			wantApplied: true,
+		},
+		{
+			// Delete configs
+			name: "6: Dry-run topic foo version 2",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: fooDocs[2],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    fooDiffs[2],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Delete configs
+			name: "7: Apply topic foo version 2",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: fooDocs[2],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    fooDiffs[2],
+			wantErr:     "",
+			wantApplied: true,
+		},
+		{
+			// Update configs (non-incremental)
+			name: "8: Dry-run topic foo version 3",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: fooDocs[3],
+				flags: ApplierFlags{
+					DryRun:         true,
+					NonIncremental: true,
+				},
+			},
+			wantDiff:    fooDiffs[3],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Update configs (non-incremental)
+			name: "9: Apply topic foo version 3",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: fooDocs[3],
+				flags: ApplierFlags{
+					NonIncremental: true,
+				},
+			},
+			wantDiff:    fooDiffs[3],
+			wantErr:     "",
+			wantApplied: true,
+		},
+		{
+			// Delete configs (non-incremental)
+			// Fail due to deletion of missing configs being not enabled
+			name: "10: Dry-run topic foo version 4",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: fooDocs[4],
+				flags: ApplierFlags{
+					DryRun:         true,
+					NonIncremental: true,
+				},
+			},
+			wantDiff:    fooDiffs[4],
+			wantErr:     "cannot apply configs because deletion of missing configs is not enabled",
+			wantApplied: false,
+		},
+		{
+			// Delete configs (non-incremental)
+			name: "11: Apply topic foo version 5",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: fooDocs[5],
+				flags: ApplierFlags{
+					NonIncremental: true,
+				},
+			},
+			wantDiff:    fooDiffs[5],
+			wantErr:     "",
+			wantApplied: true,
+		},
 	})
 
-	// // Tests changes to assignments and handling of in-progress reassignments
-	// barDocs := tutil.FileToYamlDocs(t, "../../../test/fixtures/topic/core.operators.topic.applier.bar.yml")
-	// barDiffs := getDiffsFixture(t, "../../../test/fixtures/topic/core.operators.topic.applier.bar.json")
-	// runTests(t, []testCase{
-	// 	// NOTE: Execution of tests is ordered
-	// 	{
-	// 		// Create topic
-	// 		name: "1: Dry-run topic bar version 0",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: barDocs[0],
-	// 			flags: ApplierFlags{
-	// 				DryRun: true,
-	// 			},
-	// 		},
-	// 		wantDiff:    barDiffs[0],
-	// 		wantErr:     "",
-	// 		wantApplied: false,
-	// 	},
-	// 	{
-	// 		// Create topic
-	// 		name: "2: Apply topic bar version 0",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: barDocs[0],
-	// 			flags:   ApplierFlags{},
-	// 		},
-	// 		wantDiff:    barDiffs[0],
-	// 		wantErr:     "",
-	// 		wantApplied: true,
-	// 	},
-	// })
+	// Tests changes to assignments and handling of in-progress reassignments
+	barDocs := tutil.FileToYamlDocs(t, "../../../test/fixtures/topic/core.operators.topic.applier.bar.yml")
+	barDiffs := getDiffsFixture(t, "../../../test/fixtures/topic/core.operators.topic.applier.bar.json")
+	runTests(t, []testCase{
+		// NOTE: Execution of tests is ordered
+		{
+			// Create topic
+			name: "1: Dry-run topic bar version 0",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[0],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    barDiffs[0],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Create topic
+			name: "2: Apply topic bar version 0",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[0],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    barDiffs[0],
+			wantErr:     "",
+			wantApplied: true,
+		},
+	})
 
-	// // Produce records into topic before proceeding with remaining test cases
-	// topic := "core.operators.topic.applier.bar"
-	// t.Logf("Producing records into topic %q before proceeding...", topic)
-	// val, _ := tutil.RandomBytes(6000)
-	// for i := 0; i < 1500000; i++ {
-	// 	key, _ := tutil.RandomBytes(16)
-	// 	r := &kgo.Record{
-	// 		Topic: topic,
-	// 		Key:   key,
-	// 		Value: val,
-	// 	}
-	// 	cl.Client().Produce(context.Background(), r, func(r *kgo.Record, err error) {})
-	// }
-	// if err := cl.Client().Flush(context.Background()); err != nil {
-	// 	t.Errorf("failed to produce records: %v", err)
-	// 	t.FailNow()
-	// }
+	// Produce records into topic before proceeding with remaining test cases
+	topic := "core.operators.topic.applier.bar"
+	t.Logf("Producing records into topic %q before proceeding...", topic)
+	val, _ := tutil.RandomBytes(6000)
+	for i := 0; i < 1500000; i++ {
+		key, _ := tutil.RandomBytes(16)
+		r := &kgo.Record{
+			Topic: topic,
+			Key:   key,
+			Value: val,
+		}
+		cl.Client().Produce(context.Background(), r, func(r *kgo.Record, err error) {})
+	}
+	if err := cl.Client().Flush(context.Background()); err != nil {
+		t.Errorf("failed to produce records: %v", err)
+		t.FailNow()
+	}
 
-	// // Tests changes to assignments and handling of in-progress reassignments (continued)
-	// runTests(t, []testCase{
-	// 	// NOTE: Execution of tests is ordered
-	// 	{
-	// 		// Increase replication factor
-	// 		name: "3: Dry-run topic bar version 1",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: barDocs[1],
-	// 			flags: ApplierFlags{
-	// 				DryRun: true,
-	// 			},
-	// 		},
-	// 		wantDiff:    barDiffs[1],
-	// 		wantErr:     "",
-	// 		wantApplied: false,
-	// 	},
-	// 	{
-	// 		// Increase replication factor
-	// 		name: "4: Apply topic bar version 1",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: barDocs[1],
-	// 			flags:   ApplierFlags{},
-	// 		},
-	// 		wantDiff:    barDiffs[1],
-	// 		wantErr:     "",
-	// 		wantApplied: true,
-	// 	},
-	// 	{
-	// 		// Add partitions
-	// 		name: "5: Dry-run topic bar version 2",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: barDocs[2],
-	// 			flags: ApplierFlags{
-	// 				DryRun: true,
-	// 			},
-	// 		},
-	// 		wantDiff:    barDiffs[2],
-	// 		wantErr:     "",
-	// 		wantApplied: false,
-	// 	},
-	// 	{
-	// 		// Add partitions
-	// 		name: "6: Apply topic bar version 2",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: barDocs[2],
-	// 			flags:   ApplierFlags{},
-	// 		},
-	// 		wantDiff:    barDiffs[2],
-	// 		wantErr:     "",
-	// 		wantApplied: true,
-	// 	},
-	// 	{
-	// 		// Add partitions and increase replication factor
-	// 		name: "7: Dry-run topic bar version 3",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: barDocs[3],
-	// 			flags: ApplierFlags{
-	// 				DryRun: true,
-	// 			},
-	// 		},
-	// 		wantDiff:    barDiffs[3],
-	// 		wantErr:     "",
-	// 		wantApplied: false,
-	// 	},
-	// 	{
-	// 		// Add partitions and increase replication factor
-	// 		name: "8: Apply topic bar version 3",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: barDocs[3],
-	// 			flags:   ApplierFlags{},
-	// 		},
-	// 		wantDiff:    barDiffs[3],
-	// 		wantErr:     "",
-	// 		wantApplied: true,
-	// 	},
-	// 	{
-	// 		// Decrease replication factor
-	// 		name: "9: Dry-run topic bar version 4",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: barDocs[4],
-	// 			flags: ApplierFlags{
-	// 				DryRun: true,
-	// 			},
-	// 		},
-	// 		wantDiff:    barDiffs[4],
-	// 		wantErr:     "",
-	// 		wantApplied: false,
-	// 	},
-	// 	{
-	// 		// Decrease replication factor
-	// 		name: "10: Apply topic bar version 4",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: barDocs[4],
-	// 			flags:   ApplierFlags{},
-	// 		},
-	// 		wantDiff:    barDiffs[4],
-	// 		wantErr:     "",
-	// 		wantApplied: true,
-	// 	},
-	// })
+	// Tests changes to assignments and handling of in-progress reassignments (continued)
+	runTests(t, []testCase{
+		// NOTE: Execution of tests is ordered
+		{
+			// Increase replication factor
+			name: "3: Dry-run topic bar version 1",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[1],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    barDiffs[1],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Increase replication factor
+			name: "4: Apply topic bar version 1",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[1],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    barDiffs[1],
+			wantErr:     "",
+			wantApplied: true,
+		},
+		{
+			// Add partitions
+			name: "5: Dry-run topic bar version 2",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[2],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    barDiffs[2],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Add partitions
+			name: "6: Apply topic bar version 2",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[2],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    barDiffs[2],
+			wantErr:     "",
+			wantApplied: true,
+		},
+		{
+			// Add partitions and increase replication factor
+			name: "7: Dry-run topic bar version 3",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[3],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    barDiffs[3],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Add partitions and increase replication factor
+			name: "8: Apply topic bar version 3",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[3],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    barDiffs[3],
+			wantErr:     "",
+			wantApplied: true,
+		},
+		{
+			// Decrease replication factor
+			name: "9: Dry-run topic bar version 4",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[4],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    barDiffs[4],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Decrease replication factor
+			name: "10: Apply topic bar version 4",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: barDocs[4],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    barDiffs[4],
+			wantErr:     "",
+			wantApplied: true,
+		},
+	})
 
-	// // Tests partition and replication factor changes (without static assignments)
-	// bazDocs := tutil.FileToYamlDocs(t, "../../../test/fixtures/topic/core.operators.topic.applier.baz.yml")
-	// bazDiffs := getDiffsFixture(t, "../../../test/fixtures/topic/core.operators.topic.applier.baz.json")
-	// runTests(t, []testCase{
-	// 	// NOTE: Execution of tests is ordered
-	// 	{
-	// 		// Create topic
-	// 		name: "1: Dry-run topic baz version 0",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: bazDocs[0],
-	// 			flags: ApplierFlags{
-	// 				DryRun: true,
-	// 			},
-	// 		},
-	// 		wantDiff:    bazDiffs[0],
-	// 		wantErr:     "",
-	// 		wantApplied: false,
-	// 	},
-	// 	{
-	// 		// Create topic
-	// 		name: "2: Apply topic baz version 0",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: bazDocs[0],
-	// 			flags:   ApplierFlags{},
-	// 		},
-	// 		wantDiff:    bazDiffs[0],
-	// 		wantErr:     "",
-	// 		wantApplied: true,
-	// 	},
-	// 	{
-	// 		// Increase replication factor
-	// 		name: "3: Dry-run topic baz version 1",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: bazDocs[1],
-	// 			flags: ApplierFlags{
-	// 				DryRun: true,
-	// 			},
-	// 		},
-	// 		wantDiff:    bazDiffs[1],
-	// 		wantErr:     "",
-	// 		wantApplied: false,
-	// 	},
-	// 	{
-	// 		// Increase replication factor
-	// 		name: "4: Apply topic baz version 1",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: bazDocs[1],
-	// 			flags:   ApplierFlags{},
-	// 		},
-	// 		wantDiff:    bazDiffs[1],
-	// 		wantErr:     "",
-	// 		wantApplied: true,
-	// 	},
-	// 	{
-	// 		// Add partitions
-	// 		name: "5: Dry-run topic baz version 2",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: bazDocs[2],
-	// 			flags: ApplierFlags{
-	// 				DryRun: true,
-	// 			},
-	// 		},
-	// 		wantDiff:    bazDiffs[2],
-	// 		wantErr:     "",
-	// 		wantApplied: false,
-	// 	},
-	// 	{
-	// 		// Add partitions
-	// 		name: "6: Apply topic baz version 2",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: bazDocs[2],
-	// 			flags:   ApplierFlags{},
-	// 		},
-	// 		wantDiff:    bazDiffs[2],
-	// 		wantErr:     "",
-	// 		wantApplied: true,
-	// 	},
-	// 	{
-	// 		// Add partitions and increase replication factor
-	// 		name: "7: Dry-run topic baz version 3",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: bazDocs[3],
-	// 			flags: ApplierFlags{
-	// 				DryRun: true,
-	// 			},
-	// 		},
-	// 		wantDiff:    bazDiffs[3],
-	// 		wantErr:     "",
-	// 		wantApplied: false,
-	// 	},
-	// 	{
-	// 		// Add partitions and increase replication factor
-	// 		name: "8: Apply topic baz version 3",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: bazDocs[3],
-	// 			flags:   ApplierFlags{},
-	// 		},
-	// 		wantDiff:    bazDiffs[3],
-	// 		wantErr:     "",
-	// 		wantApplied: true,
-	// 	},
-	// 	{
-	// 		// Decrease replication factor
-	// 		name: "9: Dry-run topic baz version 4",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: bazDocs[4],
-	// 			flags: ApplierFlags{
-	// 				DryRun: true,
-	// 			},
-	// 		},
-	// 		wantDiff:    bazDiffs[4],
-	// 		wantErr:     "",
-	// 		wantApplied: false,
-	// 	},
-	// 	{
-	// 		// Decrease replication factor
-	// 		name: "10: Apply topic baz version 4",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: bazDocs[4],
-	// 			flags:   ApplierFlags{},
-	// 		},
-	// 		wantDiff:    bazDiffs[4],
-	// 		wantErr:     "",
-	// 		wantApplied: true,
-	// 	},
-	// })
+	// Tests partition and replication factor changes (without static assignments)
+	bazDocs := tutil.FileToYamlDocs(t, "../../../test/fixtures/topic/core.operators.topic.applier.baz.yml")
+	bazDiffs := getDiffsFixture(t, "../../../test/fixtures/topic/core.operators.topic.applier.baz.json")
+	runTests(t, []testCase{
+		// NOTE: Execution of tests is ordered
+		{
+			// Create topic
+			name: "1: Dry-run topic baz version 0",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[0],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    bazDiffs[0],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Create topic
+			name: "2: Apply topic baz version 0",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[0],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    bazDiffs[0],
+			wantErr:     "",
+			wantApplied: true,
+		},
+		{
+			// Increase replication factor
+			name: "3: Dry-run topic baz version 1",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[1],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    bazDiffs[1],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Increase replication factor
+			name: "4: Apply topic baz version 1",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[1],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    bazDiffs[1],
+			wantErr:     "",
+			wantApplied: true,
+		},
+		{
+			// Add partitions
+			name: "5: Dry-run topic baz version 2",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[2],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    bazDiffs[2],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Add partitions
+			name: "6: Apply topic baz version 2",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[2],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    bazDiffs[2],
+			wantErr:     "",
+			wantApplied: true,
+		},
+		{
+			// Add partitions and increase replication factor
+			name: "7: Dry-run topic baz version 3",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[3],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    bazDiffs[3],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Add partitions and increase replication factor
+			name: "8: Apply topic baz version 3",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[3],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    bazDiffs[3],
+			wantErr:     "",
+			wantApplied: true,
+		},
+		{
+			// Decrease replication factor
+			name: "9: Dry-run topic baz version 4",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[4],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    bazDiffs[4],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Decrease replication factor
+			name: "10: Apply topic baz version 4",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: bazDocs[4],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    bazDiffs[4],
+			wantErr:     "",
+			wantApplied: true,
+		},
+	})
 
-	// // Tests rack assignments
-	// quxDocs := tutil.FileToYamlDocs(t, "../../../test/fixtures/topic/core.operators.topic.applier.qux.yml")
-	// quxDiffs := getDiffsFixture(t, "../../../test/fixtures/topic/core.operators.topic.applier.qux.json")
-	// runTests(t, []testCase{
-	// 	// NOTE: Execution of tests is ordered
-	// 	{
-	// 		// Create topic
-	// 		name: "1: Dry-run topic qux version 0",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: quxDocs[0],
-	// 			flags: ApplierFlags{
-	// 				DryRun: true,
-	// 			},
-	// 		},
-	// 		wantDiff:    quxDiffs[0],
-	// 		wantErr:     "",
-	// 		wantApplied: false,
-	// 	},
-	// 	{
-	// 		// Create topic
-	// 		name: "2: Apply topic qux version 0",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: quxDocs[0],
-	// 			flags:   ApplierFlags{},
-	// 		},
-	// 		wantDiff:    quxDiffs[0],
-	// 		wantErr:     "",
-	// 		wantApplied: true,
-	// 	},
-	// 	{
-	// 		// Increase replication factor
-	// 		name: "3: Dry-run topic qux version 1",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: quxDocs[1],
-	// 			flags: ApplierFlags{
-	// 				DryRun: true,
-	// 			},
-	// 		},
-	// 		wantDiff:    quxDiffs[1],
-	// 		wantErr:     "",
-	// 		wantApplied: false,
-	// 	},
-	// 	{
-	// 		// Increase replication factor
-	// 		name: "4: Apply topic qux version 1",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: quxDocs[1],
-	// 			flags:   ApplierFlags{},
-	// 		},
-	// 		wantDiff:    quxDiffs[1],
-	// 		wantErr:     "",
-	// 		wantApplied: true,
-	// 	},
-	// 	{
-	// 		// Add partitions
-	// 		name: "5: Dry-run topic qux version 2",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: quxDocs[2],
-	// 			flags: ApplierFlags{
-	// 				DryRun: true,
-	// 			},
-	// 		},
-	// 		wantDiff:    quxDiffs[2],
-	// 		wantErr:     "",
-	// 		wantApplied: false,
-	// 	},
-	// 	{
-	// 		// Add partitions
-	// 		name: "6: Apply topic qux version 2",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: quxDocs[2],
-	// 			flags:   ApplierFlags{},
-	// 		},
-	// 		wantDiff:    quxDiffs[2],
-	// 		wantErr:     "",
-	// 		wantApplied: true,
-	// 	},
-	// 	{
-	// 		// Add partitions and increase replication factor
-	// 		name: "7: Dry-run topic qux version 3",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: quxDocs[3],
-	// 			flags: ApplierFlags{
-	// 				DryRun: true,
-	// 			},
-	// 		},
-	// 		wantDiff:    quxDiffs[3],
-	// 		wantErr:     "",
-	// 		wantApplied: false,
-	// 	},
-	// 	{
-	// 		// Add partitions and increase replication factor
-	// 		name: "8: Apply topic qux version 3",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: quxDocs[3],
-	// 			flags:   ApplierFlags{},
-	// 		},
-	// 		wantDiff:    quxDiffs[3],
-	// 		wantErr:     "",
-	// 		wantApplied: true,
-	// 	},
-	// 	{
-	// 		// Decrease replication factor
-	// 		name: "9: Dry-run topic qux version 4",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: quxDocs[4],
-	// 			flags: ApplierFlags{
-	// 				DryRun: true,
-	// 			},
-	// 		},
-	// 		wantDiff:    quxDiffs[4],
-	// 		wantErr:     "",
-	// 		wantApplied: false,
-	// 	},
-	// 	{
-	// 		// Decrease replication factor
-	// 		name: "10: Apply topic qux version 4",
-	// 		fields: fields{
-	// 			cl:      cl,
-	// 			yamlDoc: quxDocs[4],
-	// 			flags:   ApplierFlags{},
-	// 		},
-	// 		wantDiff:    quxDiffs[4],
-	// 		wantErr:     "",
-	// 		wantApplied: true,
-	// 	},
-	// })
+	// Tests rack assignments
+	quxDocs := tutil.FileToYamlDocs(t, "../../../test/fixtures/topic/core.operators.topic.applier.qux.yml")
+	quxDiffs := getDiffsFixture(t, "../../../test/fixtures/topic/core.operators.topic.applier.qux.json")
+	runTests(t, []testCase{
+		// NOTE: Execution of tests is ordered
+		{
+			// Create topic
+			name: "1: Dry-run topic qux version 0",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[0],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    quxDiffs[0],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Create topic
+			name: "2: Apply topic qux version 0",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[0],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    quxDiffs[0],
+			wantErr:     "",
+			wantApplied: true,
+		},
+		{
+			// Increase replication factor
+			name: "3: Dry-run topic qux version 1",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[1],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    quxDiffs[1],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Increase replication factor
+			name: "4: Apply topic qux version 1",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[1],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    quxDiffs[1],
+			wantErr:     "",
+			wantApplied: true,
+		},
+		{
+			// Add partitions
+			name: "5: Dry-run topic qux version 2",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[2],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    quxDiffs[2],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Add partitions
+			name: "6: Apply topic qux version 2",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[2],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    quxDiffs[2],
+			wantErr:     "",
+			wantApplied: true,
+		},
+		{
+			// Add partitions and increase replication factor
+			name: "7: Dry-run topic qux version 3",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[3],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    quxDiffs[3],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Add partitions and increase replication factor
+			name: "8: Apply topic qux version 3",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[3],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    quxDiffs[3],
+			wantErr:     "",
+			wantApplied: true,
+		},
+		{
+			// Decrease replication factor
+			name: "9: Dry-run topic qux version 4",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[4],
+				flags: ApplierFlags{
+					DryRun: true,
+				},
+			},
+			wantDiff:    quxDiffs[4],
+			wantErr:     "",
+			wantApplied: false,
+		},
+		{
+			// Decrease replication factor
+			name: "10: Apply topic qux version 4",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: quxDocs[4],
+				flags:   ApplierFlags{},
+			},
+			wantDiff:    quxDiffs[4],
+			wantErr:     "",
+			wantApplied: true,
+		},
+	})
 }
