@@ -23,8 +23,9 @@ type applier interface {
 // Flags to configure an apply controller
 type ApplyControllerFlags struct {
 	// ApplierFlags
-	DryRun         bool
-	NonIncremental bool
+	DryRun            bool
+	NonIncremental    bool
+	ReassAwaitTimeout int
 
 	// Apply controller specific
 	ContinueOnError bool
@@ -174,8 +175,9 @@ func applyYamlDocs(
 			})
 		case "topic":
 			applier = topic.NewApplier(cl, yamlDocs[i], topic.ApplierFlags{
-				DryRun:         flags.DryRun,
-				NonIncremental: flags.NonIncremental,
+				DryRun:            flags.DryRun,
+				NonIncremental:    flags.NonIncremental,
+				ReassAwaitTimeout: flags.ReassAwaitTimeout,
 			})
 		}
 
