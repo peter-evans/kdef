@@ -1,6 +1,8 @@
 package apply
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/peter-evans/kdef/cli/log"
@@ -24,6 +26,12 @@ cat topics/my_topic.yml | kdef apply - --dry-run`,
 		SilenceErrors:         true,
 		DisableFlagsInUseLine: true,
 		Args:                  cobra.MinimumNArgs(1),
+		PreRunE: func(_ *cobra.Command, args []string) error {
+			if flags.ReassAwaitTimeout < 0 {
+				return fmt.Errorf("reassignments await timeout seconds must be greater or equal to 0")
+			}
+			return nil
+		},
 		RunE: func(_ *cobra.Command, args []string) error {
 			if flags.JsonOutput {
 				log.Quiet = true
@@ -48,8 +56,8 @@ cat topics/my_topic.yml | kdef apply - --dry-run`,
 	cmd.Flags().BoolVarP(&flags.ExitCode, "exit-code", "e", false, "implies --dry-run and causes the program to exit with 1 if there are unapplied changes and 0 otherwise")
 	cmd.Flags().BoolVar(&flags.JsonOutput, "json-output", false, "implies --quiet and outputs JSON apply results")
 	cmd.Flags().BoolVarP(&flags.ContinueOnError, "continue-on-error", "c", false, "applying resource definitions is not interrupted if there are errors")
-	cmd.Flags().BoolVarP(&flags.NonIncremental, "non-inc", "n", false, `use the non-incremental alter configs request method
-required by clusters that do not support incremental alter configs (Kafka 0.11.0 to 2.2.0)`)
+	cmd.Flags().IntVarP(&flags.ReassAwaitTimeout, "reass-await-timeout", "r", 0, "time in seconds to wait for topic partition reassignments to complete before timing out")
+	cmd.Flags().BoolVarP(&flags.NonIncremental, "non-inc", "n", false, "use the non-incremental alter configs request method required by clusters that do not support incremental alter configs (Kafka 0.11.0 to 2.2.0)")
 
 	return cmd
 }

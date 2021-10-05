@@ -21,8 +21,9 @@ import (
 
 // Flags to configure an applier
 type ApplierFlags struct {
-	DryRun         bool
-	NonIncremental bool
+	DryRun            bool
+	NonIncremental    bool
+	ReassAwaitTimeout int
 }
 
 // Applier operations
@@ -144,9 +145,9 @@ func (a *applier) apply() error {
 				return err
 			}
 			if len(a.reassignments) > 0 {
-				if a.localDef.Spec.Reassignment.AwaitTimeoutSec > 0 {
+				if a.flags.ReassAwaitTimeout > 0 {
 					// Wait for reassignments to complete
-					if err := a.awaitReassignments(a.localDef.Spec.Reassignment.AwaitTimeoutSec); err != nil {
+					if err := a.awaitReassignments(a.flags.ReassAwaitTimeout); err != nil {
 						return err
 					}
 				} else if !log.Quiet {
@@ -228,7 +229,6 @@ func (a *applier) updateApplyResult() error {
 
 		// Set properties that are local only and have no remote state
 		remoteCopy.Spec.DeleteMissingConfigs = a.localDef.Spec.DeleteMissingConfigs
-		remoteCopy.Spec.Reassignment.AwaitTimeoutSec = a.localDef.Spec.Reassignment.AwaitTimeoutSec
 	}
 
 	// Compute diff

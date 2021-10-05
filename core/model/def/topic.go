@@ -18,13 +18,12 @@ type TopicDefinition struct {
 
 // Topic spec definition
 type TopicSpecDefinition struct {
-	Configs              ConfigsMap                  `json:"configs,omitempty"`
-	DeleteMissingConfigs bool                        `json:"deleteMissingConfigs"`
-	Partitions           int                         `json:"partitions"`
-	ReplicationFactor    int                         `json:"replicationFactor"`
-	Assignments          PartitionAssignments        `json:"assignments,omitempty"`
-	RackAssignments      PartitionRackAssignments    `json:"rackAssignments,omitempty"`
-	Reassignment         TopicReassignmentDefinition `json:"reassignment,omitempty"`
+	Configs              ConfigsMap               `json:"configs,omitempty"`
+	DeleteMissingConfigs bool                     `json:"deleteMissingConfigs"`
+	Partitions           int                      `json:"partitions"`
+	ReplicationFactor    int                      `json:"replicationFactor"`
+	Assignments          PartitionAssignments     `json:"assignments,omitempty"`
+	RackAssignments      PartitionRackAssignments `json:"rackAssignments,omitempty"`
 }
 
 // Topic assignments
@@ -32,11 +31,6 @@ type PartitionAssignments [][]int32
 
 // Topic rack assignments
 type PartitionRackAssignments [][]string
-
-// Topic reassignment definition
-type TopicReassignmentDefinition struct {
-	AwaitTimeoutSec int `json:"awaitTimeoutSec"`
-}
 
 // Determine if a spec has assignments
 func (s TopicSpecDefinition) HasAssignments() bool {
@@ -107,10 +101,6 @@ func (t TopicDefinition) Validate() error {
 				}
 			}
 		}
-	}
-
-	if t.Spec.Reassignment.AwaitTimeoutSec < 0 {
-		return fmt.Errorf("reassignment await timeout seconds must be greater or equal to 0")
 	}
 
 	return nil

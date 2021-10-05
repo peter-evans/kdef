@@ -151,20 +151,6 @@ func TestTopicDefinition_Validate(t *testing.T) {
 			wantErr: "rack ids cannot be an empty string",
 		},
 		{
-			name: "Tests invalid reassignment await timeout",
-			topicDef: TopicDefinition{
-				ResourceDefinition: resDef,
-				Spec: TopicSpecDefinition{
-					Partitions:        3,
-					ReplicationFactor: 2,
-					Reassignment: TopicReassignmentDefinition{
-						AwaitTimeoutSec: -10,
-					},
-				},
-			},
-			wantErr: "reassignment await timeout seconds must be greater or equal to 0",
-		},
-		{
 			name: "Tests a valid TopicDefinition",
 			topicDef: TopicDefinition{
 				ResourceDefinition: resDef,
@@ -175,9 +161,6 @@ func TestTopicDefinition_Validate(t *testing.T) {
 						{1, 2},
 						{2, 3},
 						{3, 1},
-					},
-					Reassignment: TopicReassignmentDefinition{
-						AwaitTimeoutSec: 30,
 					},
 				},
 			},

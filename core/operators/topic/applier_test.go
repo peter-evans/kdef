@@ -268,7 +268,8 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[0],
 				flags: ApplierFlags{
-					DryRun: true,
+					DryRun:            true,
+					ReassAwaitTimeout: 30,
 				},
 			},
 			wantDiff:    barDiffs[0],
@@ -281,7 +282,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[0],
-				flags:   ApplierFlags{},
+				flags: ApplierFlags{
+					ReassAwaitTimeout: 30,
+				},
 			},
 			wantDiff:    barDiffs[0],
 			wantErr:     "",
@@ -317,7 +320,8 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[1],
 				flags: ApplierFlags{
-					DryRun: true,
+					DryRun:            true,
+					ReassAwaitTimeout: 30,
 				},
 			},
 			wantDiff:    barDiffs[1],
@@ -330,7 +334,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[1],
-				flags:   ApplierFlags{},
+				flags: ApplierFlags{
+					ReassAwaitTimeout: 30,
+				},
 			},
 			wantDiff:    barDiffs[1],
 			wantErr:     "",
@@ -343,7 +349,8 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[2],
 				flags: ApplierFlags{
-					DryRun: true,
+					DryRun:            true,
+					ReassAwaitTimeout: 30,
 				},
 			},
 			wantDiff:    barDiffs[2],
@@ -356,7 +363,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[2],
-				flags:   ApplierFlags{},
+				flags: ApplierFlags{
+					ReassAwaitTimeout: 30,
+				},
 			},
 			wantDiff:    barDiffs[2],
 			wantErr:     "",
@@ -369,7 +378,8 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[3],
 				flags: ApplierFlags{
-					DryRun: true,
+					DryRun:            true,
+					ReassAwaitTimeout: 30,
 				},
 			},
 			wantDiff:    barDiffs[3],
@@ -382,7 +392,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[3],
-				flags:   ApplierFlags{},
+				flags: ApplierFlags{
+					ReassAwaitTimeout: 30,
+				},
 			},
 			wantDiff:    barDiffs[3],
 			wantErr:     "",
@@ -395,7 +407,8 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[4],
 				flags: ApplierFlags{
-					DryRun: true,
+					DryRun:            true,
+					ReassAwaitTimeout: 30,
 				},
 			},
 			wantDiff:    barDiffs[4],
@@ -408,7 +421,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[4],
-				flags:   ApplierFlags{},
+				flags: ApplierFlags{
+					ReassAwaitTimeout: 30,
+				},
 			},
 			wantDiff:    barDiffs[4],
 			wantErr:     "",
