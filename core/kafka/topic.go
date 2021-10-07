@@ -1,4 +1,4 @@
-package service
+package kafka
 
 import (
 	"context"
@@ -12,13 +12,13 @@ import (
 )
 
 // Execute a request for the metadata of a topic that may or may not exist (Kafka 0.11.0+)
-func TryRequestTopic(cl *client.Client, topic string) (
+func tryRequestTopic(cl *client.Client, topic string) (
 	*def.TopicDefinition,
 	def.Configs,
 	meta.Brokers,
 	error,
 ) {
-	metadata, err := DescribeMetadata(cl, []string{topic}, false)
+	metadata, err := describeMetadata(cl, []string{topic}, false)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -30,7 +30,7 @@ func TryRequestTopic(cl *client.Client, topic string) (
 	}
 
 	// Fetch topic configs
-	resourceConfigs, err := DescribeTopicConfigs(cl, []string{topic})
+	resourceConfigs, err := describeTopicConfigs(cl, []string{topic})
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -51,7 +51,7 @@ func TryRequestTopic(cl *client.Client, topic string) (
 }
 
 // Execute a request to create a topic (Kafka 0.10.1+)
-func CreateTopic(
+func createTopic(
 	cl *client.Client,
 	topicDef def.TopicDefinition,
 	assignments def.PartitionAssignments,
@@ -114,7 +114,7 @@ func CreateTopic(
 }
 
 // Execute a request to create partitions (Kafka 0.10.0+)
-func CreatePartitions(
+func createPartitions(
 	cl *client.Client,
 	topic string,
 	partitions int,
@@ -162,7 +162,7 @@ func CreatePartitions(
 }
 
 // Execute a request to alter partition assignments (Kafka 2.4.0+)
-func AlterPartitionAssignments(
+func alterPartitionAssignments(
 	cl *client.Client,
 	topic string,
 	assignments def.PartitionAssignments,
@@ -217,7 +217,7 @@ func AlterPartitionAssignments(
 }
 
 // Execute a request to list partition reassignments (Kafka 2.4.0+)
-func ListPartitionReassignments(
+func listPartitionReassignments(
 	cl *client.Client,
 	topic string,
 	partitions []int32,

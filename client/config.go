@@ -15,10 +15,12 @@ import (
 	"github.com/peter-evans/kdef/cli/log"
 )
 
+// Valid values for configuring the alter configs method
+var alterConfigsMethodValidValues = []string{"auto", "incremental", "non-incremental"}
+
 // Client configuration
 type clientConfig struct {
 	SeedBrokers []string    `json:"seedBrokers,omitempty"`
-	TimeoutMs   int32       `json:"timeoutMs,omitempty"`
 	TLS         *tlsConfig  `json:"tls,omitempty"`
 	SASL        *saslConfig `json:"sasl,omitempty"`
 
@@ -26,6 +28,14 @@ type clientConfig struct {
 	AsVersion string `json:"asVersion,omitempty"`
 	// Underlying Kafka client log-level (none, error, warn, info, debug)
 	LogLevel string `json:"logLevel,omitempty"`
+
+	// The following configurations are not used to build client options, but instead
+	// are exposed as methods on the Client to be used when making requests.
+
+	// Timeout in milliseconds to be used by requests with timeouts
+	TimeoutMs int32 `json:"timeoutMs,omitempty"`
+	// The alter configs method that should be used (auto, incremental, non-incremental)
+	AlterConfigsMethod string `json:"alterConfigsMethod,omitempty"`
 }
 
 // TLS configuration
@@ -58,11 +68,12 @@ const (
 
 // Default client configuration
 var defaultClientConfig = map[string]interface{}{
-	"seedBrokers": []string{"localhost:9092"},
-	"timeoutMs":   5000,
-	"tls.enabled": false,
-	"asVersion":   "",
-	"logLevel":    "none",
+	"seedBrokers":        []string{"localhost:9092"},
+	"timeoutMs":          5000,
+	"tls.enabled":        false,
+	"asVersion":          "",
+	"logLevel":           "none",
+	"alterConfigsMethod": "auto",
 }
 
 // The default config file path

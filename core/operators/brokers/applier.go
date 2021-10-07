@@ -8,20 +8,32 @@ import (
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
 	"github.com/peter-evans/kdef/core/helpers/jsondiff"
+	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/res"
-	"github.com/peter-evans/kdef/core/service"
 )
 
 // Flags to configure an applier
 type ApplierFlags struct {
-	DryRun         bool
-	NonIncremental bool
+	DryRun bool
+}
+
+// Create a new applier
+func NewApplier(
+	cl *client.Client,
+	yamlDoc string,
+	flags ApplierFlags,
+) *applier {
+	return &applier{
+		srv:     kafka.NewService(cl),
+		yamlDoc: yamlDoc,
+		flags:   flags,
+	}
 }
 
 // Applier operations
 type applierOps struct {
-	config service.ConfigOperations
+	config kafka.ConfigOperations
 }
 
 // Determine if there are any pending operations
@@ -32,7 +44,7 @@ func (a applierOps) pending() bool {
 // An applier handling the apply operation
 type applier struct {
 	// constructor params
-	cl      *client.Client
+	srv     *kafka.Service
 	yamlDoc string
 	flags   ApplierFlags
 
@@ -42,21 +54,8 @@ type applier struct {
 	remoteConfigs def.Configs
 	ops           applierOps
 
-	// TODO: refactor this to Execute() scope only?
+	// result
 	res res.ApplyResult
-}
-
-// Create a new applier
-func NewApplier(
-	cl *client.Client,
-	yamlDoc string,
-	flags ApplierFlags,
-) *applier {
-	return &applier{
-		cl:      cl,
-		yamlDoc: yamlDoc,
-		flags:   flags,
-	}
 }
 
 // Execute the applier
@@ -87,7 +86,7 @@ func (a *applier) apply() error {
 		return err
 	}
 
-	// Fetch the remote definition
+	// Fetch the remote definition and necessary metadata
 	if err := a.fetchRemote(); err != nil {
 		return err
 	}
@@ -121,11 +120,11 @@ func (a *applier) apply() error {
 	return nil
 }
 
-// Fetch remote brokers definition
+// Fetch the remote definition and necessary metadata
 func (a *applier) fetchRemote() error {
 	log.Info("Fetching brokers configuration...")
 	var err error
-	a.remoteConfigs, err = service.DescribeAllBrokerConfigs(a.cl)
+	a.remoteConfigs, err = a.srv.DescribeAllBrokerConfigs()
 	if err != nil {
 		return err
 	}
@@ -137,7 +136,9 @@ func (a *applier) fetchRemote() error {
 
 // Build brokers operations
 func (a *applier) buildOps() error {
-	a.buildConfigOps()
+	if err := a.buildConfigOps(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -200,72 +201,32 @@ func (a *applier) executeOps() error {
 }
 
 // Build alter configs operations
-func (a *applier) buildConfigOps() {
+func (a *applier) buildConfigOps() error {
 	log.Debug("Comparing local and remote definition configs for brokers %q", a.localDef.Metadata.Name)
 
-	a.ops.config = service.NewConfigOps(
+	var err error
+	a.ops.config, err = a.srv.NewConfigOps(
 		a.localDef.Spec.Configs,
 		a.remoteDef.Spec.Configs,
 		a.remoteConfigs,
 		a.localDef.Spec.DeleteMissingConfigs,
-		a.flags.NonIncremental,
 	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Update brokers configs
 func (a *applier) updateConfigs() error {
-	if a.flags.NonIncremental {
-		if a.ops.config.ContainsOp(service.DeleteConfigOperation) && !a.localDef.Spec.DeleteMissingConfigs {
-			return errors.New("cannot apply configs because deletion of missing configs is not enabled")
-		}
-
-		if err := a.alterConfigs(); err != nil {
-			return err
-		}
-	} else {
-		log.Debug("Checking if incremental alter configs is supported by the target cluster...")
-		supported, err := service.IncrementalAlterConfigsIsSupported(a.cl)
-		if err != nil {
-			return err
-		}
-
-		if supported {
-			if err := a.incrementalAlterConfigs(); err != nil {
-				return err
-			}
-		} else {
-			log.Info("The target cluster does not support incremental alter configs (Kafka 2.3.0+)")
-			log.Info("Set flag --non-inc to use the non-incremental alter configs method")
-			return errors.New("api unsupported by the target cluster")
-		}
+	if a.ops.config.ContainsOp(kafka.DeleteConfigOperation) && !a.localDef.Spec.DeleteMissingConfigs {
+		// This case should only occur when using non-incremental alter configs
+		return errors.New("cannot apply configs because deletion of missing configs is not enabled")
 	}
 
-	return nil
-}
-
-// Execute a request to perform a non-incremental alter configs
-func (a *applier) alterConfigs() error {
-	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altering configs (non-incremental)...")
-
-	if err := service.AlterAllBrokerConfigs(
-		a.cl,
-		a.ops.config,
-		a.flags.DryRun,
-	); err != nil {
-		return err
-	} else {
-		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altered configs for brokers %q", a.localDef.Metadata.Name)
-	}
-
-	return nil
-}
-
-// Execute a request to perform an incremental alter configs
-func (a *applier) incrementalAlterConfigs() error {
 	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altering configs...")
-
-	if err := service.IncrementalAlterAllBrokerConfigs(
-		a.cl,
+	if err := a.srv.AlterAllBrokerConfigs(
 		a.ops.config,
 		a.flags.DryRun,
 	); err != nil {

@@ -13,24 +13,36 @@ import (
 	"github.com/peter-evans/kdef/client"
 	"github.com/peter-evans/kdef/core/helpers/assignments"
 	"github.com/peter-evans/kdef/core/helpers/jsondiff"
+	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/meta"
 	"github.com/peter-evans/kdef/core/model/res"
-	"github.com/peter-evans/kdef/core/service"
 )
 
 // Flags to configure an applier
 type ApplierFlags struct {
 	DryRun            bool
-	NonIncremental    bool
 	ReassAwaitTimeout int
+}
+
+// Create a new applier
+func NewApplier(
+	cl *client.Client,
+	yamlDoc string,
+	flags ApplierFlags,
+) *applier {
+	return &applier{
+		srv:     kafka.NewService(cl),
+		yamlDoc: yamlDoc,
+		flags:   flags,
+	}
 }
 
 // Applier operations
 type applierOps struct {
 	create            bool
 	createAssignments def.PartitionAssignments
-	config            service.ConfigOperations
+	config            kafka.ConfigOperations
 	partitions        def.PartitionAssignments
 	assignments       def.PartitionAssignments
 }
@@ -46,7 +58,7 @@ func (a applierOps) pending() bool {
 // An applier handling the apply operation
 type applier struct {
 	// constructor params
-	cl      *client.Client
+	srv     *kafka.Service
 	yamlDoc string
 	flags   ApplierFlags
 
@@ -57,22 +69,9 @@ type applier struct {
 	brokers       meta.Brokers
 	ops           applierOps
 
-	// TODO: refactor this to Execute() scope only?
+	// result
 	res           res.ApplyResult
 	reassignments meta.PartitionReassignments
-}
-
-// Create a new applier
-func NewApplier(
-	cl *client.Client,
-	yamlDoc string,
-	flags ApplierFlags,
-) *applier {
-	return &applier{
-		cl:      cl,
-		yamlDoc: yamlDoc,
-		flags:   flags,
-	}
 }
 
 // Execute the applier
@@ -107,7 +106,7 @@ func (a *applier) apply() error {
 		return err
 	}
 
-	// Fetch the remote definition
+	// Fetch the remote definition and necessary metadata
 	if err := a.tryFetchRemote(); err != nil {
 		return err
 	}
@@ -165,11 +164,11 @@ func (a *applier) apply() error {
 	return nil
 }
 
-// Fetch remote topic definition if it exists, plus cluster metadata
+// Fetch the remote definition and necessary metadata
 func (a *applier) tryFetchRemote() error {
 	log.Info("Checking if topic %q exists...", a.localDef.Metadata.Name)
 	var err error
-	a.remoteDef, a.remoteConfigs, a.brokers, err = service.TryRequestTopic(a.cl, a.localDef.Metadata.Name)
+	a.remoteDef, a.remoteConfigs, a.brokers, err = a.srv.TryRequestTopic(a.localDef.Metadata.Name)
 	if err != nil {
 		return err
 	}
@@ -187,7 +186,9 @@ func (a *applier) buildOps() error {
 	if a.ops.create {
 		a.buildCreateOp()
 	} else {
-		a.buildConfigOps()
+		if err := a.buildConfigOps(); err != nil {
+			return err
+		}
 		if err := a.buildPartitionsOp(); err != nil {
 			return err
 		}
@@ -311,8 +312,7 @@ func (a *applier) buildCreateOp() {
 func (a *applier) createTopic() error {
 	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Creating topic %q...", a.localDef.Metadata.Name)
 
-	if err := service.CreateTopic(
-		a.cl,
+	if err := a.srv.CreateTopic(
 		a.localDef,
 		a.ops.createAssignments,
 		a.flags.DryRun,
@@ -326,73 +326,32 @@ func (a *applier) createTopic() error {
 }
 
 // Build alter configs operations
-func (a *applier) buildConfigOps() {
+func (a *applier) buildConfigOps() error {
 	log.Debug("Comparing local and remote definition configs for topic %q", a.localDef.Metadata.Name)
 
-	a.ops.config = service.NewConfigOps(
+	var err error
+	a.ops.config, err = a.srv.NewConfigOps(
 		a.localDef.Spec.Configs,
 		a.remoteDef.Spec.Configs,
 		a.remoteConfigs,
 		a.localDef.Spec.DeleteMissingConfigs,
-		a.flags.NonIncremental,
 	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Update topic configs
 func (a *applier) updateConfigs() error {
-	if a.flags.NonIncremental {
-		if a.ops.config.ContainsOp(service.DeleteConfigOperation) && !a.localDef.Spec.DeleteMissingConfigs {
-			return errors.New("cannot apply configs because deletion of missing configs is not enabled")
-		}
-
-		if err := a.alterConfigs(); err != nil {
-			return err
-		}
-	} else {
-		log.Debug("Checking if incremental alter configs is supported by the target cluster...")
-		supported, err := service.IncrementalAlterConfigsIsSupported(a.cl)
-		if err != nil {
-			return err
-		}
-
-		if supported {
-			if err := a.incrementalAlterConfigs(); err != nil {
-				return err
-			}
-		} else {
-			log.Info("The target cluster does not support incremental alter configs (Kafka 2.3.0+)")
-			log.Info("Set flag --non-inc to use the non-incremental alter configs method")
-			return errors.New("api unsupported by the target cluster")
-		}
+	if a.ops.config.ContainsOp(kafka.DeleteConfigOperation) && !a.localDef.Spec.DeleteMissingConfigs {
+		// This case should only occur when using non-incremental alter configs
+		return errors.New("cannot apply configs because deletion of missing configs is not enabled")
 	}
 
-	return nil
-}
-
-// Execute a request to perform a non-incremental alter configs
-func (a *applier) alterConfigs() error {
-	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altering configs (non-incremental)...")
-
-	if err := service.AlterTopicConfigs(
-		a.cl,
-		a.localDef.Metadata.Name,
-		a.ops.config,
-		a.flags.DryRun,
-	); err != nil {
-		return err
-	} else {
-		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altered configs for topic %q", a.localDef.Metadata.Name)
-	}
-
-	return nil
-}
-
-// Execute a request to perform an incremental alter configs
-func (a *applier) incrementalAlterConfigs() error {
 	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altering configs...")
-
-	if err := service.IncrementalAlterTopicConfigs(
-		a.cl,
+	if err := a.srv.AlterTopicConfigs(
 		a.localDef.Metadata.Name,
 		a.ops.config,
 		a.flags.DryRun,
@@ -433,8 +392,7 @@ func (a *applier) buildPartitionsOp() error {
 func (a *applier) updatePartitions() error {
 	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Creating partitions...")
 
-	if err := service.CreatePartitions(
-		a.cl,
+	if err := a.srv.CreatePartitions(
 		a.localDef.Metadata.Name,
 		a.localDef.Spec.Partitions,
 		a.ops.partitions,
@@ -502,8 +460,7 @@ func (a *applier) fetchPartitionReassignments(suppressLog bool) error {
 	}
 
 	var err error
-	a.reassignments, err = service.ListPartitionReassignments(
-		a.cl,
+	a.reassignments, err = a.srv.ListPartitionReassignments(
 		a.localDef.Metadata.Name,
 		partitions,
 	)
@@ -549,8 +506,7 @@ func (a *applier) updateAssignments() error {
 	} else {
 		log.Info("Altering partition assignments...")
 
-		if err := service.AlterPartitionAssignments(
-			a.cl,
+		if err := a.srv.AlterPartitionAssignments(
 			a.localDef.Metadata.Name,
 			a.ops.assignments,
 		); err != nil {

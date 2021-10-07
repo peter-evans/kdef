@@ -57,7 +57,6 @@ cat topics/my_topic.yml | kdef apply - --dry-run`,
 	cmd.Flags().BoolVar(&flags.JsonOutput, "json-output", false, "implies --quiet and outputs JSON apply results")
 	cmd.Flags().BoolVarP(&flags.ContinueOnError, "continue-on-error", "c", false, "applying resource definitions is not interrupted if there are errors")
 	cmd.Flags().IntVarP(&flags.ReassAwaitTimeout, "reass-await-timeout", "r", 0, "time in seconds to wait for topic partition reassignments to complete before timing out")
-	cmd.Flags().BoolVarP(&flags.NonIncremental, "non-inc", "n", false, "use the non-incremental alter configs request method required by clusters that do not support incremental alter configs (Kafka 0.11.0 to 2.2.0)")
 
 	return cmd
 }

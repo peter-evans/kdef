@@ -5,24 +5,24 @@ import (
 
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/res"
-	"github.com/peter-evans/kdef/core/service"
 )
-
-// An exporter handling the export operation
-type exporter struct {
-	// constructor params
-	cl *client.Client
-}
 
 // Create a new exporter
 func NewExporter(
 	cl *client.Client,
 ) *exporter {
 	return &exporter{
-		cl: cl,
+		srv: kafka.NewService(cl),
 	}
+}
+
+// An exporter handling the export operation
+type exporter struct {
+	// constructor params
+	srv *kafka.Service
 }
 
 // Execute the export operation
@@ -53,7 +53,7 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 
 // Return the broker definitions
 func (e *exporter) getBrokerDefinitions() ([]def.BrokerDefinition, error) {
-	metadata, err := service.DescribeMetadata(e.cl, []string{}, true)
+	metadata, err := e.srv.DescribeMetadata([]string{}, true)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (e *exporter) getBrokerDefinitions() ([]def.BrokerDefinition, error) {
 	brokerDefs := []def.BrokerDefinition{}
 	for _, broker := range metadata.Brokers {
 		brokerIdStr := fmt.Sprint(broker.Id)
-		brokerConfigs, err := service.DescribeBrokerConfigs(e.cl, brokerIdStr)
+		brokerConfigs, err := e.srv.DescribeBrokerConfigs(brokerIdStr)
 		if err != nil {
 			return nil, err
 		}

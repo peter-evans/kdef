@@ -24,26 +24,6 @@ import (
 	"github.com/twmb/franz-go/pkg/sasl/scram"
 )
 
-// Client contains kgo client options and a kgo client
-type Client struct {
-	client *kgo.Client
-	cc     *clientConfig
-	flags  *ClientFlags
-	once   sync.Once
-	opts   []kgo.Opt
-}
-
-// Flag-based options to configure the client
-type ClientFlags struct {
-	ConfigPath     string
-	FlagConfigOpts []string
-}
-
-// Configured timeout in milliseconds that should be used by requests with timeouts
-func (cl *Client) TimeoutMs() int32 {
-	return cl.cc.TimeoutMs
-}
-
 // Create a new client
 func New(flags *ClientFlags) *Client {
 	cl := &Client{
@@ -54,6 +34,31 @@ func New(flags *ClientFlags) *Client {
 	}
 
 	return cl
+}
+
+// Flag-based options to configure the client
+type ClientFlags struct {
+	ConfigPath     string
+	FlagConfigOpts []string
+}
+
+// Client contains kgo client options and a kgo client
+type Client struct {
+	client *kgo.Client
+	cc     *clientConfig
+	flags  *ClientFlags
+	once   sync.Once
+	opts   []kgo.Opt
+}
+
+// Timeout in milliseconds to be used by requests with timeouts
+func (cl *Client) TimeoutMs() int32 {
+	return cl.cc.TimeoutMs
+}
+
+// The alter configs method that should be used (auto, incremental, non-incremental)
+func (cl *Client) AlterConfigsMethod() string {
+	return cl.cc.AlterConfigsMethod
 }
 
 // Returns a configured kgo.Client
@@ -75,6 +80,11 @@ func (cl *Client) loadOnce() (err error) {
 			return
 		}
 
+		// Validate configuration not used for client options
+		if err = cl.validateNonClientOptConfig(); err != nil {
+			return
+		}
+
 		log.Debug("Building Kafka client")
 
 		// Build options to configure a kgo.Client instance
@@ -87,6 +97,19 @@ func (cl *Client) loadOnce() (err error) {
 	})
 
 	return err
+}
+
+// Validate configuration not used for client options
+func (cl *Client) validateNonClientOptConfig() error {
+	if cl.cc.TimeoutMs < 0 {
+		return fmt.Errorf("timeoutMs must be greater or equal to 0")
+	}
+
+	if !str.Contains(cl.cc.AlterConfigsMethod, alterConfigsMethodValidValues) {
+		return fmt.Errorf("alterConfigsMethod must be one of %q", strings.Join(alterConfigsMethodValidValues, "|"))
+	}
+
+	return nil
 }
 
 // Adds an option to configure kgo.Client
