@@ -9,7 +9,7 @@ import (
 
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
-	"github.com/peter-evans/kdef/core/service"
+	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/test/compose"
 	"github.com/peter-evans/kdef/test/fixtures"
 	"github.com/peter-evans/kdef/test/tutil"
@@ -90,8 +90,18 @@ func Test_applier_Execute(t *testing.T) {
 		},
 	})
 
+	// Create client set to use non-incremental alter configs
+	clNonInc := client.New(&client.ClientFlags{
+		ConfigPath: "does-not-exist",
+		FlagConfigOpts: []string{
+			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.BrokerApplierTest.BrokerPort),
+			"alterConfigsMethod=non-incremental",
+		},
+	})
+
 	// Wait for Kafka to be ready
-	if !service.IsKafkaReady(cl, fixtures.BrokerApplierTest.Brokers, 90) {
+	srv := kafka.NewService(cl)
+	if !srv.IsKafkaReady(fixtures.BrokerApplierTest.Brokers, 90) {
 		t.Errorf("kafka failed to be ready within timeout")
 		t.FailNow()
 	}
@@ -183,11 +193,10 @@ func Test_applier_Execute(t *testing.T) {
 			// Update configs (non-incremental)
 			name: "7: Dry-run broker foo version 3",
 			fields: fields{
-				cl:      cl,
+				cl:      clNonInc,
 				yamlDoc: broker1Docs[3],
 				flags: ApplierFlags{
-					DryRun:         true,
-					NonIncremental: true,
+					DryRun: true,
 				},
 			},
 			wantDiff:    broker1Diffs[3],
@@ -196,13 +205,11 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Update configs (non-incremental)
-			name: "7: Apply broker foo version 3",
+			name: "8: Apply broker foo version 3",
 			fields: fields{
-				cl:      cl,
+				cl:      clNonInc,
 				yamlDoc: broker1Docs[3],
-				flags: ApplierFlags{
-					NonIncremental: true,
-				},
+				flags:   ApplierFlags{},
 			},
 			wantDiff:    broker1Diffs[3],
 			wantErr:     "",
@@ -211,13 +218,12 @@ func Test_applier_Execute(t *testing.T) {
 		{
 			// Delete configs (non-incremental)
 			// Fail due to deletion of missing configs being not enabled
-			name: "7: Dry-run broker foo version 4",
+			name: "9: Dry-run broker foo version 4",
 			fields: fields{
-				cl:      cl,
+				cl:      clNonInc,
 				yamlDoc: broker1Docs[4],
 				flags: ApplierFlags{
-					DryRun:         true,
-					NonIncremental: true,
+					DryRun: true,
 				},
 			},
 			wantDiff:    broker1Diffs[4],
@@ -226,13 +232,11 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Delete configs (non-incremental)
-			name: "8: Apply broker foo version 5",
+			name: "10: Apply broker foo version 5",
 			fields: fields{
-				cl:      cl,
+				cl:      clNonInc,
 				yamlDoc: broker1Docs[5],
-				flags: ApplierFlags{
-					NonIncremental: true,
-				},
+				flags:   ApplierFlags{},
 			},
 			wantDiff:    broker1Diffs[5],
 			wantErr:     "",

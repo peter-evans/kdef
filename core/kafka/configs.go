@@ -1,4 +1,4 @@
-package service
+package kafka
 
 import (
 	"context"
@@ -47,7 +47,7 @@ func (c ConfigOperations) ContainsOp(operation int8) bool {
 }
 
 // Create alter configs operations
-func NewConfigOps(
+func newConfigOps(
 	localConfigs def.ConfigsMap,
 	remoteConfigsMap def.ConfigsMap,
 	remoteConfigs def.Configs,
@@ -118,7 +118,7 @@ func NewConfigOps(
 }
 
 // Execute a request to describe broker configs (Kafka 0.11.0+)
-func DescribeBrokerConfigs(cl *client.Client, brokerId string) (def.Configs, error) {
+func describeBrokerConfigs(cl *client.Client, brokerId string) (def.Configs, error) {
 	req := kmsg.NewDescribeConfigsRequest()
 
 	res := kmsg.NewDescribeConfigsRequestResource()
@@ -134,12 +134,6 @@ func DescribeBrokerConfigs(cl *client.Client, brokerId string) (def.Configs, err
 	return newConfigs(resp[0].Configs), nil
 }
 
-// Execute a request to describe all broker configs (Kafka 0.11.0+)
-func DescribeAllBrokerConfigs(cl *client.Client) (def.Configs, error) {
-	// Empty brokerId returns dynamic config for all brokers (cluster-wide)
-	return DescribeBrokerConfigs(cl, "")
-}
-
 // Configs for a named resource
 type ResourceConfigs struct {
 	ResourceName string
@@ -147,7 +141,7 @@ type ResourceConfigs struct {
 }
 
 // Execute a request to describe topic configs (Kafka 0.11.0+)
-func DescribeTopicConfigs(cl *client.Client, topics []string) ([]ResourceConfigs, error) {
+func describeTopicConfigs(cl *client.Client, topics []string) ([]ResourceConfigs, error) {
 	req := kmsg.NewDescribeConfigsRequest()
 
 	for _, topic := range topics {
@@ -226,7 +220,7 @@ func describeConfigs(cl *client.Client, req kmsg.DescribeConfigsRequest) ([]kmsg
 }
 
 // Execute a request to perform a non-incremental alter broker configs (Kafka 0.11.0+)
-func AlterBrokerConfigs(
+func alterBrokerConfigs(
 	cl *client.Client,
 	brokerId string,
 	configOps ConfigOperations,
@@ -248,18 +242,8 @@ func AlterBrokerConfigs(
 	return nil
 }
 
-// Execute a request to perform a non-incremental alter all broker configs (Kafka 0.11.0+)
-func AlterAllBrokerConfigs(
-	cl *client.Client,
-	configOps ConfigOperations,
-	validateOnly bool,
-) error {
-	// Empty brokerId alters config for all brokers (cluster-wide)
-	return AlterBrokerConfigs(cl, "", configOps, validateOnly)
-}
-
 // Execute a request to perform a non-incremental alter topic configs (Kafka 0.11.0+)
-func AlterTopicConfigs(
+func alterTopicConfigs(
 	cl *client.Client,
 	topic string,
 	configOps ConfigOperations,
@@ -331,7 +315,7 @@ func alterConfigs(
 }
 
 // Execute a request to perform an incremental alter broker configs (Kafka 2.3.0+)
-func IncrementalAlterBrokerConfigs(
+func incrementalAlterBrokerConfigs(
 	cl *client.Client,
 	brokerId string,
 	configOps ConfigOperations,
@@ -353,18 +337,8 @@ func IncrementalAlterBrokerConfigs(
 	return nil
 }
 
-// Execute a request to perform an incremental alter all broker configs (Kafka 2.3.0+)
-func IncrementalAlterAllBrokerConfigs(
-	cl *client.Client,
-	configOps ConfigOperations,
-	validateOnly bool,
-) error {
-	// Empty brokerId alters config for all brokers (cluster-wide)
-	return IncrementalAlterBrokerConfigs(cl, "", configOps, validateOnly)
-}
-
 // Execute a request to perform an incremental alter topic configs (Kafka 2.3.0+)
-func IncrementalAlterTopicConfigs(
+func incrementalAlterTopicConfigs(
 	cl *client.Client,
 	topic string,
 	configOps ConfigOperations,

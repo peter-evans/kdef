@@ -6,9 +6,9 @@ import (
 
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/res"
-	"github.com/peter-evans/kdef/core/service"
 )
 
 // Valid values for the assignments flag
@@ -22,22 +22,22 @@ type ExporterFlags struct {
 	Assignments     string
 }
 
-// An exporter handling the export operation
-type exporter struct {
-	// constructor params
-	cl    *client.Client
-	flags ExporterFlags
-}
-
 // Create a new exporter
 func NewExporter(
 	cl *client.Client,
 	flags ExporterFlags,
 ) *exporter {
 	return &exporter{
-		cl:    cl,
+		srv:   kafka.NewService(cl),
 		flags: flags,
 	}
+}
+
+// An exporter handling the export operation
+type exporter struct {
+	// constructor params
+	srv   *kafka.Service
+	flags ExporterFlags
 }
 
 // Execute the export operation
@@ -67,19 +67,19 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 
 // Return topic definitions for existing topics in a cluster
 func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
-	metadata, err := service.DescribeMetadata(e.cl, nil, true)
+	metadata, err := e.srv.DescribeMetadata(nil, true)
 	if err != nil {
 		return nil, err
 	}
 
 	topicNames := []string{}
-	topicMetadataMap := map[string]service.TopicMetadata{}
+	topicMetadataMap := map[string]kafka.TopicMetadata{}
 	for _, t := range metadata.Topics {
 		topicNames = append(topicNames, t.Topic)
 		topicMetadataMap[t.Topic] = t
 	}
 
-	resourceConfigs, err := service.DescribeTopicConfigs(e.cl, topicNames)
+	resourceConfigs, err := e.srv.DescribeTopicConfigs(topicNames)
 	if err != nil {
 		return nil, err
 	}

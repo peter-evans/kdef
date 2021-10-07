@@ -3,24 +3,24 @@ package brokers
 import (
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/res"
-	"github.com/peter-evans/kdef/core/service"
 )
-
-// An exporter handling the export operation
-type exporter struct {
-	// constructor params
-	cl *client.Client
-}
 
 // Create a new exporter
 func NewExporter(
 	cl *client.Client,
 ) *exporter {
 	return &exporter{
-		cl: cl,
+		srv: kafka.NewService(cl),
 	}
+}
+
+// An exporter handling the export operation
+type exporter struct {
+	// constructor params
+	srv *kafka.Service
 }
 
 // Execute the export operation
@@ -42,7 +42,7 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 
 // Return the brokers definition
 func (e *exporter) getBrokersDefinition() (*def.BrokersDefinition, error) {
-	brokerConfigs, err := service.DescribeAllBrokerConfigs(e.cl)
+	brokerConfigs, err := e.srv.DescribeAllBrokerConfigs()
 	if err != nil {
 		return nil, err
 	}

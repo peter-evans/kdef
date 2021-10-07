@@ -8,7 +8,7 @@ import (
 
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
-	"github.com/peter-evans/kdef/core/service"
+	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/test/compose"
 	"github.com/peter-evans/kdef/test/fixtures"
 	"github.com/peter-evans/kdef/test/tutil"
@@ -35,7 +35,8 @@ func Test_exporter_Execute(t *testing.T) {
 	})
 
 	// Wait for Kafka to be ready
-	if !service.IsKafkaReady(cl, fixtures.BrokersExporterTest.Brokers, 90) {
+	srv := kafka.NewService(cl)
+	if !srv.IsKafkaReady(fixtures.BrokersExporterTest.Brokers, 90) {
 		t.Errorf("kafka failed to be ready within timeout")
 		t.FailNow()
 	}

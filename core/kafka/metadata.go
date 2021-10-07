@@ -1,4 +1,4 @@
-package service
+package kafka
 
 import (
 	"context"
@@ -30,7 +30,7 @@ type TopicMetadata struct {
 }
 
 // Execute a request for metadata (Kafka 0.8.0+)
-func DescribeMetadata(cl *client.Client, topics []string, errorOnNonExistence bool) (*Metadata, error) {
+func describeMetadata(cl *client.Client, topics []string, errorOnNonExistence bool) (*Metadata, error) {
 	req := kmsg.NewMetadataRequest()
 
 	// If topics is nil all topics are included
@@ -103,12 +103,6 @@ func DescribeMetadata(cl *client.Client, topics []string, errorOnNonExistence bo
 	return &metadata, nil
 }
 
-// Execute a request to determine if incremental alter configs is supported by the cluster (Kafka 0.10.0+)
-func IncrementalAlterConfigsIsSupported(cl *client.Client) (bool, error) {
-	r := kmsg.NewIncrementalAlterConfigsRequest()
-	return requestIsSupported(cl, r.Key())
-}
-
 // Execute a request to determine if a request key is supported by the cluster (Kafka 0.10.0+)
 func requestIsSupported(cl *client.Client, requestKey int16) (bool, error) {
 	req := kmsg.NewApiVersionsRequest()
@@ -121,7 +115,7 @@ func requestIsSupported(cl *client.Client, requestKey int16) (bool, error) {
 }
 
 // Execute a request to describe the cluster (Kafka 2.8.0+)
-func DescribeCluster(cl *client.Client) (*kmsg.DescribeClusterResponse, error) {
+func describeCluster(cl *client.Client) (*kmsg.DescribeClusterResponse, error) {
 	kresp, err := cl.Client().Request(context.Background(), kmsg.NewPtrDescribeClusterRequest())
 	if err != nil {
 		return nil, err
@@ -140,7 +134,7 @@ func DescribeCluster(cl *client.Client) (*kmsg.DescribeClusterResponse, error) {
 }
 
 // Execute describe cluster requests until a minimum number of brokers are alive (Kafka 2.8.0+)
-func IsKafkaReady(cl *client.Client, minBrokers int, timeoutSec int) bool {
+func isKafkaReady(cl *client.Client, minBrokers int, timeoutSec int) bool {
 	timeout := time.After(time.Duration(timeoutSec) * time.Second)
 
 	for {
@@ -148,7 +142,7 @@ func IsKafkaReady(cl *client.Client, minBrokers int, timeoutSec int) bool {
 		case <-timeout:
 			return false
 		default:
-			resp, err := DescribeCluster(cl)
+			resp, err := describeCluster(cl)
 			if err == nil {
 				if len(resp.Brokers) >= minBrokers {
 					return true

@@ -10,7 +10,7 @@ import (
 
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
-	"github.com/peter-evans/kdef/core/service"
+	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/test/compose"
 	"github.com/peter-evans/kdef/test/fixtures"
 	"github.com/peter-evans/kdef/test/tutil"
@@ -92,8 +92,18 @@ func Test_applier_Execute(t *testing.T) {
 		},
 	})
 
+	// Create client set to use non-incremental alter configs
+	clNonInc := client.New(&client.ClientFlags{
+		ConfigPath: "does-not-exist",
+		FlagConfigOpts: []string{
+			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.TopicsApplierTest.BrokerPort),
+			"alterConfigsMethod=non-incremental",
+		},
+	})
+
 	// Wait for Kafka to be ready
-	if !service.IsKafkaReady(cl, fixtures.TopicsApplierTest.Brokers, 90) {
+	srv := kafka.NewService(cl)
+	if !srv.IsKafkaReady(fixtures.TopicsApplierTest.Brokers, 90) {
 		t.Errorf("kafka failed to be ready within timeout")
 		t.FailNow()
 	}
@@ -199,11 +209,10 @@ func Test_applier_Execute(t *testing.T) {
 			// Update configs (non-incremental)
 			name: "8: Dry-run topic foo version 3",
 			fields: fields{
-				cl:      cl,
+				cl:      clNonInc,
 				yamlDoc: fooDocs[3],
 				flags: ApplierFlags{
-					DryRun:         true,
-					NonIncremental: true,
+					DryRun: true,
 				},
 			},
 			wantDiff:    fooDiffs[3],
@@ -214,11 +223,9 @@ func Test_applier_Execute(t *testing.T) {
 			// Update configs (non-incremental)
 			name: "9: Apply topic foo version 3",
 			fields: fields{
-				cl:      cl,
+				cl:      clNonInc,
 				yamlDoc: fooDocs[3],
-				flags: ApplierFlags{
-					NonIncremental: true,
-				},
+				flags:   ApplierFlags{},
 			},
 			wantDiff:    fooDiffs[3],
 			wantErr:     "",
@@ -229,11 +236,10 @@ func Test_applier_Execute(t *testing.T) {
 			// Fail due to deletion of missing configs being not enabled
 			name: "10: Dry-run topic foo version 4",
 			fields: fields{
-				cl:      cl,
+				cl:      clNonInc,
 				yamlDoc: fooDocs[4],
 				flags: ApplierFlags{
-					DryRun:         true,
-					NonIncremental: true,
+					DryRun: true,
 				},
 			},
 			wantDiff:    fooDiffs[4],
@@ -244,11 +250,9 @@ func Test_applier_Execute(t *testing.T) {
 			// Delete configs (non-incremental)
 			name: "11: Apply topic foo version 5",
 			fields: fields{
-				cl:      cl,
+				cl:      clNonInc,
 				yamlDoc: fooDocs[5],
-				flags: ApplierFlags{
-					NonIncremental: true,
-				},
+				flags:   ApplierFlags{},
 			},
 			wantDiff:    fooDiffs[5],
 			wantErr:     "",

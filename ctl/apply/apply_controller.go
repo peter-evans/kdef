@@ -24,7 +24,6 @@ type applier interface {
 type ApplyControllerFlags struct {
 	// ApplierFlags
 	DryRun            bool
-	NonIncremental    bool
 	ReassAwaitTimeout int
 
 	// Apply controller specific
@@ -165,18 +164,15 @@ func applyYamlDocs(
 		switch resourceDef.Kind {
 		case "broker":
 			applier = broker.NewApplier(cl, yamlDocs[i], broker.ApplierFlags{
-				DryRun:         flags.DryRun,
-				NonIncremental: flags.NonIncremental,
+				DryRun: flags.DryRun,
 			})
 		case "brokers":
 			applier = brokers.NewApplier(cl, yamlDocs[i], brokers.ApplierFlags{
-				DryRun:         flags.DryRun,
-				NonIncremental: flags.NonIncremental,
+				DryRun: flags.DryRun,
 			})
 		case "topic":
 			applier = topic.NewApplier(cl, yamlDocs[i], topic.ApplierFlags{
 				DryRun:            flags.DryRun,
-				NonIncremental:    flags.NonIncremental,
 				ReassAwaitTimeout: flags.ReassAwaitTimeout,
 			})
 		}
