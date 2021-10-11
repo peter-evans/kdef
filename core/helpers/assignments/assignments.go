@@ -3,7 +3,7 @@ package assignments
 import (
 	"sort"
 
-	"github.com/peter-evans/kdef/util/i32"
+	"github.com/peter-evans/kdef/core/util/i32"
 )
 
 // Alter the replication factor and return the new assignments

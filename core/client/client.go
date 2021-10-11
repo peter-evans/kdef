@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/peter-evans/kdef/cli/log"
-	"github.com/peter-evans/kdef/util/str"
+	"github.com/peter-evans/kdef/core/util/str"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 

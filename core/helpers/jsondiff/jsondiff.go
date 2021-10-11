@@ -3,7 +3,7 @@ package jsondiff
 import (
 	"encoding/json"
 
-	"github.com/peter-evans/kdef/util/diff"
+	"github.com/peter-evans/kdef/core/util/diff"
 )
 
 // Compute the line-oriented diff between the JSON representation of two structs
