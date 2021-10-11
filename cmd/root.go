@@ -26,7 +26,7 @@ func rootCmd(version string) *cobra.Command {
 	var quiet bool
 	var verbose bool
 
-	flags := &client.ClientFlags{}
+	opts := &client.ClientOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "kdef",
@@ -56,7 +56,7 @@ For usage documentation visit http://github.com/peter-evans/kdef`,
 		Version: version,
 	}
 
-	cl := client.New(flags)
+	cl := client.New(opts)
 
 	cmd.AddCommand(
 		apply.Command(cl),
@@ -67,8 +67,8 @@ For usage documentation visit http://github.com/peter-evans/kdef`,
 	cmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "enable quiet mode (output errors only)")
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable debug output")
 
-	cmd.PersistentFlags().StringVar(&flags.ConfigPath, "config-path", client.DefaultConfigPath(), "path to configuration file")
-	cmd.PersistentFlags().StringArrayVarP(&flags.FlagConfigOpts, "config-opt", "X", nil, "flag provided config option (e.g. \"timeoutMs=6000\")")
+	cmd.PersistentFlags().StringVar(&opts.ConfigPath, "config-path", client.DefaultConfigPath(), "path to configuration file")
+	cmd.PersistentFlags().StringArrayVarP(&opts.FlagConfigOpts, "config-opt", "X", nil, "flag provided config option (e.g. \"timeoutMs=6000\")")
 
 	return cmd
 }

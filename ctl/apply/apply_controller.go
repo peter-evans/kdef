@@ -1,28 +1,31 @@
 package apply
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
 
 	"github.com/ghodss/yaml"
-	"github.com/peter-evans/kdef/cli/in"
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
 	"github.com/peter-evans/kdef/core/model/def"
+	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/model/res"
 	"github.com/peter-evans/kdef/core/operators/broker"
 	"github.com/peter-evans/kdef/core/operators/brokers"
 	"github.com/peter-evans/kdef/core/operators/topic"
+	"github.com/peter-evans/kdef/ctl/apply/in"
 )
 
 type applier interface {
 	Execute() *res.ApplyResult
 }
 
-// Flags to configure an apply controller
-type ApplyControllerFlags struct {
-	// ApplierFlags
+// Options to configure an apply controller
+type ApplyControllerOptions struct {
+	// ApplierOptions
+	DefinitionFormat  opt.DefinitionFormat
 	DryRun            bool
 	ReassAwaitTimeout int
 
@@ -35,21 +38,21 @@ type ApplyControllerFlags struct {
 // An apply controller
 type applyController struct {
 	// constructor params
-	cl    *client.Client
-	args  []string
-	flags ApplyControllerFlags
+	cl   *client.Client
+	args []string
+	opts ApplyControllerOptions
 }
 
 // Create a new apply controller
 func NewApplyController(
 	cl *client.Client,
 	args []string,
-	flags ApplyControllerFlags,
+	opts ApplyControllerOptions,
 ) *applyController {
 	return &applyController{
-		cl:    cl,
-		args:  args,
-		flags: flags,
+		cl:   cl,
+		args: args,
+		opts: opts,
 	}
 }
 
@@ -59,17 +62,19 @@ func (a *applyController) Execute() error {
 
 	if a.args[0] == "-" {
 		log.Info("Reading definition(s) from stdin")
-		yamlDocs, err := in.StdinToYamlDocs()
+		defDocs, err := in.StdinToSeparatedDocs(a.opts.DefinitionFormat)
 		if err != nil {
 			return err
 		}
 
-		resourceDefs, err := getResourceDefinitions(yamlDocs)
+		// TODO: make this part of the applyController(?)
+		resourceDefs, err := getResourceDefinitions(defDocs, a.opts.DefinitionFormat)
 		if err != nil {
 			return err
 		}
 
-		results = applyYamlDocs(a.cl, a.flags, yamlDocs, resourceDefs)
+		// TODO: make this part of the applyController(?)
+		results = applyDefinitions(a.cl, a.opts, defDocs, resourceDefs)
 	} else {
 	mainloop:
 		for _, arg := range a.args {
@@ -84,19 +89,19 @@ func (a *applyController) Execute() error {
 				matchCount++
 
 				log.Info("Reading definition(s) from file %q", match)
-				yamlDocs, err := in.FileToYamlDocs(match)
+				defDocs, err := in.FileToSeparatedDocs(match, a.opts.DefinitionFormat)
 				if err != nil {
 					return err
 				}
 
-				resourceDefs, err := getResourceDefinitions(yamlDocs)
+				resourceDefs, err := getResourceDefinitions(defDocs, a.opts.DefinitionFormat)
 				if err != nil {
 					return err
 				}
 
-				res := applyYamlDocs(a.cl, a.flags, yamlDocs, resourceDefs)
+				res := applyDefinitions(a.cl, a.opts, defDocs, resourceDefs)
 				results = append(results, res...)
-				if res.ContainsErr() && !a.flags.ContinueOnError {
+				if res.ContainsErr() && !a.opts.ContinueOnError {
 					break mainloop
 				}
 
@@ -108,7 +113,7 @@ func (a *applyController) Execute() error {
 		}
 	}
 
-	if a.flags.JsonOutput {
+	if a.opts.JsonOutput {
 		out, err := results.JSON()
 		if err != nil {
 			return err
@@ -122,21 +127,31 @@ func (a *applyController) Execute() error {
 	}
 
 	// Cause the program to exit with 1 if there are unapplied changes
-	if a.flags.ExitCode && results.ContainsUnappliedChanges() {
+	if a.opts.ExitCode && results.ContainsUnappliedChanges() {
 		return fmt.Errorf("unapplied changes exist")
 	}
 
 	return nil
 }
 
-// Get resource definitions contained in yaml documents
-func getResourceDefinitions(yamlDocs []string) ([]def.ResourceDefinition, error) {
-	kinds := make([]def.ResourceDefinition, len(yamlDocs))
+// Get resource definitions for the definition documents
+func getResourceDefinitions(defDocs []string, format opt.DefinitionFormat) ([]def.ResourceDefinition, error) {
+	kinds := make([]def.ResourceDefinition, len(defDocs))
 
-	for i, yamlDoc := range yamlDocs {
+	for i, defDoc := range defDocs {
 		var resourceDef def.ResourceDefinition
-		if err := yaml.Unmarshal([]byte(yamlDoc), &resourceDef); err != nil {
-			return nil, err
+
+		switch format {
+		case opt.YamlFormat:
+			if err := yaml.Unmarshal([]byte(defDoc), &resourceDef); err != nil {
+				return nil, err
+			}
+		case opt.JsonFormat:
+			if err := json.Unmarshal([]byte(defDoc), &resourceDef); err != nil {
+				return nil, err
+			}
+		default:
+			return nil, fmt.Errorf("unsupported format")
 		}
 
 		if err := resourceDef.ValidateResource(); err != nil {
@@ -149,11 +164,11 @@ func getResourceDefinitions(yamlDocs []string) ([]def.ResourceDefinition, error)
 	return kinds, nil
 }
 
-// Apply YAML resource documents using an applier
-func applyYamlDocs(
+// Apply resource definitions using an applier
+func applyDefinitions(
 	cl *client.Client,
-	flags ApplyControllerFlags,
-	yamlDocs []string,
+	opts ApplyControllerOptions,
+	defDocs []string,
 	resourceDefs []def.ResourceDefinition,
 ) res.ApplyResults {
 	var results res.ApplyResults
@@ -163,23 +178,26 @@ func applyYamlDocs(
 
 		switch resourceDef.Kind {
 		case "broker":
-			applier = broker.NewApplier(cl, yamlDocs[i], broker.ApplierFlags{
-				DryRun: flags.DryRun,
+			applier = broker.NewApplier(cl, defDocs[i], broker.ApplierOptions{
+				DefinitionFormat: opts.DefinitionFormat,
+				DryRun:           opts.DryRun,
 			})
 		case "brokers":
-			applier = brokers.NewApplier(cl, yamlDocs[i], brokers.ApplierFlags{
-				DryRun: flags.DryRun,
+			applier = brokers.NewApplier(cl, defDocs[i], brokers.ApplierOptions{
+				DefinitionFormat: opts.DefinitionFormat,
+				DryRun:           opts.DryRun,
 			})
 		case "topic":
-			applier = topic.NewApplier(cl, yamlDocs[i], topic.ApplierFlags{
-				DryRun:            flags.DryRun,
-				ReassAwaitTimeout: flags.ReassAwaitTimeout,
+			applier = topic.NewApplier(cl, defDocs[i], topic.ApplierOptions{
+				DefinitionFormat:  opts.DefinitionFormat,
+				DryRun:            opts.DryRun,
+				ReassAwaitTimeout: opts.ReassAwaitTimeout,
 			})
 		}
 
 		res := applier.Execute()
 		results = append(results, res)
-		if err := res.GetErr(); err != nil && !flags.ContinueOnError {
+		if err := res.GetErr(); err != nil && !opts.ContinueOnError {
 			return results
 		}
 	}

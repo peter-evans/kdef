@@ -32,6 +32,15 @@ func (e ExportResults) Ids() []string {
 	return ids
 }
 
+// An array of the definitions
+func (e ExportResults) Defs() []interface{} {
+	defs := make([]interface{}, len(e))
+	for i, r := range e {
+		defs[i] = r.Def
+	}
+	return defs
+}
+
 // Convert export results to JSON
 func (e ExportResults) JSON() (string, error) {
 	j, err := json.Marshal(e)

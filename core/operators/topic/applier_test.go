@@ -11,6 +11,7 @@ import (
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
 	"github.com/peter-evans/kdef/core/kafka"
+	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/test/compose"
 	"github.com/peter-evans/kdef/test/fixtures"
 	"github.com/peter-evans/kdef/test/tutil"
@@ -24,7 +25,7 @@ func Test_applier_Execute(t *testing.T) {
 	type fields struct {
 		cl      *client.Client
 		yamlDoc string
-		flags   ApplierFlags
+		opts    ApplierOptions
 	}
 	type testCase struct {
 		name        string
@@ -37,7 +38,7 @@ func Test_applier_Execute(t *testing.T) {
 	runTests := func(t *testing.T, tests []testCase) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				a := NewApplier(tt.fields.cl, tt.fields.yamlDoc, tt.fields.flags)
+				a := NewApplier(tt.fields.cl, tt.fields.yamlDoc, tt.fields.opts)
 				got := a.Execute()
 
 				if log.Verbose {
@@ -85,7 +86,7 @@ func Test_applier_Execute(t *testing.T) {
 	defer compose.Down(t, c)
 
 	// Create client
-	cl := client.New(&client.ClientFlags{
+	cl := client.New(&client.ClientOptions{
 		ConfigPath: "does-not-exist",
 		FlagConfigOpts: []string{
 			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.TopicsApplierTest.BrokerPort),
@@ -93,7 +94,7 @@ func Test_applier_Execute(t *testing.T) {
 	})
 
 	// Create client set to use non-incremental alter configs
-	clNonInc := client.New(&client.ClientFlags{
+	clNonInc := client.New(&client.ClientOptions{
 		ConfigPath: "does-not-exist",
 		FlagConfigOpts: []string{
 			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.TopicsApplierTest.BrokerPort),
@@ -119,8 +120,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: fooDocs[0],
-				flags: ApplierFlags{
-					DryRun: true,
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+					DryRun:           true,
 				},
 			},
 			wantDiff:    fooDiffs[0],
@@ -133,7 +135,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: fooDocs[0],
-				flags:   ApplierFlags{},
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+				},
 			},
 			wantDiff:    fooDiffs[0],
 			wantErr:     "",
@@ -145,8 +149,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: fooDocs[0],
-				flags: ApplierFlags{
-					DryRun: true,
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+					DryRun:           true,
 				},
 			},
 			wantDiff:    "",
@@ -159,8 +164,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: fooDocs[1],
-				flags: ApplierFlags{
-					DryRun: true,
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+					DryRun:           true,
 				},
 			},
 			wantDiff:    fooDiffs[1],
@@ -173,7 +179,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: fooDocs[1],
-				flags:   ApplierFlags{},
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+				},
 			},
 			wantDiff:    fooDiffs[1],
 			wantErr:     "",
@@ -185,8 +193,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: fooDocs[2],
-				flags: ApplierFlags{
-					DryRun: true,
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+					DryRun:           true,
 				},
 			},
 			wantDiff:    fooDiffs[2],
@@ -199,7 +208,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: fooDocs[2],
-				flags:   ApplierFlags{},
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+				},
 			},
 			wantDiff:    fooDiffs[2],
 			wantErr:     "",
@@ -211,8 +222,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      clNonInc,
 				yamlDoc: fooDocs[3],
-				flags: ApplierFlags{
-					DryRun: true,
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+					DryRun:           true,
 				},
 			},
 			wantDiff:    fooDiffs[3],
@@ -225,7 +237,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      clNonInc,
 				yamlDoc: fooDocs[3],
-				flags:   ApplierFlags{},
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+				},
 			},
 			wantDiff:    fooDiffs[3],
 			wantErr:     "",
@@ -238,8 +252,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      clNonInc,
 				yamlDoc: fooDocs[4],
-				flags: ApplierFlags{
-					DryRun: true,
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+					DryRun:           true,
 				},
 			},
 			wantDiff:    fooDiffs[4],
@@ -252,7 +267,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      clNonInc,
 				yamlDoc: fooDocs[5],
-				flags:   ApplierFlags{},
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+				},
 			},
 			wantDiff:    fooDiffs[5],
 			wantErr:     "",
@@ -271,7 +288,8 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[0],
-				flags: ApplierFlags{
+				opts: ApplierOptions{
+					DefinitionFormat:  opt.YamlFormat,
 					DryRun:            true,
 					ReassAwaitTimeout: 30,
 				},
@@ -286,7 +304,8 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[0],
-				flags: ApplierFlags{
+				opts: ApplierOptions{
+					DefinitionFormat:  opt.YamlFormat,
 					ReassAwaitTimeout: 30,
 				},
 			},
@@ -323,7 +342,8 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[1],
-				flags: ApplierFlags{
+				opts: ApplierOptions{
+					DefinitionFormat:  opt.YamlFormat,
 					DryRun:            true,
 					ReassAwaitTimeout: 30,
 				},
@@ -338,7 +358,8 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[1],
-				flags: ApplierFlags{
+				opts: ApplierOptions{
+					DefinitionFormat:  opt.YamlFormat,
 					ReassAwaitTimeout: 30,
 				},
 			},
@@ -352,7 +373,8 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[2],
-				flags: ApplierFlags{
+				opts: ApplierOptions{
+					DefinitionFormat:  opt.YamlFormat,
 					DryRun:            true,
 					ReassAwaitTimeout: 30,
 				},
@@ -367,7 +389,8 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[2],
-				flags: ApplierFlags{
+				opts: ApplierOptions{
+					DefinitionFormat:  opt.YamlFormat,
 					ReassAwaitTimeout: 30,
 				},
 			},
@@ -381,7 +404,8 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[3],
-				flags: ApplierFlags{
+				opts: ApplierOptions{
+					DefinitionFormat:  opt.YamlFormat,
 					DryRun:            true,
 					ReassAwaitTimeout: 30,
 				},
@@ -396,7 +420,8 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[3],
-				flags: ApplierFlags{
+				opts: ApplierOptions{
+					DefinitionFormat:  opt.YamlFormat,
 					ReassAwaitTimeout: 30,
 				},
 			},
@@ -410,7 +435,8 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[4],
-				flags: ApplierFlags{
+				opts: ApplierOptions{
+					DefinitionFormat:  opt.YamlFormat,
 					DryRun:            true,
 					ReassAwaitTimeout: 30,
 				},
@@ -425,7 +451,8 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: barDocs[4],
-				flags: ApplierFlags{
+				opts: ApplierOptions{
+					DefinitionFormat:  opt.YamlFormat,
 					ReassAwaitTimeout: 30,
 				},
 			},
@@ -446,8 +473,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: bazDocs[0],
-				flags: ApplierFlags{
-					DryRun: true,
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+					DryRun:           true,
 				},
 			},
 			wantDiff:    bazDiffs[0],
@@ -460,7 +488,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: bazDocs[0],
-				flags:   ApplierFlags{},
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+				},
 			},
 			wantDiff:    bazDiffs[0],
 			wantErr:     "",
@@ -472,8 +502,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: bazDocs[1],
-				flags: ApplierFlags{
-					DryRun: true,
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+					DryRun:           true,
 				},
 			},
 			wantDiff:    bazDiffs[1],
@@ -486,7 +517,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: bazDocs[1],
-				flags:   ApplierFlags{},
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+				},
 			},
 			wantDiff:    bazDiffs[1],
 			wantErr:     "",
@@ -498,8 +531,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: bazDocs[2],
-				flags: ApplierFlags{
-					DryRun: true,
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+					DryRun:           true,
 				},
 			},
 			wantDiff:    bazDiffs[2],
@@ -512,7 +546,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: bazDocs[2],
-				flags:   ApplierFlags{},
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+				},
 			},
 			wantDiff:    bazDiffs[2],
 			wantErr:     "",
@@ -524,8 +560,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: bazDocs[3],
-				flags: ApplierFlags{
-					DryRun: true,
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+					DryRun:           true,
 				},
 			},
 			wantDiff:    bazDiffs[3],
@@ -538,7 +575,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: bazDocs[3],
-				flags:   ApplierFlags{},
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+				},
 			},
 			wantDiff:    bazDiffs[3],
 			wantErr:     "",
@@ -550,8 +589,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: bazDocs[4],
-				flags: ApplierFlags{
-					DryRun: true,
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+					DryRun:           true,
 				},
 			},
 			wantDiff:    bazDiffs[4],
@@ -564,7 +604,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: bazDocs[4],
-				flags:   ApplierFlags{},
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+				},
 			},
 			wantDiff:    bazDiffs[4],
 			wantErr:     "",
@@ -583,8 +625,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: quxDocs[0],
-				flags: ApplierFlags{
-					DryRun: true,
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+					DryRun:           true,
 				},
 			},
 			wantDiff:    quxDiffs[0],
@@ -597,7 +640,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: quxDocs[0],
-				flags:   ApplierFlags{},
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+				},
 			},
 			wantDiff:    quxDiffs[0],
 			wantErr:     "",
@@ -609,8 +654,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: quxDocs[1],
-				flags: ApplierFlags{
-					DryRun: true,
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+					DryRun:           true,
 				},
 			},
 			wantDiff:    quxDiffs[1],
@@ -623,7 +669,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: quxDocs[1],
-				flags:   ApplierFlags{},
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+				},
 			},
 			wantDiff:    quxDiffs[1],
 			wantErr:     "",
@@ -635,8 +683,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: quxDocs[2],
-				flags: ApplierFlags{
-					DryRun: true,
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+					DryRun:           true,
 				},
 			},
 			wantDiff:    quxDiffs[2],
@@ -649,7 +698,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: quxDocs[2],
-				flags:   ApplierFlags{},
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+				},
 			},
 			wantDiff:    quxDiffs[2],
 			wantErr:     "",
@@ -661,8 +712,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: quxDocs[3],
-				flags: ApplierFlags{
-					DryRun: true,
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+					DryRun:           true,
 				},
 			},
 			wantDiff:    quxDiffs[3],
@@ -675,7 +727,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: quxDocs[3],
-				flags:   ApplierFlags{},
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+				},
 			},
 			wantDiff:    quxDiffs[3],
 			wantErr:     "",
@@ -687,8 +741,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: quxDocs[4],
-				flags: ApplierFlags{
-					DryRun: true,
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+					DryRun:           true,
 				},
 			},
 			wantDiff:    quxDiffs[4],
@@ -701,7 +756,9 @@ func Test_applier_Execute(t *testing.T) {
 			fields: fields{
 				cl:      cl,
 				yamlDoc: quxDocs[4],
-				flags:   ApplierFlags{},
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YamlFormat,
+				},
 			},
 			wantDiff:    quxDiffs[4],
 			wantErr:     "",

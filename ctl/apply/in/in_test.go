@@ -77,3 +77,49 @@ func Test_bytesToYamlDocs(t *testing.T) {
 		})
 	}
 }
+
+func Test_bytesToJsonDocs(t *testing.T) {
+	type args struct {
+		bytes []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []string
+		wantErr bool
+	}{
+		{
+			name: "Tests handling a single JSON doc (non-array)",
+			args: args{
+				bytes: []byte("{\"name\": \"foo\"}"),
+			},
+			want: []string{
+				"{\"name\":\"foo\"}",
+			},
+			wantErr: false,
+		},
+		{
+			name: "Tests handling an array of JSON docs",
+			args: args{
+				bytes: []byte("[{\"name\": \"foo\"},{\"name\": \"bar\"}]"),
+			},
+			want: []string{
+				"{\"name\":\"foo\"}",
+				"{\"name\":\"bar\"}",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := bytesToJsonDocs(tt.args.bytes)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("bytesToJsonDocs() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("bytesToJsonDocs() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
