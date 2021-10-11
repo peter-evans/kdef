@@ -1,6 +1,7 @@
 package brokers
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -10,24 +11,26 @@ import (
 	"github.com/peter-evans/kdef/core/helpers/jsondiff"
 	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/model/def"
+	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/model/res"
 )
 
-// Flags to configure an applier
-type ApplierFlags struct {
-	DryRun bool
+// Options to configure an applier
+type ApplierOptions struct {
+	DefinitionFormat opt.DefinitionFormat
+	DryRun           bool
 }
 
 // Create a new applier
 func NewApplier(
 	cl *client.Client,
-	yamlDoc string,
-	flags ApplierFlags,
+	defDoc string,
+	opts ApplierOptions,
 ) *applier {
 	return &applier{
-		srv:     kafka.NewService(cl),
-		yamlDoc: yamlDoc,
-		flags:   flags,
+		srv:    kafka.NewService(cl),
+		defDoc: defDoc,
+		opts:   opts,
 	}
 }
 
@@ -44,9 +47,9 @@ func (a applierOps) pending() bool {
 // An applier handling the apply operation
 type applier struct {
 	// constructor params
-	srv     *kafka.Service
-	yamlDoc string
-	flags   ApplierFlags
+	srv    *kafka.Service
+	defDoc string
+	opts   ApplierOptions
 
 	// internal
 	localDef      def.BrokersDefinition
@@ -65,7 +68,7 @@ func (a *applier) Execute() *res.ApplyResult {
 		log.Error(err)
 	} else {
 		// Consider the definition applied if there were ops and this is not a dry run
-		if a.ops.pending() && !a.flags.DryRun {
+		if a.ops.pending() && !a.opts.DryRun {
 			a.res.Applied = true
 		}
 	}
@@ -75,13 +78,12 @@ func (a *applier) Execute() *res.ApplyResult {
 
 // Perform the apply operation sequence
 func (a *applier) apply() error {
-	log.Debug("Validating brokers definition")
-	if err := yaml.Unmarshal([]byte(a.yamlDoc), &a.localDef); err != nil {
+	// Create the local definition
+	if err := a.createLocal(); err != nil {
 		return err
 	}
-	// Set the local definition on the apply result
-	a.res.LocalDef = &a.localDef
 
+	log.Debug("Validating brokers definition")
 	if err := a.localDef.Validate(); err != nil {
 		return err
 	}
@@ -112,10 +114,31 @@ func (a *applier) apply() error {
 			return err
 		}
 
-		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Completed apply for brokers %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Completed apply for brokers %q", a.localDef.Metadata.Name)
 	} else {
 		log.Info("No changes to apply for brokers %q", a.localDef.Metadata.Name)
 	}
+
+	return nil
+}
+
+// Create the local definition
+func (a *applier) createLocal() error {
+	switch a.opts.DefinitionFormat {
+	case opt.YamlFormat:
+		if err := yaml.Unmarshal([]byte(a.defDoc), &a.localDef); err != nil {
+			return err
+		}
+	case opt.JsonFormat:
+		if err := json.Unmarshal([]byte(a.defDoc), &a.localDef); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("unsupported format")
+	}
+
+	// Set the local definition on the apply result
+	a.res.LocalDef = &a.localDef
 
 	return nil
 }
@@ -225,14 +248,14 @@ func (a *applier) updateConfigs() error {
 		return errors.New("cannot apply configs because deletion of missing configs is not enabled")
 	}
 
-	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altering configs...")
+	log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Altering configs...")
 	if err := a.srv.AlterAllBrokerConfigs(
 		a.ops.config,
-		a.flags.DryRun,
+		a.opts.DryRun,
 	); err != nil {
 		return err
 	} else {
-		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altered configs for brokers %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Altered configs for brokers %q", a.localDef.Metadata.Name)
 	}
 
 	return nil

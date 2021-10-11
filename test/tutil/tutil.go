@@ -8,7 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/peter-evans/kdef/cli/in"
+	"github.com/peter-evans/kdef/core/model/opt"
+	"github.com/peter-evans/kdef/ctl/apply/in"
 )
 
 // Check if an error message contains a string
@@ -34,7 +35,8 @@ func Fixture(t *testing.T, path string) []byte {
 
 // A wrapper around FileToYamlDocs to simplify test usage
 func FileToYamlDocs(t *testing.T, path string) []string {
-	yamlDocs, err := in.FileToYamlDocs(path)
+	// TODO: pass format param
+	yamlDocs, err := in.FileToSeparatedDocs(path, opt.YamlFormat)
 	if err != nil {
 		t.Errorf("failed to load test fixture %q: %v", path, err)
 		t.FailNow()

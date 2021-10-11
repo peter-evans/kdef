@@ -27,7 +27,7 @@ func Test_exporter_Execute(t *testing.T) {
 	defer compose.Down(t, c)
 
 	// Create client
-	cl := client.New(&client.ClientFlags{
+	cl := client.New(&client.ClientOptions{
 		ConfigPath: "does-not-exist",
 		FlagConfigOpts: []string{
 			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.BrokersExporterTest.BrokerPort),
@@ -46,7 +46,7 @@ func Test_exporter_Execute(t *testing.T) {
 
 	// Apply the fixtures
 	for _, yamlDoc := range yamlDocs {
-		applier := NewApplier(cl, yamlDoc, ApplierFlags{})
+		applier := NewApplier(cl, yamlDoc, ApplierOptions{})
 		res := applier.Execute()
 		if err := res.GetErr(); err != nil {
 			t.Errorf("failed to apply fixture: %v", err)

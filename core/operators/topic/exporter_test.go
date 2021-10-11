@@ -9,6 +9,7 @@ import (
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/client"
 	"github.com/peter-evans/kdef/core/kafka"
+	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/test/compose"
 	"github.com/peter-evans/kdef/test/fixtures"
 	"github.com/peter-evans/kdef/test/tutil"
@@ -27,7 +28,7 @@ func Test_exporter_Execute(t *testing.T) {
 	defer compose.Down(t, c)
 
 	// Create client
-	cl := client.New(&client.ClientFlags{
+	cl := client.New(&client.ClientOptions{
 		ConfigPath: "does-not-exist",
 		FlagConfigOpts: []string{
 			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.TopicsExporterTest.BrokerPort),
@@ -46,7 +47,7 @@ func Test_exporter_Execute(t *testing.T) {
 
 	// Apply the fixtures
 	for _, yamlDoc := range yamlDocs {
-		applier := NewApplier(cl, yamlDoc, ApplierFlags{})
+		applier := NewApplier(cl, yamlDoc, ApplierOptions{})
 		res := applier.Execute()
 		if err := res.GetErr(); err != nil {
 			t.Errorf("failed to apply fixture: %v", err)
@@ -58,8 +59,8 @@ func Test_exporter_Execute(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	type fields struct {
-		cl    *client.Client
-		flags ExporterFlags
+		cl   *client.Client
+		opts ExporterOptions
 	}
 	tests := []struct {
 		name     string
@@ -71,7 +72,7 @@ func Test_exporter_Execute(t *testing.T) {
 			name: "1: Test export of all topics",
 			fields: fields{
 				cl: cl,
-				flags: ExporterFlags{
+				opts: ExporterOptions{
 					Match:   ".*",
 					Exclude: ".^",
 				},
@@ -83,7 +84,7 @@ func Test_exporter_Execute(t *testing.T) {
 			name: "2: Test export of all topics including internal",
 			fields: fields{
 				cl: cl,
-				flags: ExporterFlags{
+				opts: ExporterOptions{
 					Match:           ".*",
 					Exclude:         ".^",
 					IncludeInternal: true,
@@ -96,7 +97,7 @@ func Test_exporter_Execute(t *testing.T) {
 			name: "3: Test export of topics with match regexp",
 			fields: fields{
 				cl: cl,
-				flags: ExporterFlags{
+				opts: ExporterOptions{
 					Match:   "core.operators.topic.exporter.foo.*",
 					Exclude: ".^",
 				},
@@ -108,7 +109,7 @@ func Test_exporter_Execute(t *testing.T) {
 			name: "4: Test export of topics with exclude regexp",
 			fields: fields{
 				cl: cl,
-				flags: ExporterFlags{
+				opts: ExporterOptions{
 					Match:   ".*",
 					Exclude: "core.operators.topic.exporter.bar.*",
 				},
@@ -120,10 +121,10 @@ func Test_exporter_Execute(t *testing.T) {
 			name: "5: Test export of topics including broker assignments",
 			fields: fields{
 				cl: cl,
-				flags: ExporterFlags{
+				opts: ExporterOptions{
 					Match:       "core.operators.topic.exporter.foo1",
 					Exclude:     ".^",
-					Assignments: "broker",
+					Assignments: opt.BrokerAssignments,
 				},
 			},
 			wantJson: string(tutil.Fixture(t, "../../../test/fixtures/topic/core.operators.topic.exporter.5.json")),
@@ -133,10 +134,10 @@ func Test_exporter_Execute(t *testing.T) {
 			name: "6: Test export of topics including rack assignments",
 			fields: fields{
 				cl: cl,
-				flags: ExporterFlags{
+				opts: ExporterOptions{
 					Match:       "core.operators.topic.exporter.foo1",
 					Exclude:     ".^",
-					Assignments: "rack",
+					Assignments: opt.RackAssignments,
 				},
 			},
 			wantJson: string(tutil.Fixture(t, "../../../test/fixtures/topic/core.operators.topic.exporter.6.json")),
@@ -145,7 +146,7 @@ func Test_exporter_Execute(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := NewExporter(tt.fields.cl, tt.fields.flags)
+			e := NewExporter(tt.fields.cl, tt.fields.opts)
 			got, err := e.Execute()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("exporter.Execute() error = %v, wantErr %v", err, tt.wantErr)

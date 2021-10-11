@@ -26,7 +26,7 @@ func Test_exporter_Execute(t *testing.T) {
 	defer compose.Down(t, c)
 
 	// Create client
-	cl := client.New(&client.ClientFlags{
+	cl := client.New(&client.ClientOptions{
 		ConfigPath: "does-not-exist",
 		FlagConfigOpts: []string{
 			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.BrokerExporterTest.BrokerPort),

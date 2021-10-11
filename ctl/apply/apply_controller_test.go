@@ -5,12 +5,14 @@ import (
 	"testing"
 
 	"github.com/peter-evans/kdef/core/model/def"
+	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/test/tutil"
 )
 
 func Test_getResourceDefinitions(t *testing.T) {
 	type args struct {
-		yamlDocs []string
+		defDocs []string
+		format  opt.DefinitionFormat
 	}
 	tests := []struct {
 		name    string
@@ -19,38 +21,105 @@ func Test_getResourceDefinitions(t *testing.T) {
 		wantErr string
 	}{
 		{
-			name: "Tests invalid YAML doc",
+			name: "Tests invalid doc (YAML)",
 			args: args{
-				yamlDocs: []string{"foo"},
+				defDocs: []string{"foo"},
+				format:  opt.YamlFormat,
 			},
 			want:    nil,
 			wantErr: "error unmarshaling JSON",
 		},
 		{
-			name: "Tests invalid kind",
+			name: "Tests invalid kind (YAML)",
 			args: args{
-				yamlDocs: []string{"apiVersion: v1\nkind: foo"},
+				defDocs: []string{"apiVersion: v1\nkind: foo"},
+				format:  opt.YamlFormat,
 			},
 			want:    nil,
 			wantErr: "invalid definition kind",
 		},
 		{
-			name: "Tests invalid apiVersion",
+			name: "Tests invalid apiVersion (YAML)",
 			args: args{
-				yamlDocs: []string{"apiVersion: foo\nkind: topic"},
+				defDocs: []string{"apiVersion: foo\nkind: topic"},
+				format:  opt.YamlFormat,
 			},
 			want:    nil,
 			wantErr: "invalid definition apiVersion",
 		},
 		{
 			// TODO: add other resources
-			name: "Tests return of resource definitions",
+			name: "Tests return of resource definitions (YAML)",
 			args: args{
-				yamlDocs: []string{
+				defDocs: []string{
 					"apiVersion: v1\nkind: broker\nmetadata:\n  name: \"1\"",
 					"apiVersion: v1\nkind: brokers\nmetadata:\n  name: brokers_foo",
 					"apiVersion: v1\nkind: topic\nmetadata:\n  name: topic_foo",
 				},
+				format: opt.YamlFormat,
+			},
+			want: []def.ResourceDefinition{
+				{
+					ApiVersion: "v1",
+					Kind:       "broker",
+					Metadata: def.ResourceMetadataDefinition{
+						Name: "1",
+					},
+				},
+				{
+					ApiVersion: "v1",
+					Kind:       "brokers",
+					Metadata: def.ResourceMetadataDefinition{
+						Name: "brokers_foo",
+					},
+				},
+				{
+					ApiVersion: "v1",
+					Kind:       "topic",
+					Metadata: def.ResourceMetadataDefinition{
+						Name: "topic_foo",
+					},
+				},
+			},
+			wantErr: "",
+		},
+		{
+			name: "Tests invalid doc (JSON)",
+			args: args{
+				defDocs: []string{"invalid json"},
+				format:  opt.JsonFormat,
+			},
+			want:    nil,
+			wantErr: "invalid character 'i' looking for beginning of value",
+		},
+		{
+			name: "Tests invalid kind (JSON)",
+			args: args{
+				defDocs: []string{"{\"apiVersion\": \"v1\", \"kind\": \"foo\"}"},
+				format:  opt.JsonFormat,
+			},
+			want:    nil,
+			wantErr: "invalid definition kind",
+		},
+		{
+			name: "Tests invalid apiVersion (JSON)",
+			args: args{
+				defDocs: []string{"{\"apiVersion\": \"foo\", \"kind\": \"topic\"}"},
+				format:  opt.JsonFormat,
+			},
+			want:    nil,
+			wantErr: "invalid definition apiVersion",
+		},
+		{
+			// TODO: add other resources
+			name: "Tests return of resource definitions (JSON)",
+			args: args{
+				defDocs: []string{
+					"{\"apiVersion\": \"v1\", \"kind\": \"broker\", \"metadata\": {\"name\": \"1\"}}",
+					"{\"apiVersion\": \"v1\", \"kind\": \"brokers\", \"metadata\": {\"name\": \"brokers_foo\"}}",
+					"{\"apiVersion\": \"v1\", \"kind\": \"topic\", \"metadata\": {\"name\": \"topic_foo\"}}",
+				},
+				format: opt.YamlFormat,
 			},
 			want: []def.ResourceDefinition{
 				{
@@ -80,7 +149,7 @@ func Test_getResourceDefinitions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getResourceDefinitions(tt.args.yamlDocs)
+			got, err := getResourceDefinitions(tt.args.defDocs, tt.args.format)
 			if !tutil.ErrorContains(err, tt.wantErr) {
 				t.Errorf("getResourceDefinitions() error = %v, wantErr %v", err, tt.wantErr)
 				return

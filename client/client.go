@@ -25,30 +25,30 @@ import (
 )
 
 // Create a new client
-func New(flags *ClientFlags) *Client {
+func New(opts *ClientOptions) *Client {
 	cl := &Client{
-		opts: []kgo.Opt{
+		kgoOpts: []kgo.Opt{
 			kgo.MetadataMinAge(time.Second),
 		},
-		flags: flags,
+		opts: opts,
 	}
 
 	return cl
 }
 
 // Flag-based options to configure the client
-type ClientFlags struct {
+type ClientOptions struct {
 	ConfigPath     string
 	FlagConfigOpts []string
 }
 
 // Client contains kgo client options and a kgo client
 type Client struct {
-	client *kgo.Client
-	cc     *clientConfig
-	flags  *ClientFlags
-	once   sync.Once
-	opts   []kgo.Opt
+	client  *kgo.Client
+	cc      *clientConfig
+	opts    *ClientOptions
+	once    sync.Once
+	kgoOpts []kgo.Opt
 }
 
 // Timeout in milliseconds to be used by requests with timeouts
@@ -75,7 +75,7 @@ func (cl *Client) Client() *kgo.Client {
 func (cl *Client) loadOnce() (err error) {
 	cl.once.Do(func() {
 		// Load configuration from multiple sources
-		cl.cc, err = loadConfig(cl.flags.ConfigPath, cl.flags.FlagConfigOpts)
+		cl.cc, err = loadConfig(cl.opts.ConfigPath, cl.opts.FlagConfigOpts)
 		if err != nil {
 			return
 		}
@@ -93,7 +93,7 @@ func (cl *Client) loadOnce() (err error) {
 		}
 
 		// Create the client
-		cl.client, err = kgo.NewClient(cl.opts...)
+		cl.client, err = kgo.NewClient(cl.kgoOpts...)
 	})
 
 	return err
@@ -114,7 +114,7 @@ func (cl *Client) validateNonClientOptConfig() error {
 
 // Adds an option to configure kgo.Client
 func (cl *Client) addOpt(opt kgo.Opt) {
-	cl.opts = append(cl.opts, opt)
+	cl.kgoOpts = append(cl.kgoOpts, opt)
 }
 
 // Build options to configure a kgo.Client instance
@@ -372,7 +372,7 @@ func (cl *Client) buildLogLevelOpt() error {
 	default:
 		return fmt.Errorf("invalid log level %q", ll)
 	}
-	cl.opts = append(cl.opts, kgo.WithLogger(kgo.BasicLogger(os.Stderr, level, nil)))
+	cl.kgoOpts = append(cl.kgoOpts, kgo.WithLogger(kgo.BasicLogger(os.Stderr, level, nil)))
 
 	return nil
 }

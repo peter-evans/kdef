@@ -1,6 +1,7 @@
 package topic
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -16,11 +17,13 @@ import (
 	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/meta"
+	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/model/res"
 )
 
-// Flags to configure an applier
-type ApplierFlags struct {
+// Options to configure an applier
+type ApplierOptions struct {
+	DefinitionFormat  opt.DefinitionFormat
 	DryRun            bool
 	ReassAwaitTimeout int
 }
@@ -28,13 +31,13 @@ type ApplierFlags struct {
 // Create a new applier
 func NewApplier(
 	cl *client.Client,
-	yamlDoc string,
-	flags ApplierFlags,
+	defDoc string,
+	opts ApplierOptions,
 ) *applier {
 	return &applier{
-		srv:     kafka.NewService(cl),
-		yamlDoc: yamlDoc,
-		flags:   flags,
+		srv:    kafka.NewService(cl),
+		defDoc: defDoc,
+		opts:   opts,
 	}
 }
 
@@ -58,9 +61,9 @@ func (a applierOps) pending() bool {
 // An applier handling the apply operation
 type applier struct {
 	// constructor params
-	srv     *kafka.Service
-	yamlDoc string
-	flags   ApplierFlags
+	srv    *kafka.Service
+	defDoc string
+	opts   ApplierOptions
 
 	// internal
 	localDef      def.TopicDefinition
@@ -81,7 +84,7 @@ func (a *applier) Execute() *res.ApplyResult {
 		log.Error(err)
 	} else {
 		// Consider the definition applied if there were ops and this is not a dry run
-		if a.ops.pending() && !a.flags.DryRun {
+		if a.ops.pending() && !a.opts.DryRun {
 			a.res.Applied = true
 		}
 	}
@@ -95,13 +98,12 @@ func (a *applier) Execute() *res.ApplyResult {
 
 // Perform the apply operation sequence
 func (a *applier) apply() error {
-	log.Debug("Validating topic definition")
-	if err := yaml.Unmarshal([]byte(a.yamlDoc), &a.localDef); err != nil {
+	// Create the local definition
+	if err := a.createLocal(); err != nil {
 		return err
 	}
-	// Set the local definition on the apply result
-	a.res.LocalDef = &a.localDef
 
+	log.Debug("Validating topic definition")
 	if err := a.localDef.Validate(); err != nil {
 		return err
 	}
@@ -144,9 +146,9 @@ func (a *applier) apply() error {
 				return err
 			}
 			if len(a.reassignments) > 0 {
-				if a.flags.ReassAwaitTimeout > 0 {
+				if a.opts.ReassAwaitTimeout > 0 {
 					// Wait for reassignments to complete
-					if err := a.awaitReassignments(a.flags.ReassAwaitTimeout); err != nil {
+					if err := a.awaitReassignments(a.opts.ReassAwaitTimeout); err != nil {
 						return err
 					}
 				} else if !log.Quiet {
@@ -156,10 +158,31 @@ func (a *applier) apply() error {
 			}
 		}
 
-		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Completed apply for topic %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Completed apply for topic %q", a.localDef.Metadata.Name)
 	} else {
 		log.Info("No changes to apply for topic %q", a.localDef.Metadata.Name)
 	}
+
+	return nil
+}
+
+// Create the local definition
+func (a *applier) createLocal() error {
+	switch a.opts.DefinitionFormat {
+	case opt.YamlFormat:
+		if err := yaml.Unmarshal([]byte(a.defDoc), &a.localDef); err != nil {
+			return err
+		}
+	case opt.JsonFormat:
+		if err := json.Unmarshal([]byte(a.defDoc), &a.localDef); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("unsupported format")
+	}
+
+	// Set the local definition on the apply result
+	a.res.LocalDef = &a.localDef
 
 	return nil
 }
@@ -310,16 +333,16 @@ func (a *applier) buildCreateOp() {
 
 // Execute a request to create a topic
 func (a *applier) createTopic() error {
-	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Creating topic %q...", a.localDef.Metadata.Name)
+	log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Creating topic %q...", a.localDef.Metadata.Name)
 
 	if err := a.srv.CreateTopic(
 		a.localDef,
 		a.ops.createAssignments,
-		a.flags.DryRun,
+		a.opts.DryRun,
 	); err != nil {
 		return err
 	} else {
-		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Created topic %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Created topic %q", a.localDef.Metadata.Name)
 	}
 
 	return nil
@@ -350,15 +373,15 @@ func (a *applier) updateConfigs() error {
 		return errors.New("cannot apply configs because deletion of missing configs is not enabled")
 	}
 
-	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altering configs...")
+	log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Altering configs...")
 	if err := a.srv.AlterTopicConfigs(
 		a.localDef.Metadata.Name,
 		a.ops.config,
-		a.flags.DryRun,
+		a.opts.DryRun,
 	); err != nil {
 		return err
 	} else {
-		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Altered configs for topic %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Altered configs for topic %q", a.localDef.Metadata.Name)
 	}
 
 	return nil
@@ -390,17 +413,17 @@ func (a *applier) buildPartitionsOp() error {
 
 // Execute a request to create partitions
 func (a *applier) updatePartitions() error {
-	log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Creating partitions...")
+	log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Creating partitions...")
 
 	if err := a.srv.CreatePartitions(
 		a.localDef.Metadata.Name,
 		a.localDef.Spec.Partitions,
 		a.ops.partitions,
-		a.flags.DryRun,
+		a.opts.DryRun,
 	); err != nil {
 		return err
 	} else {
-		log.InfoMaybeWithKey("dry-run", a.flags.DryRun, "Created partitions for topic %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Created partitions for topic %q", a.localDef.Metadata.Name)
 	}
 
 	return nil
@@ -491,7 +514,7 @@ func (a *applier) displayPartitionReassignments() {
 
 // Execute a request to alter assignments
 func (a *applier) updateAssignments() error {
-	if a.flags.DryRun {
+	if a.opts.DryRun {
 		// AlterPartitionAssignments has no 'ValidateOnly' for dry-run mode so we check
 		// in-progress partition reassignments and error if found.
 		if err := a.fetchPartitionReassignments(false); err != nil {

@@ -8,36 +8,34 @@ import (
 	"github.com/peter-evans/kdef/client"
 	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/model/def"
+	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/model/res"
 )
 
-// Valid values for the assignments flag
-var AssignmentsValidValues = []string{"none", "broker", "rack"}
-
-// Flags to configure an exporter
-type ExporterFlags struct {
+// Options to configure an exporter
+type ExporterOptions struct {
 	Match           string
 	Exclude         string
 	IncludeInternal bool
-	Assignments     string
+	Assignments     opt.Assignments
 }
 
 // Create a new exporter
 func NewExporter(
 	cl *client.Client,
-	flags ExporterFlags,
+	opts ExporterOptions,
 ) *exporter {
 	return &exporter{
-		srv:   kafka.NewService(cl),
-		flags: flags,
+		srv:  kafka.NewService(cl),
+		opts: opts,
 	}
 }
 
 // An exporter handling the export operation
 type exporter struct {
 	// constructor params
-	srv   *kafka.Service
-	flags ExporterFlags
+	srv  *kafka.Service
+	opts ExporterOptions
 }
 
 // Execute the export operation
@@ -89,11 +87,11 @@ func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 		topicConfigsMapMap[resource.ResourceName] = resource.Configs.ToExportableMap()
 	}
 
-	matchRegExp, err := regexp.Compile(e.flags.Match)
+	matchRegExp, err := regexp.Compile(e.opts.Match)
 	if err != nil {
 		return nil, err
 	}
-	excludeRegExp, err := regexp.Compile(e.flags.Exclude)
+	excludeRegExp, err := regexp.Compile(e.opts.Exclude)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +100,7 @@ func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 	for _, topic := range topicNames {
 		// Kafka internal topics are prefixed by double underscores
 		// Confluent Schema Registry uses a single underscore
-		if strings.HasPrefix(topic, "_") && !e.flags.IncludeInternal {
+		if strings.HasPrefix(topic, "_") && !e.opts.IncludeInternal {
 			continue
 		}
 		if !matchRegExp.MatchString(topic) {
@@ -119,8 +117,8 @@ func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 				topicMetadataMap[topic].PartitionRackAssignments,
 				topicConfigsMapMap[topic],
 				metadata.Brokers,
-				e.flags.Assignments == "broker",
-				e.flags.Assignments == "rack",
+				e.opts.Assignments == opt.BrokerAssignments,
+				e.opts.Assignments == opt.RackAssignments,
 			),
 		)
 	}

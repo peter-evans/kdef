@@ -7,18 +7,20 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/peter-evans/kdef/client"
-	"github.com/peter-evans/kdef/core/operators/topic"
+	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/ctl/export"
-	"github.com/peter-evans/kdef/util/str"
 )
 
 // Creates the export topics command
 func Command(cl *client.Client) *cobra.Command {
-	flags := export.ExportControllerFlags{}
+	opts := export.ExportControllerOptions{}
+	var definitionFormat string
+	var assignments string
+
 	cmd := &cobra.Command{
 		Use:   "topic",
-		Short: "Export topics to YAML definitions",
-		Long:  "Export topics to YAML definitions (Kafka 0.11.0+).",
+		Short: "Export topics to definitions",
+		Long:  "Export topics to definitions (Kafka 0.11.0+).",
 		Example: `# export all topics to the directory "topics"
 kdef export topic --output-dir "topics"
 
@@ -31,13 +33,18 @@ kdef export topic --match "myapp.*"`,
 		SilenceErrors:         true,
 		DisableFlagsInUseLine: true,
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			if !str.Contains(flags.Assignments, topic.AssignmentsValidValues) {
-				return fmt.Errorf("flag \"assignments\" must be one of %q", strings.Join(topic.AssignmentsValidValues, "|"))
+			opts.DefinitionFormat = opt.ParseDefinitionFormat(definitionFormat)
+			if opts.DefinitionFormat == opt.UnsupportedFormat {
+				return fmt.Errorf("\"format\" must be one of %q", strings.Join(opt.DefinitionFormatValidValues, "|"))
+			}
+			opts.Assignments = opt.ParseAssignments(assignments)
+			if opts.Assignments == opt.UnsupportedAssignments {
+				return fmt.Errorf("\"assignments\" must be one of %q", strings.Join(opt.AssignmentsValidValues, "|"))
 			}
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			controller := export.NewExportController(cl, args, flags, "topic")
+			controller := export.NewExportController(cl, args, opts, "topic")
 			if err := controller.Execute(); err != nil {
 				return err
 			}
@@ -45,16 +52,23 @@ kdef export topic --match "myapp.*"`,
 		},
 	}
 
-	cmd.Flags().StringVarP(&flags.OutputDir, "output-dir", "o", "", "output directory (must exist)")
-	cmd.Flags().BoolVar(&flags.Overwrite, "overwrite", false, "overwrite existing files in output directory")
-	cmd.Flags().StringVarP(&flags.Match, "match", "m", ".*", "regular expression matching topic names to include")
-	cmd.Flags().StringVarP(&flags.Exclude, "exclude", "e", ".^", "regular expression matching topic names to exclude")
-	cmd.Flags().BoolVarP(&flags.IncludeInternal, "include-internal", "i", false, "include internal topics")
+	cmd.Flags().StringVarP(
+		&definitionFormat,
+		"format",
+		"f",
+		"yaml",
+		fmt.Sprintf("resource definition format [%s]", strings.Join(opt.DefinitionFormatValidValues, "|")),
+	)
+	cmd.Flags().StringVarP(&opts.OutputDir, "output-dir", "o", "", "output directory (must exist)")
+	cmd.Flags().BoolVar(&opts.Overwrite, "overwrite", false, "overwrite existing files in output directory")
+	cmd.Flags().StringVarP(&opts.Match, "match", "m", ".*", "regular expression matching topic names to include")
+	cmd.Flags().StringVarP(&opts.Exclude, "exclude", "e", ".^", "regular expression matching topic names to exclude")
+	cmd.Flags().BoolVarP(&opts.IncludeInternal, "include-internal", "i", false, "include internal topics")
 	cmd.Flags().StringVar(
-		&flags.Assignments,
+		&assignments,
 		"assignments",
 		"none",
-		fmt.Sprintf("partition assignments to include in topic definitions [%s]", strings.Join(topic.AssignmentsValidValues, "|")),
+		fmt.Sprintf("partition assignments to include in topic definitions [%s]", strings.Join(opt.AssignmentsValidValues, "|")),
 	)
 
 	return cmd
