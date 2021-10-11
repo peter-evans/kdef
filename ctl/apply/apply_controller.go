@@ -67,14 +67,13 @@ func (a *applyController) Execute() error {
 			return err
 		}
 
-		// TODO: make this part of the applyController(?)
 		resourceDefs, err := getResourceDefinitions(defDocs, a.opts.DefinitionFormat)
 		if err != nil {
 			return err
 		}
 
 		// TODO: make this part of the applyController(?)
-		results = applyDefinitions(a.cl, a.opts, defDocs, resourceDefs)
+		results = a.applyDefinitions(defDocs, resourceDefs)
 	} else {
 	mainloop:
 		for _, arg := range a.args {
@@ -99,7 +98,7 @@ func (a *applyController) Execute() error {
 					return err
 				}
 
-				res := applyDefinitions(a.cl, a.opts, defDocs, resourceDefs)
+				res := a.applyDefinitions(defDocs, resourceDefs)
 				results = append(results, res...)
 				if res.ContainsErr() && !a.opts.ContinueOnError {
 					break mainloop
@@ -134,6 +133,45 @@ func (a *applyController) Execute() error {
 	return nil
 }
 
+// Apply resource definitions using an applier
+func (a *applyController) applyDefinitions(
+	defDocs []string,
+	resourceDefs []def.ResourceDefinition,
+) res.ApplyResults {
+	var results res.ApplyResults
+
+	for i, resourceDef := range resourceDefs {
+		var applier applier
+
+		switch resourceDef.Kind {
+		case "broker":
+			applier = broker.NewApplier(a.cl, defDocs[i], broker.ApplierOptions{
+				DefinitionFormat: a.opts.DefinitionFormat,
+				DryRun:           a.opts.DryRun,
+			})
+		case "brokers":
+			applier = brokers.NewApplier(a.cl, defDocs[i], brokers.ApplierOptions{
+				DefinitionFormat: a.opts.DefinitionFormat,
+				DryRun:           a.opts.DryRun,
+			})
+		case "topic":
+			applier = topic.NewApplier(a.cl, defDocs[i], topic.ApplierOptions{
+				DefinitionFormat:  a.opts.DefinitionFormat,
+				DryRun:            a.opts.DryRun,
+				ReassAwaitTimeout: a.opts.ReassAwaitTimeout,
+			})
+		}
+
+		res := applier.Execute()
+		results = append(results, res)
+		if err := res.GetErr(); err != nil && !a.opts.ContinueOnError {
+			return results
+		}
+	}
+
+	return results
+}
+
 // Get resource definitions for the definition documents
 func getResourceDefinitions(defDocs []string, format opt.DefinitionFormat) ([]def.ResourceDefinition, error) {
 	kinds := make([]def.ResourceDefinition, len(defDocs))
@@ -162,45 +200,4 @@ func getResourceDefinitions(defDocs []string, format opt.DefinitionFormat) ([]de
 	}
 
 	return kinds, nil
-}
-
-// Apply resource definitions using an applier
-func applyDefinitions(
-	cl *client.Client,
-	opts ApplyControllerOptions,
-	defDocs []string,
-	resourceDefs []def.ResourceDefinition,
-) res.ApplyResults {
-	var results res.ApplyResults
-
-	for i, resourceDef := range resourceDefs {
-		var applier applier
-
-		switch resourceDef.Kind {
-		case "broker":
-			applier = broker.NewApplier(cl, defDocs[i], broker.ApplierOptions{
-				DefinitionFormat: opts.DefinitionFormat,
-				DryRun:           opts.DryRun,
-			})
-		case "brokers":
-			applier = brokers.NewApplier(cl, defDocs[i], brokers.ApplierOptions{
-				DefinitionFormat: opts.DefinitionFormat,
-				DryRun:           opts.DryRun,
-			})
-		case "topic":
-			applier = topic.NewApplier(cl, defDocs[i], topic.ApplierOptions{
-				DefinitionFormat:  opts.DefinitionFormat,
-				DryRun:            opts.DryRun,
-				ReassAwaitTimeout: opts.ReassAwaitTimeout,
-			})
-		}
-
-		res := applier.Execute()
-		results = append(results, res)
-		if err := res.GetErr(); err != nil && !opts.ContinueOnError {
-			return results
-		}
-	}
-
-	return results
 }
