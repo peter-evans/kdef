@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/peter-evans/kdef/cli/log"
-	"github.com/peter-evans/kdef/client"
 	"github.com/peter-evans/kdef/cmd/apply"
 	"github.com/peter-evans/kdef/cmd/export"
+	"github.com/peter-evans/kdef/config"
 )
 
 // Execute the root command
@@ -26,7 +26,7 @@ func rootCmd(version string) *cobra.Command {
 	var quiet bool
 	var verbose bool
 
-	opts := &client.ClientOptions{}
+	cOpts := &config.ConfigOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "kdef",
@@ -56,19 +56,16 @@ For usage documentation visit http://github.com/peter-evans/kdef`,
 		Version: version,
 	}
 
-	cl := client.New(opts)
-
 	cmd.AddCommand(
-		apply.Command(cl),
-		export.Command(cl),
+		apply.Command(cOpts),
+		export.Command(cOpts),
 	)
 
 	cmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "disable coloured output")
 	cmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "enable quiet mode (output errors only)")
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable debug output")
-
-	cmd.PersistentFlags().StringVar(&opts.ConfigPath, "config-path", client.DefaultConfigPath(), "path to configuration file")
-	cmd.PersistentFlags().StringArrayVarP(&opts.FlagConfigOpts, "config-opt", "X", nil, "flag provided config option (e.g. \"timeoutMs=6000\")")
+	cmd.PersistentFlags().StringVar(&cOpts.ConfigPath, "config-path", config.DefaultConfigPath(), "path to configuration file")
+	cmd.PersistentFlags().StringArrayVarP(&cOpts.ConfigOpts, "config-opt", "X", nil, "flag provided config option (e.g. \"timeoutMs=6000\")")
 
 	return cmd
 }

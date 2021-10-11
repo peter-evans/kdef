@@ -9,7 +9,6 @@ import (
 	"net"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/peter-evans/kdef/cli/log"
@@ -25,29 +24,29 @@ import (
 )
 
 // Create a new client
-func New(opts *ClientOptions) *Client {
+func New(cc *ClientConfig) (*Client, error) {
 	cl := &Client{
+		cc: cc,
 		kgoOpts: []kgo.Opt{
 			kgo.MetadataMinAge(time.Second),
 		},
-		opts: opts,
+	}
+	// Validate configuration not used for client options
+	if err := cl.validateNonClientOptConfig(); err != nil {
+		return nil, err
+	}
+	// Build the internal client
+	if err := cl.buildClient(); err != nil {
+		return nil, err
 	}
 
-	return cl
+	return cl, nil
 }
 
-// Flag-based options to configure the client
-type ClientOptions struct {
-	ConfigPath     string
-	FlagConfigOpts []string
-}
-
-// Client contains kgo client options and a kgo client
+// A client providing broker APIs
 type Client struct {
-	client  *kgo.Client
-	cc      *clientConfig
-	opts    *ClientOptions
-	once    sync.Once
+	Client  *kgo.Client
+	cc      *ClientConfig
 	kgoOpts []kgo.Opt
 }
 
@@ -61,44 +60,6 @@ func (cl *Client) AlterConfigsMethod() string {
 	return cl.cc.AlterConfigsMethod
 }
 
-// Returns a configured kgo.Client
-func (cl *Client) Client() *kgo.Client {
-	if err := cl.loadOnce(); err != nil {
-		log.Error(fmt.Errorf("failed to load client: %v", err))
-		os.Exit(1)
-	}
-
-	return cl.client
-}
-
-// Loads the new client once
-func (cl *Client) loadOnce() (err error) {
-	cl.once.Do(func() {
-		// Load configuration from multiple sources
-		cl.cc, err = loadConfig(cl.opts.ConfigPath, cl.opts.FlagConfigOpts)
-		if err != nil {
-			return
-		}
-
-		// Validate configuration not used for client options
-		if err = cl.validateNonClientOptConfig(); err != nil {
-			return
-		}
-
-		log.Debug("Building Kafka client")
-
-		// Build options to configure a kgo.Client instance
-		if err = cl.buildOptions(); err != nil {
-			return
-		}
-
-		// Create the client
-		cl.client, err = kgo.NewClient(cl.kgoOpts...)
-	})
-
-	return err
-}
-
 // Validate configuration not used for client options
 func (cl *Client) validateNonClientOptConfig() error {
 	if cl.cc.TimeoutMs < 0 {
@@ -107,6 +68,25 @@ func (cl *Client) validateNonClientOptConfig() error {
 
 	if !str.Contains(cl.cc.AlterConfigsMethod, alterConfigsMethodValidValues) {
 		return fmt.Errorf("alterConfigsMethod must be one of %q", strings.Join(alterConfigsMethodValidValues, "|"))
+	}
+
+	return nil
+}
+
+// Build the internal client
+func (cl *Client) buildClient() error {
+	log.Debug("Building Kafka client")
+
+	// Build options to configure a kgo.Client instance
+	if err := cl.buildOptions(); err != nil {
+		return err
+	}
+
+	// Create the client
+	var err error
+	cl.Client, err = kgo.NewClient(cl.kgoOpts...)
+	if err != nil {
+		return err
 	}
 
 	return nil

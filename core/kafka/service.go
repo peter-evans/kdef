@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/peter-evans/kdef/cli/log"
-	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/meta"
 	"github.com/twmb/franz-go/pkg/kmsg"
@@ -14,8 +14,6 @@ import (
 func NewService(
 	cl *client.Client,
 ) *Service {
-	// Initialise the client
-	cl.Client()
 	srv := &Service{
 		cl: cl,
 	}

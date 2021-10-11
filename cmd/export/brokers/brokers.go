@@ -6,13 +6,13 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/config"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/ctl/export"
 )
 
 // Creates the export brokers command
-func Command(cl *client.Client) *cobra.Command {
+func Command(cOpts *config.ConfigOptions) *cobra.Command {
 	opts := export.ExportControllerOptions{}
 	var definitionFormat string
 
@@ -36,6 +36,11 @@ kdef export brokers --quiet`,
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
+			cl, err := config.NewClient(cOpts)
+			if err != nil {
+				return err
+			}
+
 			controller := export.NewExportController(cl, args, opts, "brokers")
 			if err := controller.Execute(); err != nil {
 				return err

@@ -7,13 +7,13 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/peter-evans/kdef/cli/log"
-	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/config"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/ctl/apply"
 )
 
 // Creates the apply command
-func Command(cl *client.Client) *cobra.Command {
+func Command(cOpts *config.ConfigOptions) *cobra.Command {
 	opts := apply.ApplyControllerOptions{}
 	var definitionFormat string
 
@@ -49,6 +49,11 @@ cat topics/my_topic.yml | kdef apply - --dry-run`,
 			}
 			if opts.DryRun {
 				log.InfoWithKey("dry-run", "Enabled")
+			}
+
+			cl, err := config.NewClient(cOpts)
+			if err != nil {
+				return err
 			}
 
 			controller := apply.NewApplyController(cl, args, opts)

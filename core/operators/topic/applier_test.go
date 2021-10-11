@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/peter-evans/kdef/cli/log"
-	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/test/compose"
@@ -86,21 +86,17 @@ func Test_applier_Execute(t *testing.T) {
 	defer compose.Down(t, c)
 
 	// Create client
-	cl := client.New(&client.ClientOptions{
-		ConfigPath: "does-not-exist",
-		FlagConfigOpts: []string{
-			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.TopicsApplierTest.BrokerPort),
-		},
-	})
+	cl := tutil.CreateClient(t,
+		[]string{fmt.Sprintf("seedBrokers=localhost:%d", fixtures.TopicsApplierTest.BrokerPort)},
+	)
 
 	// Create client set to use non-incremental alter configs
-	clNonInc := client.New(&client.ClientOptions{
-		ConfigPath: "does-not-exist",
-		FlagConfigOpts: []string{
+	clNonInc := tutil.CreateClient(t,
+		[]string{
 			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.TopicsApplierTest.BrokerPort),
 			"alterConfigsMethod=non-incremental",
 		},
-	})
+	)
 
 	// Wait for Kafka to be ready
 	srv := kafka.NewService(cl)
@@ -326,9 +322,9 @@ func Test_applier_Execute(t *testing.T) {
 			Key:   key,
 			Value: val,
 		}
-		cl.Client().Produce(context.Background(), r, func(r *kgo.Record, err error) {})
+		cl.Client.Produce(context.Background(), r, func(r *kgo.Record, err error) {})
 	}
-	if err := cl.Client().Flush(context.Background()); err != nil {
+	if err := cl.Client.Flush(context.Background()); err != nil {
 		t.Errorf("failed to produce records: %v", err)
 		t.FailNow()
 	}

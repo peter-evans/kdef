@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/meta"
 	"github.com/peter-evans/kdef/util/str"
@@ -45,7 +45,7 @@ func describeMetadata(cl *client.Client, topics []string, errorOnNonExistence bo
 		}
 	}
 
-	kresp, err := cl.Client().Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(context.Background(), &req)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func describeMetadata(cl *client.Client, topics []string, errorOnNonExistence bo
 // Execute a request to determine if a request key is supported by the cluster (Kafka 0.10.0+)
 func requestIsSupported(cl *client.Client, requestKey int16) (bool, error) {
 	req := kmsg.NewApiVersionsRequest()
-	kresp, err := cl.Client().Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(context.Background(), &req)
 	if err != nil {
 		return false, err
 	}
@@ -116,7 +116,7 @@ func requestIsSupported(cl *client.Client, requestKey int16) (bool, error) {
 
 // Execute a request to describe the cluster (Kafka 2.8.0+)
 func describeCluster(cl *client.Client) (*kmsg.DescribeClusterResponse, error) {
-	kresp, err := cl.Client().Request(context.Background(), kmsg.NewPtrDescribeClusterRequest())
+	kresp, err := cl.Client.Request(context.Background(), kmsg.NewPtrDescribeClusterRequest())
 	if err != nil {
 		return nil, err
 	}

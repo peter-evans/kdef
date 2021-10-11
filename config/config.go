@@ -1,4 +1,4 @@
-package client
+package config
 
 import (
 	"fmt"
@@ -13,53 +13,8 @@ import (
 	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/peter-evans/kdef/cli/log"
+	"github.com/peter-evans/kdef/core/client"
 )
-
-// Valid values for configuring the alter configs method
-var alterConfigsMethodValidValues = []string{"auto", "incremental", "non-incremental"}
-
-// Client configuration
-type clientConfig struct {
-	SeedBrokers []string    `json:"seedBrokers,omitempty"`
-	TLS         *tlsConfig  `json:"tls,omitempty"`
-	SASL        *saslConfig `json:"sasl,omitempty"`
-
-	// Set the maximum Kafka version to try (e.g. '0.8.0', '2.3.0')
-	AsVersion string `json:"asVersion,omitempty"`
-	// Underlying Kafka client log-level (none, error, warn, info, debug)
-	LogLevel string `json:"logLevel,omitempty"`
-
-	// The following configurations are not used to build client options, but instead
-	// are exposed as methods on the Client to be used when making requests.
-
-	// Timeout in milliseconds to be used by requests with timeouts
-	TimeoutMs int32 `json:"timeoutMs,omitempty"`
-	// The alter configs method that should be used (auto, incremental, non-incremental)
-	AlterConfigsMethod string `json:"alterConfigsMethod,omitempty"`
-}
-
-// TLS configuration
-type tlsConfig struct {
-	Enabled bool `json:"enabled,omitempty"`
-
-	CACertPath     string `json:"caCertPath,omitempty"`
-	ClientCertPath string `json:"clientCertPath,omitempty"`
-	ClientKeyPath  string `json:"clientKeyPath,omitempty"`
-	ServerName     string `json:"serverName,omitempty"`
-
-	MinVersion       string   `json:"minVersion,omitempty"`
-	CipherSuites     []string `json:"cipherSuites"`
-	CurvePreferences []string `json:"curvePreferences"`
-}
-
-// SASL configuration
-type saslConfig struct {
-	Method  string `json:"method,omitempty"`
-	Zid     string `json:"zid,omitempty"`
-	User    string `json:"user,omitempty"`
-	Pass    string `json:"pass,omitempty"`
-	IsToken bool   `json:"isToken,omitempty"`
-}
 
 const (
 	defaultConfigFilename = "config.yml"
@@ -95,7 +50,7 @@ func DefaultConfigPath() string {
 }
 
 // Loads and merges the client configuration from multiple sources
-func loadConfig(filepath string, configOpts []string) (*clientConfig, error) {
+func loadConfig(configPath string, configOpts []string) (*client.ClientConfig, error) {
 	log.Debug("Loading client config")
 
 	var k = koanf.New(".")
@@ -104,11 +59,11 @@ func loadConfig(filepath string, configOpts []string) (*clientConfig, error) {
 	k.Load(confmap.Provider(defaultClientConfig, "."), nil)
 
 	// Load config file
-	if err := k.Load(file.Provider(filepath), yaml.Parser()); err != nil {
+	if err := k.Load(file.Provider(configPath), yaml.Parser()); err != nil {
 		if os.IsNotExist(err) {
-			log.Debug("No config file found at path %q", filepath)
+			log.Debug("No config file found at path %q", configPath)
 		} else {
-			return nil, fmt.Errorf("failed to load config file %q: %v", filepath, err)
+			return nil, fmt.Errorf("failed to load config file %q: %v", configPath, err)
 		}
 	}
 
@@ -144,7 +99,7 @@ func loadConfig(filepath string, configOpts []string) (*clientConfig, error) {
 	k.Load(confmap.Provider(flagConfigOptsMap, "."), nil)
 
 	// Unmarshal to config struct
-	cc := &clientConfig{}
+	cc := &client.ClientConfig{}
 	k.UnmarshalWithConf("", cc, koanf.UnmarshalConf{Tag: "json"})
 
 	for _, key := range k.Keys() {

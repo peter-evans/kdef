@@ -3,14 +3,14 @@ package export
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/peter-evans/kdef/client"
 	"github.com/peter-evans/kdef/cmd/export/broker"
 	"github.com/peter-evans/kdef/cmd/export/brokers"
 	"github.com/peter-evans/kdef/cmd/export/topic"
+	"github.com/peter-evans/kdef/config"
 )
 
 // Creates the export command
-func Command(cl *client.Client) *cobra.Command {
+func Command(cOpts *config.ConfigOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export cluster resources to YAML definitions",
@@ -19,9 +19,9 @@ func Command(cl *client.Client) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		broker.Command(cl),
-		brokers.Command(cl),
-		topic.Command(cl),
+		broker.Command(cOpts),
+		brokers.Command(cOpts),
+		topic.Command(cOpts),
 	)
 
 	return cmd
