@@ -6,8 +6,8 @@ import (
 	"github.com/gotidy/copy"
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/core/model/meta"
-	"github.com/peter-evans/kdef/util/i32"
-	"github.com/peter-evans/kdef/util/str"
+	"github.com/peter-evans/kdef/core/util/i32"
+	"github.com/peter-evans/kdef/core/util/str"
 )
 
 // Top-level topic definition

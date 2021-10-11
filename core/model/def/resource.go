@@ -3,7 +3,7 @@ package def
 import (
 	"fmt"
 
-	"github.com/peter-evans/kdef/util/str"
+	"github.com/peter-evans/kdef/core/util/str"
 )
 
 // Top-level definition of a resource

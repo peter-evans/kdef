@@ -14,10 +14,9 @@ import (
 func NewService(
 	cl *client.Client,
 ) *Service {
-	srv := &Service{
+	return &Service{
 		cl: cl,
 	}
-	return srv
 }
 
 // A Kafka service
