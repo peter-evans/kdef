@@ -10,7 +10,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/peter-evans/kdef/cli/log"
-	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/model/res"
 	"github.com/peter-evans/kdef/core/operators/broker"

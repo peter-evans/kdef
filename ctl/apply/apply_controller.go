@@ -8,7 +8,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/peter-evans/kdef/cli/log"
-	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/model/res"
@@ -72,7 +72,6 @@ func (a *applyController) Execute() error {
 			return err
 		}
 
-		// TODO: make this part of the applyController(?)
 		results = a.applyDefinitions(defDocs, resourceDefs)
 	} else {
 	mainloop:

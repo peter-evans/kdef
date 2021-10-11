@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/peter-evans/kdef/cli/log"
-	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/test/compose"
 	"github.com/peter-evans/kdef/test/fixtures"
@@ -26,12 +26,9 @@ func Test_exporter_Execute(t *testing.T) {
 	defer compose.Down(t, c)
 
 	// Create client
-	cl := client.New(&client.ClientOptions{
-		ConfigPath: "does-not-exist",
-		FlagConfigOpts: []string{
-			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.BrokerExporterTest.BrokerPort),
-		},
-	})
+	cl := tutil.CreateClient(t,
+		[]string{fmt.Sprintf("seedBrokers=localhost:%d", fixtures.BrokerExporterTest.BrokerPort)},
+	)
 
 	// Wait for Kafka to be ready
 	srv := kafka.NewService(cl)

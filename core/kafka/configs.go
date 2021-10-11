@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/peter-evans/kdef/cli/log"
-	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/twmb/franz-go/pkg/kerr"
 	"github.com/twmb/franz-go/pkg/kmsg"
@@ -196,7 +196,7 @@ func newConfigs(configsResp []kmsg.DescribeConfigsResponseResourceConfig) def.Co
 
 // Execute a request to describe configs (Kafka 0.11.0+)
 func describeConfigs(cl *client.Client, req kmsg.DescribeConfigsRequest) ([]kmsg.DescribeConfigsResponseResource, error) {
-	kresp, err := cl.Client().Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(context.Background(), &req)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +291,7 @@ func alterConfigs(
 	req.Resources = resources
 	req.ValidateOnly = validateOnly
 
-	kresp, err := cl.Client().Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(context.Background(), &req)
 	if err != nil {
 		return err
 	}
@@ -385,7 +385,7 @@ func incrementalAlterConfigs(
 	req.Resources = resources
 	req.ValidateOnly = validateOnly
 
-	kresp, err := cl.Client().Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(context.Background(), &req)
 	if err != nil {
 		return err
 	}

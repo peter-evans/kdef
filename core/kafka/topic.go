@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/meta"
 	"github.com/twmb/franz-go/pkg/kerr"
@@ -90,7 +90,7 @@ func createTopic(
 	req.TimeoutMillis = cl.TimeoutMs()
 	req.ValidateOnly = validateOnly
 
-	kresp, err := cl.Client().Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(context.Background(), &req)
 	if err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ func createPartitions(
 	req.TimeoutMillis = cl.TimeoutMs()
 	req.ValidateOnly = validateOnly
 
-	kresp, err := cl.Client().Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(context.Background(), &req)
 	if err != nil {
 		return err
 	}
@@ -183,7 +183,7 @@ func alterPartitionAssignments(
 	req.Topics = append(req.Topics, t)
 	req.TimeoutMillis = cl.TimeoutMs()
 
-	kresp, err := cl.Client().Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(context.Background(), &req)
 	if err != nil {
 		return err
 	}
@@ -230,7 +230,7 @@ func listPartitionReassignments(
 	req.Topics = append(req.Topics, t)
 	req.TimeoutMillis = cl.TimeoutMs()
 
-	kresp, err := cl.Client().Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(context.Background(), &req)
 	if err != nil {
 		return nil, err
 	}

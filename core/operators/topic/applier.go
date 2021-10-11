@@ -11,7 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/peter-evans/kdef/cli/log"
-	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/helpers/assignments"
 	"github.com/peter-evans/kdef/core/helpers/jsondiff"
 	"github.com/peter-evans/kdef/core/kafka"

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/peter-evans/kdef/cli/log"
-	"github.com/peter-evans/kdef/client"
+	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/test/compose"
@@ -84,21 +84,17 @@ func Test_applier_Execute(t *testing.T) {
 	defer compose.Down(t, c)
 
 	// Create client
-	cl := client.New(&client.ClientOptions{
-		ConfigPath: "does-not-exist",
-		FlagConfigOpts: []string{
-			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.BrokerApplierTest.BrokerPort),
-		},
-	})
+	cl := tutil.CreateClient(t,
+		[]string{fmt.Sprintf("seedBrokers=localhost:%d", fixtures.BrokerApplierTest.BrokerPort)},
+	)
 
 	// Create client set to use non-incremental alter configs
-	clNonInc := client.New(&client.ClientOptions{
-		ConfigPath: "does-not-exist",
-		FlagConfigOpts: []string{
+	clNonInc := tutil.CreateClient(t,
+		[]string{
 			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.BrokerApplierTest.BrokerPort),
 			"alterConfigsMethod=non-incremental",
 		},
-	})
+	)
 
 	// Wait for Kafka to be ready
 	srv := kafka.NewService(cl)
