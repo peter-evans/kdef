@@ -369,7 +369,7 @@ func buildIncrementalAlterConfigsResourceConfig(
 		configs = append(configs, kmsg.IncrementalAlterConfigsRequestResourceConfig{
 			Name:  co.Name,
 			Value: co.Value,
-			Op:    co.Op,
+			Op:    kmsg.IncrementalAlterConfigOp(co.Op),
 		})
 	}
 	return configs
