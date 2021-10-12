@@ -8,9 +8,9 @@ import (
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/kafka"
-	"github.com/peter-evans/kdef/test/compose"
-	"github.com/peter-evans/kdef/test/fixtures"
-	"github.com/peter-evans/kdef/test/tutil"
+	"github.com/peter-evans/kdef/core/test/compose"
+	"github.com/peter-evans/kdef/core/test/compose_fixture"
+	"github.com/peter-evans/kdef/core/test/tutil"
 )
 
 // VERBOSE_TESTS=1 go test -run ^Test_exporter_Execute$ ./core/operators/broker -v
@@ -20,19 +20,19 @@ func Test_exporter_Execute(t *testing.T) {
 	// Create the test cluster
 	c := compose.Up(
 		t,
-		fixtures.BrokerExporterTest.ComposeFilePaths,
-		fixtures.BrokerExporterTest.Env(),
+		compose_fixture.BrokerExporterComposeFixture.ComposeFilePaths,
+		compose_fixture.BrokerExporterComposeFixture.Env(),
 	)
 	defer compose.Down(t, c)
 
 	// Create client
 	cl := tutil.CreateClient(t,
-		[]string{fmt.Sprintf("seedBrokers=localhost:%d", fixtures.BrokerExporterTest.BrokerPort)},
+		[]string{fmt.Sprintf("seedBrokers=localhost:%d", compose_fixture.BrokerExporterComposeFixture.BrokerPort)},
 	)
 
 	// Wait for Kafka to be ready
 	srv := kafka.NewService(cl)
-	if !srv.IsKafkaReady(fixtures.BrokerExporterTest.Brokers, 90) {
+	if !srv.IsKafkaReady(compose_fixture.BrokerExporterComposeFixture.Brokers, 90) {
 		t.Errorf("kafka failed to be ready within timeout")
 		t.FailNow()
 	}
@@ -51,7 +51,7 @@ func Test_exporter_Execute(t *testing.T) {
 			fields: fields{
 				cl: cl,
 			},
-			wantJson: string(tutil.Fixture(t, "../../../test/fixtures/broker/core.operators.broker.exporter.1.json")),
+			wantJson: string(tutil.Fixture(t, "../../test/fixtures/broker/core.operators.broker.exporter.1.json")),
 			wantErr:  false,
 		},
 	}

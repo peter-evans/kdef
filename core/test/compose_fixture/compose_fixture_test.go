@@ -1,11 +1,11 @@
-package fixtures
+package compose_fixture
 
 import (
 	"reflect"
 	"testing"
 )
 
-func TestComposeTest_Env(t *testing.T) {
+func TestComposeFixture_Env(t *testing.T) {
 	type fields struct {
 		ZookeeperPort int
 		BrokerPort    int
@@ -36,13 +36,13 @@ func TestComposeTest_Env(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tr := ComposeTest{
+			tr := ComposeFixture{
 				ZookeeperPort: tt.fields.ZookeeperPort,
 				BrokerPort:    tt.fields.BrokerPort,
 				Brokers:       tt.fields.Brokers,
 			}
 			if got := tr.Env(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ComposeTest.Env() = %v, want %v", got, tt.want)
+				t.Errorf("ComposeFixture.Env() = %v, want %v", got, tt.want)
 			}
 		})
 	}

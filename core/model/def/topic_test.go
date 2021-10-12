@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/peter-evans/kdef/core/model/meta"
-	"github.com/peter-evans/kdef/test/tutil"
+	"github.com/peter-evans/kdef/core/test/tutil"
 )
 
 func TestTopicDefinition_Validate(t *testing.T) {

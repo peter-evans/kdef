@@ -3,7 +3,7 @@ package jsondiff
 import (
 	"testing"
 
-	"github.com/peter-evans/kdef/test/tutil"
+	"github.com/peter-evans/kdef/core/test/tutil"
 )
 
 func TestDiff(t *testing.T) {
@@ -49,7 +49,7 @@ func TestDiff(t *testing.T) {
 					},
 				},
 			},
-			want:    string(tutil.Fixture(t, "../../../test/fixtures/jsondiff/test1.diff")),
+			want:    string(tutil.Fixture(t, "../../test/fixtures/jsondiff/test1.diff")),
 			wantErr: false,
 		},
 		{
@@ -67,7 +67,7 @@ func TestDiff(t *testing.T) {
 					},
 				},
 			},
-			want:    string(tutil.Fixture(t, "../../../test/fixtures/jsondiff/test2.diff")),
+			want:    string(tutil.Fixture(t, "../../test/fixtures/jsondiff/test2.diff")),
 			wantErr: false,
 		},
 		{

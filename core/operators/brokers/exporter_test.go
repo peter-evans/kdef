@@ -9,9 +9,9 @@ import (
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/kafka"
-	"github.com/peter-evans/kdef/test/compose"
-	"github.com/peter-evans/kdef/test/fixtures"
-	"github.com/peter-evans/kdef/test/tutil"
+	"github.com/peter-evans/kdef/core/test/compose"
+	"github.com/peter-evans/kdef/core/test/compose_fixture"
+	"github.com/peter-evans/kdef/core/test/tutil"
 )
 
 // VERBOSE_TESTS=1 go test -run ^Test_exporter_Execute$ ./core/operators/brokers -v
@@ -21,25 +21,25 @@ func Test_exporter_Execute(t *testing.T) {
 	// Create the test cluster
 	c := compose.Up(
 		t,
-		fixtures.BrokersExporterTest.ComposeFilePaths,
-		fixtures.BrokersExporterTest.Env(),
+		compose_fixture.BrokersExporterComposeFixture.ComposeFilePaths,
+		compose_fixture.BrokersExporterComposeFixture.Env(),
 	)
 	defer compose.Down(t, c)
 
 	// Create client
 	cl := tutil.CreateClient(t,
-		[]string{fmt.Sprintf("seedBrokers=localhost:%d", fixtures.BrokersExporterTest.BrokerPort)},
+		[]string{fmt.Sprintf("seedBrokers=localhost:%d", compose_fixture.BrokersExporterComposeFixture.BrokerPort)},
 	)
 
 	// Wait for Kafka to be ready
 	srv := kafka.NewService(cl)
-	if !srv.IsKafkaReady(fixtures.BrokersExporterTest.Brokers, 90) {
+	if !srv.IsKafkaReady(compose_fixture.BrokersExporterComposeFixture.Brokers, 90) {
 		t.Errorf("kafka failed to be ready within timeout")
 		t.FailNow()
 	}
 
 	// Load YAML doc test fixtures
-	yamlDocs := tutil.FileToYamlDocs(t, "../../../test/fixtures/brokers/core.operators.brokers.exporter.yml")
+	yamlDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/brokers/core.operators.brokers.exporter.yml")
 
 	// Apply the fixtures
 	for _, yamlDoc := range yamlDocs {
@@ -68,7 +68,7 @@ func Test_exporter_Execute(t *testing.T) {
 			fields: fields{
 				cl: cl,
 			},
-			wantJson: string(tutil.Fixture(t, "../../../test/fixtures/brokers/core.operators.brokers.exporter.1.json")),
+			wantJson: string(tutil.Fixture(t, "../../test/fixtures/brokers/core.operators.brokers.exporter.1.json")),
 			wantErr:  false,
 		},
 	}
