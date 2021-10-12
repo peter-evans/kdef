@@ -3,7 +3,7 @@ package def
 import (
 	"testing"
 
-	"github.com/peter-evans/kdef/test/tutil"
+	"github.com/peter-evans/kdef/core/test/tutil"
 )
 
 func TestResourceDefinition_ValidateResource(t *testing.T) {

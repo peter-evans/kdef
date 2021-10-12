@@ -11,9 +11,9 @@ import (
 	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/model/opt"
-	"github.com/peter-evans/kdef/test/compose"
-	"github.com/peter-evans/kdef/test/fixtures"
-	"github.com/peter-evans/kdef/test/tutil"
+	"github.com/peter-evans/kdef/core/test/compose"
+	"github.com/peter-evans/kdef/core/test/compose_fixture"
+	"github.com/peter-evans/kdef/core/test/tutil"
 )
 
 // VERBOSE_TESTS=1 go test -run ^Test_applier_Execute$ ./core/operators/broker -v
@@ -78,34 +78,34 @@ func Test_applier_Execute(t *testing.T) {
 	// Create the test cluster
 	c := compose.Up(
 		t,
-		fixtures.BrokerApplierTest.ComposeFilePaths,
-		fixtures.BrokerApplierTest.Env(),
+		compose_fixture.BrokerApplierComposeFixture.ComposeFilePaths,
+		compose_fixture.BrokerApplierComposeFixture.Env(),
 	)
 	defer compose.Down(t, c)
 
 	// Create client
 	cl := tutil.CreateClient(t,
-		[]string{fmt.Sprintf("seedBrokers=localhost:%d", fixtures.BrokerApplierTest.BrokerPort)},
+		[]string{fmt.Sprintf("seedBrokers=localhost:%d", compose_fixture.BrokerApplierComposeFixture.BrokerPort)},
 	)
 
 	// Create client set to use non-incremental alter configs
 	clNonInc := tutil.CreateClient(t,
 		[]string{
-			fmt.Sprintf("seedBrokers=localhost:%d", fixtures.BrokerApplierTest.BrokerPort),
+			fmt.Sprintf("seedBrokers=localhost:%d", compose_fixture.BrokerApplierComposeFixture.BrokerPort),
 			"alterConfigsMethod=non-incremental",
 		},
 	)
 
 	// Wait for Kafka to be ready
 	srv := kafka.NewService(cl)
-	if !srv.IsKafkaReady(fixtures.BrokerApplierTest.Brokers, 90) {
+	if !srv.IsKafkaReady(compose_fixture.BrokerApplierComposeFixture.Brokers, 90) {
 		t.Errorf("kafka failed to be ready within timeout")
 		t.FailNow()
 	}
 
 	// Tests changes to configs
-	broker1Docs := tutil.FileToYamlDocs(t, "../../../test/fixtures/broker/core.operators.broker.applier.1.yml")
-	broker1Diffs := getDiffsFixture(t, "../../../test/fixtures/broker/core.operators.broker.applier.1.json")
+	broker1Docs := tutil.FileToYamlDocs(t, "../../test/fixtures/broker/core.operators.broker.applier.1.yml")
+	broker1Diffs := getDiffsFixture(t, "../../test/fixtures/broker/core.operators.broker.applier.1.json")
 	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
 		{
