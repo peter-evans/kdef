@@ -11,7 +11,7 @@ import (
 	"github.com/peter-evans/kdef/config"
 	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/model/opt"
-	"github.com/peter-evans/kdef/ctl/apply/in"
+	"github.com/peter-evans/kdef/ctl/apply/docparse"
 )
 
 // Check if an error message contains a string
@@ -35,9 +35,9 @@ func Fixture(t *testing.T, path string) []byte {
 	return fileBytes
 }
 
-// A wrapper around FileToSeparatedDocs to simplify test usage
+// A wrapper around docparse.FromFile to simplify test usage
 func FileToYamlDocs(t *testing.T, path string) []string {
-	yamlDocs, err := in.FileToSeparatedDocs(path, opt.YamlFormat)
+	yamlDocs, err := docparse.FromFile(path, docparse.Format(opt.YamlFormat))
 	if err != nil {
 		t.Errorf("failed to load test fixture %q: %v", path, err)
 		t.FailNow()

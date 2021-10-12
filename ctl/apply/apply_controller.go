@@ -15,7 +15,7 @@ import (
 	"github.com/peter-evans/kdef/core/operators/broker"
 	"github.com/peter-evans/kdef/core/operators/brokers"
 	"github.com/peter-evans/kdef/core/operators/topic"
-	"github.com/peter-evans/kdef/ctl/apply/in"
+	"github.com/peter-evans/kdef/ctl/apply/docparse"
 )
 
 type applier interface {
@@ -62,7 +62,7 @@ func (a *applyController) Execute() error {
 
 	if a.args[0] == "-" {
 		log.Info("Reading definition(s) from stdin")
-		defDocs, err := in.StdinToSeparatedDocs(a.opts.DefinitionFormat)
+		defDocs, err := docparse.FromStdin(docparse.Format(a.opts.DefinitionFormat))
 		if err != nil {
 			return err
 		}
@@ -87,7 +87,7 @@ func (a *applyController) Execute() error {
 				matchCount++
 
 				log.Info("Reading definition(s) from file %q", match)
-				defDocs, err := in.FileToSeparatedDocs(match, a.opts.DefinitionFormat)
+				defDocs, err := docparse.FromFile(match, docparse.Format(a.opts.DefinitionFormat))
 				if err != nil {
 					return err
 				}
