@@ -1,4 +1,4 @@
-package in
+package docparse
 
 import (
 	"reflect"
