@@ -8,6 +8,7 @@ import (
 
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/cmd/apply"
+	"github.com/peter-evans/kdef/cmd/configure"
 	"github.com/peter-evans/kdef/cmd/export"
 	"github.com/peter-evans/kdef/config"
 )
@@ -57,6 +58,7 @@ For usage documentation visit http://github.com/peter-evans/kdef`,
 	}
 
 	cmd.AddCommand(
+		configure.Command(),
 		apply.Command(cOpts),
 		export.Command(cOpts),
 	)
