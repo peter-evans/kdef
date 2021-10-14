@@ -100,7 +100,9 @@ func loadConfig(configPath string, configOpts []string) (*client.ClientConfig, e
 
 	// Unmarshal to config struct
 	cc := &client.ClientConfig{}
-	k.UnmarshalWithConf("", cc, koanf.UnmarshalConf{Tag: "json"})
+	if err := k.UnmarshalWithConf("", cc, koanf.UnmarshalConf{Tag: "json"}); err != nil {
+		return nil, err
+	}
 
 	for _, key := range k.Keys() {
 		log.Debug("%s: %v", key, k.Get(key))

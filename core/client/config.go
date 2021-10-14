@@ -30,8 +30,8 @@ type tlsConfig struct {
 	ServerName     string `json:"serverName,omitempty"`
 
 	MinVersion       string   `json:"minVersion,omitempty"`
-	CipherSuites     []string `json:"cipherSuites"`
-	CurvePreferences []string `json:"curvePreferences"`
+	CipherSuites     []string `json:"cipherSuites,omitempty"`
+	CurvePreferences []string `json:"curvePreferences,omitempty"`
 }
 
 // SASL configuration

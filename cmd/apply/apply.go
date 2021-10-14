@@ -20,7 +20,11 @@ func Command(cOpts *config.ConfigOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "apply [definitions]",
 		Short: "Apply definitions to cluster",
-		Long:  "Apply definitions to cluster (Kafka 0.11.0+).",
+		Long: `Apply definitions to cluster.
+
+broker (Kafka 0.11.0+)
+brokers (Kafka 0.11.0+)
+topic (Kafka 2.4.0+)`,
 		Example: `# apply all definitions in directory "topics" (dry-run)
 kdef apply topics/* --dry-run
 

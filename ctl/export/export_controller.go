@@ -99,7 +99,7 @@ func (e *exportController) Execute() error {
 				}
 
 				log.Info("Writing %s definition file %q", e.kind, outputPath)
-				if err = ioutil.WriteFile(outputPath, defDocBytes, 0644); err != nil {
+				if err = ioutil.WriteFile(outputPath, defDocBytes, 0666); err != nil {
 					return err
 				}
 			}
