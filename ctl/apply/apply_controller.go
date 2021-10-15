@@ -2,7 +2,6 @@ package apply
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -58,69 +57,63 @@ func NewApplyController(
 
 // Execute the apply controller
 func (a *applyController) Execute() error {
-	var results res.ApplyResults
+	results := res.ApplyResults{}
+	var ctlErrors bool
 
 	if a.args[0] == "-" {
-		log.Info("Reading definition(s) from stdin")
-		defDocs, err := docparse.FromStdin(docparse.Format(a.opts.DefinitionFormat))
+		// Apply defs from stdin
+		res, err := a.applyDefsFromStdin()
+		results = append(results, res...)
 		if err != nil {
-			return err
+			log.Error(err)
+			ctlErrors = true
 		}
-
-		resourceDefs, err := getResourceDefinitions(defDocs, a.opts.DefinitionFormat)
-		if err != nil {
-			return err
-		}
-
-		results = a.applyDefinitions(defDocs, resourceDefs)
 	} else {
+		// Apply defs from file
 	mainloop:
 		for _, arg := range a.args {
-			matchCount := 0
-
-			matches, err := filepath.Glob(arg)
+			filepathMatches, err := filepath.Glob(arg)
 			if err != nil {
-				return err
-			}
-
-			for _, match := range matches {
-				matchCount++
-
-				log.Info("Reading definition(s) from file %q", match)
-				defDocs, err := docparse.FromFile(match, docparse.Format(a.opts.DefinitionFormat))
-				if err != nil {
-					return err
-				}
-
-				resourceDefs, err := getResourceDefinitions(defDocs, a.opts.DefinitionFormat)
-				if err != nil {
-					return err
-				}
-
-				res := a.applyDefinitions(defDocs, resourceDefs)
-				results = append(results, res...)
-				if res.ContainsErr() && !a.opts.ContinueOnError {
+				log.Error(fmt.Errorf("failed to glob with pattern %v: %v", arg, err))
+				ctlErrors = true
+				if a.opts.ContinueOnError {
+					continue
+				} else {
 					break mainloop
 				}
-
 			}
 
-			if matchCount == 0 {
-				return errors.New("no definition files found")
+			for _, filepath := range filepathMatches {
+				res, err := a.applyDefsFromFile(filepath)
+				results = append(results, res...)
+				if err != nil {
+					log.Error(err)
+					ctlErrors = true
+				}
+				if (err != nil || res.ContainsErr()) && !a.opts.ContinueOnError {
+					break mainloop
+				}
 			}
 		}
 	}
 
+	// Output JSON
 	if a.opts.JsonOutput {
 		out, err := results.JSON()
 		if err != nil {
 			return err
 		}
-		fmt.Print(out)
+		fmt.Printf("%s\n", out)
 	}
 
-	// Check the apply results for any errors
-	if results.ContainsErr() {
+	// Log an error if no valid resource definitions were found
+	if len(results) == 0 {
+		log.Error(fmt.Errorf("no valid resource definitions found"))
+		ctlErrors = true
+	}
+
+	// Check if the apply controller had errors or the apply results contains any errors
+	if ctlErrors || results.ContainsErr() {
 		return fmt.Errorf("apply completed with errors")
 	}
 
@@ -132,13 +125,34 @@ func (a *applyController) Execute() error {
 	return nil
 }
 
-// Apply resource definitions using an applier
-func (a *applyController) applyDefinitions(
-	defDocs []string,
-	resourceDefs []def.ResourceDefinition,
-) res.ApplyResults {
-	var results res.ApplyResults
+// Apply resource definitions from stdin
+func (a *applyController) applyDefsFromStdin() (res.ApplyResults, error) {
+	log.Info("Reading definition(s) from stdin")
+	defDocs, err := docparse.FromStdin(docparse.Format(a.opts.DefinitionFormat))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read definition(s): %v", err)
+	}
+	return a.applyDefinitions(defDocs)
+}
 
+// Apply resource definitions from file
+func (a *applyController) applyDefsFromFile(filepath string) (res.ApplyResults, error) {
+	log.Info("Reading definition(s) from file %q", filepath)
+	defDocs, err := docparse.FromFile(filepath, docparse.Format(a.opts.DefinitionFormat))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read definition(s): %v", err)
+	}
+	return a.applyDefinitions(defDocs)
+}
+
+// Apply resource definitions using the associated applier
+func (a *applyController) applyDefinitions(defDocs []string) (res.ApplyResults, error) {
+	resourceDefs, err := getResourceDefinitions(defDocs, a.opts.DefinitionFormat)
+	if err != nil {
+		return nil, fmt.Errorf("invalid resource definition(s): %v", err)
+	}
+
+	var results res.ApplyResults
 	for i, resourceDef := range resourceDefs {
 		var applier applier
 
@@ -163,12 +177,12 @@ func (a *applyController) applyDefinitions(
 
 		res := applier.Execute()
 		results = append(results, res)
-		if err := res.GetErr(); err != nil && !a.opts.ContinueOnError {
-			return results
+		if res.GetErr() != nil && !a.opts.ContinueOnError {
+			return results, nil
 		}
 	}
 
-	return results
+	return results, nil
 }
 
 // Get resource definitions for the definition documents
