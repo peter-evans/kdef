@@ -2,6 +2,7 @@ package opt
 
 type DefinitionFormat int8
 
+// TODO: Fix this so that 0 is unknown format
 const (
 	UnsupportedFormat DefinitionFormat = -1
 	YamlFormat        DefinitionFormat = 0

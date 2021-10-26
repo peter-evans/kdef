@@ -52,7 +52,7 @@ func describeMetadata(cl *client.Client, topics []string, errorOnNonExistence bo
 	resp := kresp.(*kmsg.MetadataResponse)
 
 	if len(topics) != 0 && len(resp.Topics) != len(topics) {
-		return nil, fmt.Errorf("requested %d topics but received %d", len(topics), len(resp.Topics))
+		return nil, fmt.Errorf("requested %d topic(s) but received %d", len(topics), len(resp.Topics))
 	}
 
 	var brokers meta.Brokers

@@ -13,18 +13,30 @@ import (
 	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/model/res"
+	"github.com/peter-evans/kdef/core/operators/acl"
 	"github.com/peter-evans/kdef/core/operators/broker"
 	"github.com/peter-evans/kdef/core/operators/brokers"
 	"github.com/peter-evans/kdef/core/operators/topic"
 )
 
+type exporter interface {
+	Execute() (res.ExportResults, error)
+}
+
 // Options to configure an export controller
 type ExportControllerOptions struct {
-	// ExporterOptions
-	Match           string
-	Exclude         string
+	// ExporterOptions for topic/acl
+	Match   string
+	Exclude string
+
+	// TODO: add topic prefix
+	// ExporterOptions for topic
 	IncludeInternal bool
 	Assignments     opt.Assignments
+
+	// ExporterOptions for acl
+	AclResourceType string
+	AclAutoGroup    bool
 
 	// Export controller specific
 	DefinitionFormat opt.DefinitionFormat
@@ -89,7 +101,16 @@ func (e *exportController) Execute() error {
 				// Ignores --quiet
 				fmt.Printf("---\n%s", string(defDocBytes))
 			} else {
-				outputPath := filepath.Join(e.opts.OutputDir, fmt.Sprintf("%s.%s", result.Id, e.opts.DefinitionFormat.Ext()))
+				outputPath := filepath.Join(
+					e.opts.OutputDir,
+					result.Type,
+					fmt.Sprintf("%s.%s", result.Id, e.opts.DefinitionFormat.Ext()),
+				)
+
+				dirPath := filepath.Dir(outputPath)
+				if err := os.MkdirAll(dirPath, 0755); err != nil {
+					return fmt.Errorf("failed to create directory path %q: %v", dirPath, err)
+				}
 
 				if !e.opts.Overwrite {
 					if _, err := os.Stat(outputPath); !errors.Is(err, os.ErrNotExist) {
@@ -111,26 +132,29 @@ func (e *exportController) Execute() error {
 
 // Execute a resource's exporter
 func (e *exportController) exportResources() (res.ExportResults, error) {
-	var results res.ExportResults
-	var err error
-
+	var exporter exporter
 	switch e.kind {
+	case "acl":
+		exporter = acl.NewExporter(e.cl, acl.ExporterOptions{
+			Match:        e.opts.Match,
+			Exclude:      e.opts.Exclude,
+			ResourceType: e.opts.AclResourceType,
+			AutoGroup:    e.opts.AclAutoGroup,
+		})
 	case "broker":
-		exporter := broker.NewExporter(e.cl)
-		results, err = exporter.Execute()
+		exporter = broker.NewExporter(e.cl)
 	case "brokers":
-		exporter := brokers.NewExporter(e.cl)
-		results, err = exporter.Execute()
+		exporter = brokers.NewExporter(e.cl)
 	case "topic":
-		exporter := topic.NewExporter(e.cl, topic.ExporterOptions{
+		exporter = topic.NewExporter(e.cl, topic.ExporterOptions{
 			Match:           e.opts.Match,
 			Exclude:         e.opts.Exclude,
 			IncludeInternal: e.opts.IncludeInternal,
 			Assignments:     e.opts.Assignments,
 		})
-		results, err = exporter.Execute()
 	}
 
+	results, err := exporter.Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +162,7 @@ func (e *exportController) exportResources() (res.ExportResults, error) {
 	return results, nil
 }
 
-// Get a byte array for the definition document
+// Get the byte array of a definition document
 func getDefDocBytes(def interface{}, format opt.DefinitionFormat) ([]byte, error) {
 	var defDocBytes []byte
 	var err error

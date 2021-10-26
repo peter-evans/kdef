@@ -29,3 +29,36 @@ func Contains(str string, list []string) bool {
 	}
 	return false
 }
+
+// Determine if two slices are equal regardless of element order
+func UnorderedEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	m := make(map[string]int, len(a))
+	for _, av := range a {
+		m[av]++
+	}
+	for _, bv := range b {
+		if _, ok := m[bv]; !ok {
+			return false
+		}
+		m[bv] -= 1
+		if m[bv] == 0 {
+			delete(m, bv)
+		}
+	}
+	return len(m) == 0
+}
+
+func Deduplicate(s []string) []string {
+	k := make(map[string]bool)
+	list := []string{}
+	for _, ss := range s {
+		if _, ok := k[ss]; !ok {
+			k[ss] = true
+			list = append(list, ss)
+		}
+	}
+	return list
+}

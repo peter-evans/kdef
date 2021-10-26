@@ -1,0 +1,48 @@
+[
+  {
+    "id": "core.operators.acl.exporter.foo",
+    "type": "group",
+    "definition": {
+      "apiVersion": "v1",
+      "kind": "acl",
+      "metadata": {
+        "name": "core.operators.acl.exporter.foo",
+        "type": "group"
+      },
+      "spec": {
+        "acls": [
+          {
+            "principals": ["User:qux"],
+            "hosts": ["*"],
+            "operations": ["READ"],
+            "permissionType": "ALLOW"
+          }
+        ],
+        "deleteMissingAcls": false
+      }
+    }
+  },
+  {
+    "id": "core.operators.acl.exporter.foo",
+    "type": "topic",
+    "definition": {
+      "apiVersion": "v1",
+      "kind": "acl",
+      "metadata": {
+        "name": "core.operators.acl.exporter.foo",
+        "type": "topic"
+      },
+      "spec": {
+        "acls": [
+          {
+            "principals": ["User:bar", "User:foo"],
+            "hosts": ["*"],
+            "operations": ["READ", "WRITE"],
+            "permissionType": "ALLOW"
+          }
+        ],
+        "deleteMissingAcls": false
+      }
+    }
+  }
+]

@@ -10,11 +10,11 @@ import (
 	"github.com/peter-evans/kdef/core/util/str"
 )
 
-// Top-level topic definition
-type TopicDefinition struct {
-	ResourceDefinition
-	Spec TopicSpecDefinition `json:"spec"`
-}
+// Topic assignments
+type PartitionAssignments [][]int32
+
+// Topic rack assignments
+type PartitionRackAssignments [][]string
 
 // Topic spec definition
 type TopicSpecDefinition struct {
@@ -26,12 +26,6 @@ type TopicSpecDefinition struct {
 	RackAssignments      PartitionRackAssignments `json:"rackAssignments,omitempty"`
 }
 
-// Topic assignments
-type PartitionAssignments [][]int32
-
-// Topic rack assignments
-type PartitionRackAssignments [][]string
-
 // Determine if a spec has assignments
 func (s TopicSpecDefinition) HasAssignments() bool {
 	return len(s.Assignments) > 0
@@ -40,6 +34,12 @@ func (s TopicSpecDefinition) HasAssignments() bool {
 // Determine if a spec has rack assignments
 func (s TopicSpecDefinition) HasRackAssignments() bool {
 	return len(s.RackAssignments) > 0
+}
+
+// Top-level topic definition
+type TopicDefinition struct {
+	ResourceDefinition
+	Spec TopicSpecDefinition `json:"spec"`
 }
 
 // Create a copy of this TopicDefinition
