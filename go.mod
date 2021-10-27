@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/aws/aws-sdk-go v1.40.21
+	github.com/bmatcuk/doublestar/v4 v4.0.2
 	github.com/bradfitz/slice v0.0.0-20180809154707-2b758aa73013
 	github.com/fatih/color v1.12.0
 	github.com/ghodss/yaml v1.0.0
