@@ -33,7 +33,7 @@ spec:
     segment.jitter.ms: "0"
     segment.ms: "604800000"
     unclean.leader.election.enable: "false"
-  deleteMissingConfigs: true
+  deleteUndefinedConfigs: true
   partitions: 3
   replicationFactor: 3
 ---
@@ -71,7 +71,7 @@ spec:
     segment.jitter.ms: "0"
     segment.ms: "604800000"
     unclean.leader.election.enable: "false"
-  deleteMissingConfigs: true
+  deleteUndefinedConfigs: true
   partitions: 3
   replicationFactor: 3
 ---
@@ -109,7 +109,7 @@ spec:
     segment.jitter.ms: "0"
     segment.ms: "604800000"
     unclean.leader.election.enable: "false"
-  deleteMissingConfigs: true
+  deleteUndefinedConfigs: true
   partitions: 3
   replicationFactor: 3
 ---
@@ -147,13 +147,13 @@ spec:
     segment.jitter.ms: "0"
     segment.ms: "604800000"
     unclean.leader.election.enable: "false"
-  deleteMissingConfigs: true
+  deleteUndefinedConfigs: true
   partitions: 3
   replicationFactor: 3
 ---
 # Version 4
 # Delete configs using non-incremental method
-# Fail due to deletion of missing configs being not enabled
+# Fail due to deletion of undefined configs being not enabled
 apiVersion: v1
 kind: topic
 metadata:
@@ -186,7 +186,7 @@ spec:
     segment.jitter.ms: "0"
     segment.ms: "604800000"
     unclean.leader.election.enable: "false"
-  # deleteMissingConfigs: true
+  # deleteUndefinedConfigs: true
   partitions: 3
   replicationFactor: 3
 ---
@@ -224,6 +224,6 @@ spec:
     segment.jitter.ms: "0"
     segment.ms: "604800000"
     unclean.leader.election.enable: "false"
-  deleteMissingConfigs: true
+  deleteUndefinedConfigs: true
   partitions: 3
   replicationFactor: 3

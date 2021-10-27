@@ -207,7 +207,7 @@ func Test_applier_Execute(t *testing.T) {
 			wantApplied: true,
 		},
 		{
-			// Test no diff for deletion with deleteMissing=false
+			// Test no diff for deletion with deleteUndefined=false
 			name: "8: Dry-run acl foo version 4",
 			fields: fields{
 				cl:      cl,

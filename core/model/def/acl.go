@@ -97,8 +97,8 @@ func (a AclEntryGroups) Sort() {
 
 // Acl spec definition
 type AclSpecDefinition struct {
-	Acls              AclEntryGroups `json:"acls,omitempty"`
-	DeleteMissingAcls bool           `json:"deleteMissingAcls"`
+	Acls                AclEntryGroups `json:"acls,omitempty"`
+	DeleteUndefinedAcls bool           `json:"deleteUndefinedAcls"`
 }
 
 // Top-level acl definition

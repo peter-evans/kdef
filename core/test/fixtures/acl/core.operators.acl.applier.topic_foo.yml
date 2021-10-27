@@ -20,7 +20,7 @@ spec:
       hosts: ["*"]
       operations: ["CREATE"]
       permissionType: DENY
-  deleteMissingAcls: true
+  deleteUndefinedAcls: true
 ---
 # Version 1
 # Test no diff when ungrouped
@@ -107,7 +107,7 @@ spec:
       hosts: ["*"]
       operations: ["CREATE"]
       permissionType: DENY
-  deleteMissingAcls: true
+  deleteUndefinedAcls: true
 ---
 # Version 2
 # Update acls (addition)
@@ -130,7 +130,7 @@ spec:
       hosts: ["*"]
       operations: ["CREATE"]
       permissionType: DENY
-  deleteMissingAcls: true
+  deleteUndefinedAcls: true
 ---
 # Version 3
 # Update acls (addition/deletion)
@@ -153,10 +153,10 @@ spec:
       hosts: ["*"]
       operations: ["CREATE"]
       permissionType: DENY
-  deleteMissingAcls: true
+  deleteUndefinedAcls: true
 ---
 # Version 4
-# Test no diff for deletion with deleteMissing=false
+# Test no diff for deletion with deleteUndefined=false
 apiVersion: v1
 kind: acl
 metadata:
@@ -172,4 +172,4 @@ spec:
       hosts: ["*"]
       operations: ["CREATE"]
       permissionType: DENY
-  deleteMissingAcls: false
+  deleteUndefinedAcls: false

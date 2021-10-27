@@ -15,7 +15,7 @@
             "permissionType": "ALLOW"
           }
         ],
-        "deleteMissingAcls": false
+        "deleteUndefinedAcls": false
       }
     }
   },
@@ -38,7 +38,7 @@
             "permissionType": "ALLOW"
           }
         ],
-        "deleteMissingAcls": false
+        "deleteUndefinedAcls": false
       }
     }
   },
@@ -61,7 +61,7 @@
             "permissionType": "ALLOW"
           }
         ],
-        "deleteMissingAcls": false
+        "deleteUndefinedAcls": false
       }
     }
   },
@@ -84,7 +84,7 @@
             "permissionType": "ALLOW"
           }
         ],
-        "deleteMissingAcls": false
+        "deleteUndefinedAcls": false
       }
     }
   },
@@ -107,7 +107,7 @@
             "permissionType": "ALLOW"
           }
         ],
-        "deleteMissingAcls": false
+        "deleteUndefinedAcls": false
       }
     }
   }
