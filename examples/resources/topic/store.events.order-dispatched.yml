@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: topic
+metadata:
+  name: store.events.order-dispatched
+spec:
+  partitions: 3
+  replicationFactor: 3

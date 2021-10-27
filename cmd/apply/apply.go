@@ -22,12 +22,18 @@ func Command(cOpts *config.ConfigOptions) *cobra.Command {
 		Short: "Apply definitions to cluster",
 		Long: `Apply definitions to cluster.
 
+Accepts one or more glob patterns matching the paths of definitions to apply.
+Matching directories are ignored.
+
 acl (Kafka 0.11.0+)
 broker (Kafka 0.11.0+)
 brokers (Kafka 0.11.0+)
 topic (Kafka 2.4.0+)`,
 		Example: `# apply all definitions in directory "topics" (dry-run)
-kdef apply topics/* --dry-run
+kdef apply "topics/*.yml" --dry-run
+
+# apply definitions in all directories under "resources" (dry-run)
+kdef apply "resources/**/*.yml" --dry-run
 
 # apply a topic definition from stdin (dry-run)
 cat topics/my_topic.yml | kdef apply - --dry-run`,

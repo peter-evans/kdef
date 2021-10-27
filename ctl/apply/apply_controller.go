@@ -3,8 +3,11 @@ package apply
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
+	"os"
 	"path/filepath"
 
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/ghodss/yaml"
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/core/client"
@@ -17,6 +20,8 @@ import (
 	"github.com/peter-evans/kdef/core/operators/topic"
 	"github.com/peter-evans/kdef/ctl/apply/docparse"
 )
+
+const cannotContinueOnError = "cannot continue on error"
 
 type applier interface {
 	Execute() *res.ApplyResult
@@ -71,28 +76,34 @@ func (a *applyController) Execute() error {
 		}
 	} else {
 		// Apply defs from file
-	mainloop:
 		for _, arg := range a.args {
-			filepathMatches, err := filepath.Glob(arg)
-			if err != nil {
-				log.Error(fmt.Errorf("failed to glob with pattern %v: %v", arg, err))
-				ctlErrors = true
-				if a.opts.ContinueOnError {
-					continue
-				} else {
-					break mainloop
-				}
-			}
+			basepath, pattern := doublestar.SplitPattern(arg)
+			fsys := os.DirFS(basepath)
 
-			for _, filepath := range filepathMatches {
-				res, err := a.applyDefsFromFile(filepath)
+			err := doublestar.GlobWalk(fsys, pattern, func(p string, d fs.DirEntry) error {
+				if d.IsDir() {
+					return nil
+				}
+
+				res, err := a.applyDefsFromFile(filepath.Join(basepath, p))
 				results = append(results, res...)
 				if err != nil {
 					log.Error(err)
 					ctlErrors = true
 				}
 				if (err != nil || res.ContainsErr()) && !a.opts.ContinueOnError {
-					break mainloop
+					return fmt.Errorf(cannotContinueOnError)
+				}
+
+				return nil
+			})
+			if err != nil {
+				if err.Error() != cannotContinueOnError {
+					log.Error(err)
+					ctlErrors = true
+				}
+				if !a.opts.ContinueOnError {
+					break
 				}
 			}
 		}
