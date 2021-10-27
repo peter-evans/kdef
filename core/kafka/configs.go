@@ -51,7 +51,7 @@ func newConfigOps(
 	localConfigs def.ConfigsMap,
 	remoteConfigsMap def.ConfigsMap,
 	remoteConfigs def.Configs,
-	deleteMissingConfigs bool,
+	deleteUndefinedConfigs bool,
 	nonIncremental bool,
 ) ConfigOperations {
 	var configOps ConfigOperations
@@ -87,8 +87,8 @@ func newConfigOps(
 		}
 	}
 
-	// Mark missing configs for deletion
-	if deleteMissingConfigs || nonIncremental {
+	// Mark undefined configs for deletion
+	if deleteUndefinedConfigs || nonIncremental {
 		for _, config := range remoteConfigs {
 			// Ignore static and default config keys that cannot be deleted
 			if config.Source == def.ConfigSourceStaticBrokerConfig || config.Source == def.ConfigSourceDefaultConfig {

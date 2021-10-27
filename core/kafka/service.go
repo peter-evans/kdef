@@ -75,7 +75,7 @@ func (s *Service) NewConfigOps(
 	localConfigs def.ConfigsMap,
 	remoteConfigsMap def.ConfigsMap,
 	remoteConfigs def.Configs,
-	deleteMissingConfigs bool,
+	deleteUndefinedConfigs bool,
 ) (ConfigOperations, error) {
 	incrementalAlter, err := s.getIncrementalAlter()
 	if err != nil {
@@ -85,7 +85,7 @@ func (s *Service) NewConfigOps(
 		localConfigs,
 		remoteConfigsMap,
 		remoteConfigs,
-		deleteMissingConfigs,
+		deleteUndefinedConfigs,
 		!incrementalAlter,
 	), nil
 }

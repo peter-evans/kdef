@@ -6,8 +6,8 @@ import (
 
 // Brokers spec definition
 type BrokersSpecDefinition struct {
-	Configs              ConfigsMap `json:"configs,omitempty"`
-	DeleteMissingConfigs bool       `json:"deleteMissingConfigs"`
+	Configs                ConfigsMap `json:"configs,omitempty"`
+	DeleteUndefinedConfigs bool       `json:"deleteUndefinedConfigs"`
 }
 
 // Top-level brokers definition

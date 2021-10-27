@@ -200,9 +200,9 @@ func (a *applier) updateApplyResult() error {
 
 	// Modify the remote definition to remove optional properties not specified in local
 	// Further, set properties that are local only and have no remote state
-	remoteCopy.Spec.DeleteMissingAcls = a.localDef.Spec.DeleteMissingAcls
+	remoteCopy.Spec.DeleteUndefinedAcls = a.localDef.Spec.DeleteUndefinedAcls
 
-	if !a.localDef.Spec.DeleteMissingAcls {
+	if !a.localDef.Spec.DeleteUndefinedAcls {
 		// Remove acls from the remote def that are not in local to prevent them showing in the diff
 		_, intersection := acls.DiffPatchIntersection(remoteCopy.Spec.Acls, a.localDef.Spec.Acls)
 		intersection.Sort()
@@ -255,7 +255,7 @@ func (a *applier) buildAclOps() error {
 	log.Debug("Comparing local and remote definition acls for %q", a.localDef.Metadata.Name)
 
 	a.ops.addAcls, _ = acls.DiffPatchIntersection(a.localDef.Spec.Acls, a.remoteAcls)
-	if a.localDef.Spec.DeleteMissingAcls {
+	if a.localDef.Spec.DeleteUndefinedAcls {
 		a.ops.deleteAcls, _ = acls.DiffPatchIntersection(a.remoteAcls, a.localDef.Spec.Acls)
 	}
 

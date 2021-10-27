@@ -226,7 +226,7 @@ func Test_applier_Execute(t *testing.T) {
 		},
 		{
 			// Delete configs (non-incremental)
-			// Fail due to deletion of missing configs being not enabled
+			// Fail due to deletion of undefined configs being not enabled
 			name: "9: Dry-run broker foo version 4",
 			fields: fields{
 				cl:      clNonInc,
@@ -237,7 +237,7 @@ func Test_applier_Execute(t *testing.T) {
 				},
 			},
 			wantDiff:    broker1Diffs[4],
-			wantErr:     "cannot apply configs because deletion of missing configs is not enabled",
+			wantErr:     "cannot apply configs because deletion of undefined configs is not enabled",
 			wantApplied: false,
 		},
 		{

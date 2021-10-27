@@ -28,4 +28,4 @@ spec:
       operations: ["CREATE"]
       permissionType: DENY
       principals: ["User:bar"]
-  deleteMissingAcls: true
+  deleteUndefinedAcls: true

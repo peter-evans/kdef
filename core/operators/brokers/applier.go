@@ -186,7 +186,7 @@ func (a *applier) updateApplyResult() error {
 
 	// Set properties that are local only and have no remote state
 	remoteCopy.Metadata.Name = a.localDef.Metadata.Name
-	remoteCopy.Spec.DeleteMissingConfigs = a.localDef.Spec.DeleteMissingConfigs
+	remoteCopy.Spec.DeleteUndefinedConfigs = a.localDef.Spec.DeleteUndefinedConfigs
 
 	// Compute diff
 	diff, err := jsondiff.Diff(&remoteCopy, &a.localDef)
@@ -232,7 +232,7 @@ func (a *applier) buildConfigOps() error {
 		a.localDef.Spec.Configs,
 		a.remoteDef.Spec.Configs,
 		a.remoteConfigs,
-		a.localDef.Spec.DeleteMissingConfigs,
+		a.localDef.Spec.DeleteUndefinedConfigs,
 	)
 	if err != nil {
 		return err
@@ -243,9 +243,9 @@ func (a *applier) buildConfigOps() error {
 
 // Update brokers configs
 func (a *applier) updateConfigs() error {
-	if a.ops.config.ContainsOp(kafka.DeleteConfigOperation) && !a.localDef.Spec.DeleteMissingConfigs {
+	if a.ops.config.ContainsOp(kafka.DeleteConfigOperation) && !a.localDef.Spec.DeleteUndefinedConfigs {
 		// This case should only occur when using non-incremental alter configs
-		return errors.New("cannot apply configs because deletion of missing configs is not enabled")
+		return errors.New("cannot apply configs because deletion of undefined configs is not enabled")
 	}
 
 	log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Altering configs...")
