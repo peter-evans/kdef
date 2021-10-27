@@ -95,14 +95,15 @@ func (e *exporter) getAclDefinitions() ([]def.AclDefinition, error) {
 			resAcls = acls.MergeGroups(resAcls)
 		}
 
-		aclDefs = append(
-			aclDefs,
-			def.NewAclDefinition(
-				resource.ResourceName,
-				resource.ResourceType,
-				resAcls,
-			),
+		aclDef := def.NewAclDefinition(
+			resource.ResourceName,
+			resource.ResourceType,
+			resAcls,
 		)
+		// Default to delete undefined acls
+		aclDef.Spec.DeleteUndefinedAcls = true
+
+		aclDefs = append(aclDefs, aclDef)
 	}
 
 	return aclDefs, nil

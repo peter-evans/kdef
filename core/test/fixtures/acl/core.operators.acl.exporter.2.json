@@ -18,7 +18,7 @@
             "permissionType": "ALLOW"
           }
         ],
-        "deleteUndefinedAcls": false
+        "deleteUndefinedAcls": true
       }
     }
   },
@@ -41,7 +41,7 @@
             "permissionType": "ALLOW"
           }
         ],
-        "deleteUndefinedAcls": false
+        "deleteUndefinedAcls": true
       }
     }
   }
