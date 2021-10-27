@@ -109,18 +109,20 @@ func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 		if excludeRegExp.MatchString(topic) {
 			continue
 		}
-		topicDefs = append(
-			topicDefs,
-			def.NewTopicDefinition(
-				topic,
-				topicMetadataMap[topic].PartitionAssignments,
-				topicMetadataMap[topic].PartitionRackAssignments,
-				topicConfigsMapMap[topic],
-				metadata.Brokers,
-				e.opts.Assignments == opt.BrokerAssignments,
-				e.opts.Assignments == opt.RackAssignments,
-			),
+
+		topicDef := def.NewTopicDefinition(
+			topic,
+			topicMetadataMap[topic].PartitionAssignments,
+			topicMetadataMap[topic].PartitionRackAssignments,
+			topicConfigsMapMap[topic],
+			metadata.Brokers,
+			e.opts.Assignments == opt.BrokerAssignments,
+			e.opts.Assignments == opt.RackAssignments,
 		)
+		// Default to delete undefined configs
+		topicDef.Spec.DeleteUndefinedConfigs = true
+
+		topicDefs = append(topicDefs, topicDef)
 	}
 
 	return topicDefs, nil

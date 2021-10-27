@@ -10,7 +10,6 @@ spec:
       hosts: ["*"]
       operations: ["DESCRIBE_CONFIGS"]
       permissionType: ALLOW
-  deleteUndefinedAcls: true
 ---
 apiVersion: v1
 kind: acl
@@ -23,7 +22,6 @@ spec:
       hosts: ["*"]
       operations: ["READ", "WRITE"]
       permissionType: ALLOW
-  deleteUndefinedAcls: true
 ---
 apiVersion: v1
 kind: acl
@@ -36,7 +34,6 @@ spec:
       hosts: ["*"]
       operations: ["READ", "WRITE"]
       permissionType: ALLOW
-  deleteUndefinedAcls: true
 ---
 apiVersion: v1
 kind: acl
@@ -49,7 +46,6 @@ spec:
       hosts: ["*"]
       operations: ["READ"]
       permissionType: ALLOW
-  deleteUndefinedAcls: true
 ---
 apiVersion: v1
 kind: acl
@@ -62,4 +58,3 @@ spec:
       hosts: ["*"]
       operations: ["READ", "WRITE"]
       permissionType: ALLOW
-  deleteUndefinedAcls: true
