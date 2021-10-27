@@ -97,7 +97,7 @@ func createTopic(
 	resp := kresp.(*kmsg.CreateTopicsResponse)
 
 	if len(resp.Topics) != 1 {
-		return fmt.Errorf("requested %d topics but received %d", 1, len(resp.Topics))
+		return fmt.Errorf("requested %d topic(s) but received %d", 1, len(resp.Topics))
 	}
 
 	for _, topic := range resp.Topics {
@@ -145,7 +145,7 @@ func createPartitions(
 	resp := kresp.(*kmsg.CreatePartitionsResponse)
 
 	if len(resp.Topics) != 1 {
-		return fmt.Errorf("requested %d topics but received %d", 1, len(resp.Topics))
+		return fmt.Errorf("requested %d topic(s) but received %d", 1, len(resp.Topics))
 	}
 
 	for _, topic := range resp.Topics {
@@ -190,7 +190,7 @@ func alterPartitionAssignments(
 	resp := kresp.(*kmsg.AlterPartitionAssignmentsResponse)
 
 	if len(resp.Topics) != 1 {
-		return fmt.Errorf("requested %d topics but received %d", 1, len(resp.Topics))
+		return fmt.Errorf("requested %d topic(s) but received %d", 1, len(resp.Topics))
 	}
 
 	if err := kerr.ErrorForCode(resp.ErrorCode); err != nil {

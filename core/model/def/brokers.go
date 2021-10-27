@@ -4,16 +4,16 @@ import (
 	"github.com/gotidy/copy"
 )
 
-// Top-level brokers definition
-type BrokersDefinition struct {
-	ResourceDefinition
-	Spec BrokersSpecDefinition `json:"spec"`
-}
-
 // Brokers spec definition
 type BrokersSpecDefinition struct {
 	Configs              ConfigsMap `json:"configs,omitempty"`
 	DeleteMissingConfigs bool       `json:"deleteMissingConfigs"`
+}
+
+// Top-level brokers definition
+type BrokersDefinition struct {
+	ResourceDefinition
+	Spec BrokersSpecDefinition `json:"spec"`
 }
 
 // Create a copy of this BrokersDefinition

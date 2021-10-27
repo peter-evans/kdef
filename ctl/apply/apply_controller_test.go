@@ -48,10 +48,10 @@ func Test_getResourceDefinitions(t *testing.T) {
 			wantErr: "invalid definition apiVersion",
 		},
 		{
-			// TODO: add other resources
 			name: "Tests return of resource definitions (YAML)",
 			args: args{
 				defDocs: []string{
+					"apiVersion: v1\nkind: acl\nmetadata:\n  name: \"topic_foo\"\n  type: \"topic\"",
 					"apiVersion: v1\nkind: broker\nmetadata:\n  name: \"1\"",
 					"apiVersion: v1\nkind: brokers\nmetadata:\n  name: brokers_foo",
 					"apiVersion: v1\nkind: topic\nmetadata:\n  name: topic_foo",
@@ -59,6 +59,14 @@ func Test_getResourceDefinitions(t *testing.T) {
 				format: opt.YamlFormat,
 			},
 			want: []def.ResourceDefinition{
+				{
+					ApiVersion: "v1",
+					Kind:       "acl",
+					Metadata: def.ResourceMetadataDefinition{
+						Name: "topic_foo",
+						Type: "topic",
+					},
+				},
 				{
 					ApiVersion: "v1",
 					Kind:       "broker",
@@ -111,10 +119,10 @@ func Test_getResourceDefinitions(t *testing.T) {
 			wantErr: "invalid definition apiVersion",
 		},
 		{
-			// TODO: add other resources
 			name: "Tests return of resource definitions (JSON)",
 			args: args{
 				defDocs: []string{
+					"{\"apiVersion\": \"v1\", \"kind\": \"acl\", \"metadata\": {\"name\": \"topic_foo\", \"type\": \"topic\"}}",
 					"{\"apiVersion\": \"v1\", \"kind\": \"broker\", \"metadata\": {\"name\": \"1\"}}",
 					"{\"apiVersion\": \"v1\", \"kind\": \"brokers\", \"metadata\": {\"name\": \"brokers_foo\"}}",
 					"{\"apiVersion\": \"v1\", \"kind\": \"topic\", \"metadata\": {\"name\": \"topic_foo\"}}",
@@ -122,6 +130,14 @@ func Test_getResourceDefinitions(t *testing.T) {
 				format: opt.YamlFormat,
 			},
 			want: []def.ResourceDefinition{
+				{
+					ApiVersion: "v1",
+					Kind:       "acl",
+					Metadata: def.ResourceMetadataDefinition{
+						Name: "topic_foo",
+						Type: "topic",
+					},
+				},
 				{
 					ApiVersion: "v1",
 					Kind:       "broker",

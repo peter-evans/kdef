@@ -8,16 +8,16 @@ import (
 	"github.com/peter-evans/kdef/core/util/i32"
 )
 
-// Top-level broker definition
-type BrokerDefinition struct {
-	ResourceDefinition
-	Spec BrokerSpecDefinition `json:"spec"`
-}
-
 // Broker spec definition
 type BrokerSpecDefinition struct {
 	Configs              ConfigsMap `json:"configs,omitempty"`
 	DeleteMissingConfigs bool       `json:"deleteMissingConfigs"`
+}
+
+// Top-level broker definition
+type BrokerDefinition struct {
+	ResourceDefinition
+	Spec BrokerSpecDefinition `json:"spec"`
 }
 
 // Create a copy of this BrokerDefinition

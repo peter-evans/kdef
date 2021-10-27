@@ -183,3 +183,38 @@ func (s *Service) AlterPartitionAssignments(
 ) error {
 	return alterPartitionAssignments(s.cl, topic, assignments)
 }
+
+// ========================= Acl =============================
+
+// Execute a request to describe acls of a specific resource (Kafka 0.11.0+)
+func (s *Service) DescribeResourceAcls(
+	name string,
+	resourceType string,
+) (def.AclEntryGroups, error) {
+	return describeResourceAcls(s.cl, name, resourceType)
+}
+
+// Execute a request to describe acls for all resources (Kafka 0.11.0+)
+func (s *Service) DescribeAllResourceAcls(
+	resourceType string,
+) ([]ResourceAcls, error) {
+	return describeAllResourceAcls(s.cl, resourceType)
+}
+
+// Execute a request to create acls (Kafka 0.11.0+)
+func (s *Service) CreateAcls(
+	name string,
+	resourceType string,
+	acls def.AclEntryGroups,
+) error {
+	return createAcls(s.cl, name, resourceType, acls)
+}
+
+// Execute a request to delete acls (Kafka 0.11.0+)
+func (s *Service) DeleteAcls(
+	name string,
+	resourceType string,
+	acls def.AclEntryGroups,
+) error {
+	return deleteAcls(s.cl, name, resourceType, acls)
+}

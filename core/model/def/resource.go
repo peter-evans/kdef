@@ -6,27 +6,29 @@ import (
 	"github.com/peter-evans/kdef/core/util/str"
 )
 
-// Top-level definition of a resource
-type ResourceDefinition struct {
-	ApiVersion string                     `json:"apiVersion"`
-	Kind       string                     `json:"kind"`
-	Metadata   ResourceMetadataDefinition `json:"metadata"`
-}
-
-// Resource metadata definition
-type ResourceMetadataDefinition struct {
-	Labels ResourceMetadataLabels `json:"labels,omitempty"`
-	Name   string                 `json:"name"`
+// Definition kinds and associated versions
+var definitionKindVersions = map[string][]string{
+	"acl":     {"v1"},
+	"broker":  {"v1"},
+	"brokers": {"v1"},
+	"topic":   {"v1"},
 }
 
 // Resource metadata labels
 type ResourceMetadataLabels map[string]string
 
-// Definition kinds and associated versions
-var definitionKindVersions = map[string][]string{
-	"broker":  {"v1"},
-	"brokers": {"v1"},
-	"topic":   {"v1"},
+// Resource metadata definition
+type ResourceMetadataDefinition struct {
+	Labels ResourceMetadataLabels `json:"labels,omitempty"`
+	Name   string                 `json:"name"`
+	Type   string                 `json:"type,omitempty"`
+}
+
+// Top-level definition of a resource
+type ResourceDefinition struct {
+	ApiVersion string                     `json:"apiVersion"`
+	Kind       string                     `json:"kind"`
+	Metadata   ResourceMetadataDefinition `json:"metadata"`
 }
 
 // Validate resource definition

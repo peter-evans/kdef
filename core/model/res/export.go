@@ -8,8 +8,10 @@ import (
 
 // An export result
 type ExportResult struct {
-	Id  string      `json:"id"`
-	Def interface{} `json:"definition"`
+	// TODO: Change Id to name?
+	Id   string      `json:"id"`
+	Type string      `json:"type,omitempty"`
+	Def  interface{} `json:"definition"`
 }
 
 // An array of ExportResult
@@ -19,7 +21,8 @@ type ExportResults []ExportResult
 func (e ExportResults) Sort() {
 	// TODO: Use sort.Slice in the standard library after upgrading to Go 1.8
 	slice.Sort(e[:], func(i, j int) bool {
-		return e[i].Id < e[j].Id
+		return e[i].Type < e[j].Type ||
+			e[i].Type == e[j].Type && e[i].Id < e[j].Id
 	})
 }
 

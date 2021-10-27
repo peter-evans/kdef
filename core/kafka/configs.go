@@ -203,7 +203,7 @@ func describeConfigs(cl *client.Client, req kmsg.DescribeConfigsRequest) ([]kmsg
 	resp := kresp.(*kmsg.DescribeConfigsResponse)
 
 	if len(resp.Resources) != len(req.Resources) {
-		return nil, fmt.Errorf("requested %d resources but received %d", len(req.Resources), len(resp.Resources))
+		return nil, fmt.Errorf("requested %d resource(s) but received %d", len(req.Resources), len(resp.Resources))
 	}
 
 	for _, resource := range resp.Resources {
@@ -298,7 +298,7 @@ func alterConfigs(
 	resp := kresp.(*kmsg.AlterConfigsResponse)
 
 	if len(resp.Resources) != 1 {
-		return fmt.Errorf("requested %d resources but received %d", 1, len(resp.Resources))
+		return fmt.Errorf("requested %d resource(s) but received %d", 1, len(resp.Resources))
 	}
 
 	for _, resource := range resp.Resources {
@@ -392,7 +392,7 @@ func incrementalAlterConfigs(
 	resp := kresp.(*kmsg.IncrementalAlterConfigsResponse)
 
 	if len(resp.Resources) != 1 {
-		return fmt.Errorf("requested %d resources but received %d", 1, len(resp.Resources))
+		return fmt.Errorf("requested %d resource(s) but received %d", 1, len(resp.Resources))
 	}
 
 	for _, resource := range resp.Resources {

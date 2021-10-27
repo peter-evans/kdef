@@ -22,6 +22,7 @@ func Command(cOpts *config.ConfigOptions) *cobra.Command {
 		Short: "Apply definitions to cluster",
 		Long: `Apply definitions to cluster.
 
+acl (Kafka 0.11.0+)
 broker (Kafka 0.11.0+)
 brokers (Kafka 0.11.0+)
 topic (Kafka 2.4.0+)`,

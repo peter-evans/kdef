@@ -11,6 +11,7 @@ import (
 	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/model/res"
+	"github.com/peter-evans/kdef/core/operators/acl"
 	"github.com/peter-evans/kdef/core/operators/broker"
 	"github.com/peter-evans/kdef/core/operators/brokers"
 	"github.com/peter-evans/kdef/core/operators/topic"
@@ -157,6 +158,11 @@ func (a *applyController) applyDefinitions(defDocs []string) (res.ApplyResults, 
 		var applier applier
 
 		switch resourceDef.Kind {
+		case "acl":
+			applier = acl.NewApplier(a.cl, defDocs[i], acl.ApplierOptions{
+				DefinitionFormat: a.opts.DefinitionFormat,
+				DryRun:           a.opts.DryRun,
+			})
 		case "broker":
 			applier = broker.NewApplier(a.cl, defDocs[i], broker.ApplierOptions{
 				DefinitionFormat: a.opts.DefinitionFormat,

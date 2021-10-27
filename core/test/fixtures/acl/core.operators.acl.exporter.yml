@@ -1,0 +1,65 @@
+---
+apiVersion: v1
+kind: acl
+metadata:
+  name: kafka-cluster
+  type: cluster
+spec:
+  acls:
+    - principals: ["User:foo", "User:bar", "User:baz"]
+      hosts: ["*"]
+      operations: ["DESCRIBE_CONFIGS"]
+      permissionType: ALLOW
+  deleteMissingAcls: true
+---
+apiVersion: v1
+kind: acl
+metadata:
+  name: core.operators.acl.exporter.foo
+  type: topic
+spec:
+  acls:
+    - principals: ["User:foo", "User:bar"]
+      hosts: ["*"]
+      operations: ["READ", "WRITE"]
+      permissionType: ALLOW
+  deleteMissingAcls: true
+---
+apiVersion: v1
+kind: acl
+metadata:
+  name: core.operators.acl.exporter.bar
+  type: topic
+spec:
+  acls:
+    - principals: ["User:bar", "User:baz"]
+      hosts: ["*"]
+      operations: ["READ", "WRITE"]
+      permissionType: ALLOW
+  deleteMissingAcls: true
+---
+apiVersion: v1
+kind: acl
+metadata:
+  name: core.operators.acl.exporter.foo
+  type: group
+spec:
+  acls:
+    - principals: ["User:qux"]
+      hosts: ["*"]
+      operations: ["READ"]
+      permissionType: ALLOW
+  deleteMissingAcls: true
+---
+apiVersion: v1
+kind: acl
+metadata:
+  name: core.operators.acl.exporter.bar
+  type: group
+spec:
+  acls:
+    - principals: ["User:qux"]
+      hosts: ["*"]
+      operations: ["READ", "WRITE"]
+      permissionType: ALLOW
+  deleteMissingAcls: true

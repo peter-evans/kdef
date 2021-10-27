@@ -1,0 +1,175 @@
+---
+# Version 0
+# Add acls
+apiVersion: v1
+kind: acl
+metadata:
+  name: core.operators.brokers.applier.foo
+  type: topic
+spec:
+  acls:
+    - principals: ["User:foo", "User:bar", "User:baz"]
+      hosts: ["*"]
+      operations: ["READ", "WRITE", "CREATE", "DESCRIBE", "DESCRIBE_CONFIGS"]
+      permissionType: ALLOW
+    - principals: ["User:baz"]
+      hosts: ["*"]
+      operations: ["DELETE", "ALTER", "ALTER_CONFIGS"]
+      permissionType: ALLOW
+    - principals: ["User:bar"]
+      hosts: ["*"]
+      operations: ["CREATE"]
+      permissionType: DENY
+  deleteMissingAcls: true
+---
+# Version 1
+# Test no diff when ungrouped
+apiVersion: v1
+kind: acl
+metadata:
+  name: core.operators.brokers.applier.foo
+  type: topic
+spec:
+  acls:
+    - principals: ["User:foo"]
+      hosts: ["*"]
+      operations: ["READ"]
+      permissionType: ALLOW
+    - principals: ["User:foo"]
+      hosts: ["*"]
+      operations: ["WRITE"]
+      permissionType: ALLOW
+    - principals: ["User:foo"]
+      hosts: ["*"]
+      operations: ["CREATE"]
+      permissionType: ALLOW
+    - principals: ["User:foo"]
+      hosts: ["*"]
+      operations: ["DESCRIBE"]
+      permissionType: ALLOW
+    - principals: ["User:foo"]
+      hosts: ["*"]
+      operations: ["DESCRIBE_CONFIGS"]
+      permissionType: ALLOW
+    - principals: ["User:bar"]
+      hosts: ["*"]
+      operations: ["READ"]
+      permissionType: ALLOW
+    - principals: ["User:bar"]
+      hosts: ["*"]
+      operations: ["WRITE"]
+      permissionType: ALLOW
+    - principals: ["User:bar"]
+      hosts: ["*"]
+      operations: ["CREATE"]
+      permissionType: ALLOW
+    - principals: ["User:bar"]
+      hosts: ["*"]
+      operations: ["DESCRIBE"]
+      permissionType: ALLOW
+    - principals: ["User:bar"]
+      hosts: ["*"]
+      operations: ["DESCRIBE_CONFIGS"]
+      permissionType: ALLOW
+    - principals: ["User:baz"]
+      hosts: ["*"]
+      operations: ["READ"]
+      permissionType: ALLOW
+    - principals: ["User:baz"]
+      hosts: ["*"]
+      operations: ["WRITE"]
+      permissionType: ALLOW
+    - principals: ["User:baz"]
+      hosts: ["*"]
+      operations: ["CREATE"]
+      permissionType: ALLOW
+    - principals: ["User:baz"]
+      hosts: ["*"]
+      operations: ["DESCRIBE"]
+      permissionType: ALLOW
+    - principals: ["User:baz"]
+      hosts: ["*"]
+      operations: ["DESCRIBE_CONFIGS"]
+      permissionType: ALLOW
+    - principals: ["User:baz"]
+      hosts: ["*"]
+      operations: ["DELETE"]
+      permissionType: ALLOW
+    - principals: ["User:baz"]
+      hosts: ["*"]
+      operations: ["ALTER"]
+      permissionType: ALLOW
+    - principals: ["User:baz"]
+      hosts: ["*"]
+      operations: ["ALTER_CONFIGS"]
+      permissionType: ALLOW
+    - principals: ["User:bar"]
+      hosts: ["*"]
+      operations: ["CREATE"]
+      permissionType: DENY
+  deleteMissingAcls: true
+---
+# Version 2
+# Update acls (addition)
+apiVersion: v1
+kind: acl
+metadata:
+  name: core.operators.brokers.applier.foo
+  type: topic
+spec:
+  acls:
+    - principals: ["User:foo", "User:bar", "User:baz"]
+      hosts: ["*"]
+      operations: ["READ", "WRITE", "CREATE", "DESCRIBE", "DESCRIBE_CONFIGS"]
+      permissionType: ALLOW
+    - principals: ["User:baz"]
+      hosts: ["*"]
+      operations: ["DELETE", "ALTER", "ALTER_CONFIGS", "CLUSTER_ACTION"]
+      permissionType: ALLOW
+    - principals: ["User:bar", "User:foo"]
+      hosts: ["*"]
+      operations: ["CREATE"]
+      permissionType: DENY
+  deleteMissingAcls: true
+---
+# Version 3
+# Update acls (addition/deletion)
+apiVersion: v1
+kind: acl
+metadata:
+  name: core.operators.brokers.applier.foo
+  type: topic
+spec:
+  acls:
+    - principals: ["User:foo", "User:bar", "User:baz"]
+      hosts: ["*"]
+      operations: ["READ", "WRITE", "CREATE", "DESCRIBE"]
+      permissionType: ALLOW
+    - principals: ["User:foo"]
+      hosts: ["*"]
+      operations: ["DELETE", "ALTER", "ALTER_CONFIGS", "CLUSTER_ACTION"]
+      permissionType: ALLOW
+    - principals: ["User:bar", "User:baz"]
+      hosts: ["*"]
+      operations: ["CREATE"]
+      permissionType: DENY
+  deleteMissingAcls: true
+---
+# Version 4
+# Test no diff for deletion with deleteMissing=false
+apiVersion: v1
+kind: acl
+metadata:
+  name: core.operators.brokers.applier.foo
+  type: topic
+spec:
+  acls:
+    - principals: ["User:foo", "User:bar", "User:baz"]
+      hosts: ["*"]
+      operations: ["READ", "WRITE", "CREATE", "DESCRIBE"]
+      permissionType: ALLOW
+    - principals: ["User:bar", "User:baz"]
+      hosts: ["*"]
+      operations: ["CREATE"]
+      permissionType: DENY
+  deleteMissingAcls: false

@@ -3,6 +3,7 @@ package export
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/peter-evans/kdef/cmd/export/acl"
 	"github.com/peter-evans/kdef/cmd/export/broker"
 	"github.com/peter-evans/kdef/cmd/export/brokers"
 	"github.com/peter-evans/kdef/cmd/export/topic"
@@ -19,6 +20,7 @@ func Command(cOpts *config.ConfigOptions) *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		acl.Command(cOpts),
 		broker.Command(cOpts),
 		brokers.Command(cOpts),
 		topic.Command(cOpts),

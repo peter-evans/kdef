@@ -7,11 +7,11 @@
       "metadata": { "name": "1" },
       "spec": {
         "configs": {
-          "advertised.listeners": "LISTENER_INTER://broker1:9092,LISTENER_HOST://localhost:19192",
+          "advertised.listeners": "INTER://broker1:9092,HOST://localhost:19192",
           "background.threads": "10",
           "compression.type": "producer",
-          "listener.security.protocol.map": "LISTENER_INTER:PLAINTEXT,LISTENER_HOST:PLAINTEXT",
-          "listeners": "LISTENER_INTER://broker1:9092,LISTENER_HOST://broker1:19192",
+          "listener.security.protocol.map": "INTER:PLAINTEXT,HOST:PLAINTEXT",
+          "listeners": "INTER://broker1:9092,HOST://broker1:19192",
           "log.cleaner.backoff.ms": "15000",
           "log.cleaner.dedupe.buffer.size": "134217728",
           "log.cleaner.delete.retention.ms": "86400000",
@@ -89,11 +89,11 @@
       "metadata": { "name": "2" },
       "spec": {
         "configs": {
-          "advertised.listeners": "LISTENER_INTER://broker2:9092,LISTENER_HOST://localhost:19193",
+          "advertised.listeners": "INTER://broker2:9092,HOST://localhost:19193",
           "background.threads": "10",
           "compression.type": "producer",
-          "listener.security.protocol.map": "LISTENER_INTER:PLAINTEXT,LISTENER_HOST:PLAINTEXT",
-          "listeners": "LISTENER_INTER://broker2:9092,LISTENER_HOST://broker2:19193",
+          "listener.security.protocol.map": "INTER:PLAINTEXT,HOST:PLAINTEXT",
+          "listeners": "INTER://broker2:9092,HOST://broker2:19193",
           "log.cleaner.backoff.ms": "15000",
           "log.cleaner.dedupe.buffer.size": "134217728",
           "log.cleaner.delete.retention.ms": "86400000",
