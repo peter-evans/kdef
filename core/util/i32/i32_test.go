@@ -41,7 +41,7 @@ func TestContains(t *testing.T) {
 	}
 }
 
-func Test_ContainsDuplicate(t *testing.T) {
+func TestContainsDuplicate(t *testing.T) {
 	type args struct {
 		s []int32
 	}

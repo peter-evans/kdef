@@ -18,14 +18,6 @@ import (
 func Test_exporter_Execute(t *testing.T) {
 	_, log.Verbose = os.LookupEnv("VERBOSE_TESTS")
 
-	// Create the test cluster
-	c := compose.Up(
-		t,
-		compose_fixture.AclExporterComposeFixture.ComposeFilePaths,
-		compose_fixture.AclExporterComposeFixture.Env(),
-	)
-	defer compose.Down(t, c)
-
 	// Create client
 	cl := tutil.CreateClient(t,
 		[]string{
@@ -36,11 +28,32 @@ func Test_exporter_Execute(t *testing.T) {
 		},
 	)
 
-	// Wait for Kafka to be ready
+	// Create the test cluster
 	srv := kafka.NewService(cl)
-	if !srv.IsKafkaReady(compose_fixture.AclExporterComposeFixture.Brokers, 90) {
-		t.Errorf("kafka failed to be ready within timeout")
-		t.FailNow()
+	maxTries := 3
+	try := 1
+	for {
+		start := time.Now()
+		c := compose.Up(
+			t,
+			compose_fixture.AclExporterComposeFixture.ComposeFilePaths,
+			compose_fixture.AclExporterComposeFixture.Env(),
+		)
+		if srv.IsKafkaReady(compose_fixture.AclExporterComposeFixture.Brokers, 90) {
+			duration := time.Since(start)
+			log.Info("kafka cluster ready in %v", duration)
+			defer compose.Down(t, c)
+			break
+		} else {
+			log.Warn("kafka failed to be ready within timeout")
+			compose.Down(t, c)
+			try++
+		}
+		if try > maxTries {
+			t.Errorf("kafka failed to be ready within timeout after %d tries", maxTries)
+			t.FailNow()
+		}
+		time.Sleep(2 * time.Second)
 	}
 
 	// Load YAML doc test fixtures
