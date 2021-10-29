@@ -56,7 +56,9 @@ func loadConfig(configPath string, configOpts []string) (*client.ClientConfig, e
 	var k = koanf.New(".")
 
 	// Load default values
-	k.Load(confmap.Provider(defaultClientConfig, "."), nil)
+	if err := k.Load(confmap.Provider(defaultClientConfig, "."), nil); err != nil {
+		return nil, err
+	}
 
 	// Load config file
 	if err := k.Load(file.Provider(configPath), yaml.Parser()); err != nil {
@@ -78,14 +80,16 @@ func loadConfig(configPath string, configOpts []string) (*client.ClientConfig, e
 	}
 
 	// Load environment variable overrides
-	k.Load(env.ProviderWithValue(envVarPrefix, ".", func(s string, v string) (string, interface{}) {
+	if err := k.Load(env.ProviderWithValue(envVarPrefix, ".", func(s string, v string) (string, interface{}) {
 		// Trim the prefix, lowercase, and replace "__" with the "." key delimiter
 		key := strings.Replace(strings.ToLower(strings.TrimPrefix(s, envVarPrefix)), "__", ".", -1)
 		// Convert to camelcase, e.g. "seed_brokers" -> "seedBrokers"
 		key = strcase.ToLowerCamel(key)
 
 		return key, typedVal(key, v)
-	}), nil)
+	}), nil); err != nil {
+		return nil, err
+	}
 
 	// Load commandline flag overrides
 	flagConfigOptsMap := map[string]interface{}{}
@@ -96,7 +100,9 @@ func loadConfig(configPath string, configOpts []string) (*client.ClientConfig, e
 		}
 		flagConfigOptsMap[kv[0]] = typedVal(kv[0], kv[1])
 	}
-	k.Load(confmap.Provider(flagConfigOptsMap, "."), nil)
+	if err := k.Load(confmap.Provider(flagConfigOptsMap, "."), nil); err != nil {
+		return nil, err
+	}
 
 	// Unmarshal to config struct
 	cc := &client.ClientConfig{}
