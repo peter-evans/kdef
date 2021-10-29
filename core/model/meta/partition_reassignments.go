@@ -1,6 +1,6 @@
 package meta
 
-import "github.com/bradfitz/slice"
+import "github.com/bradfitz/slice" //nolint
 
 // A partition reassignment
 type PartitionReassignment struct {
@@ -16,6 +16,7 @@ type PartitionReassignments []PartitionReassignment
 // Sort by partition ID
 func (p PartitionReassignments) Sort() {
 	// TODO: Use sort.Slice in the standard library after upgrading to Go 1.8
+	//nolint
 	slice.Sort(p[:], func(i, j int) bool {
 		return p[i].Partition < p[j].Partition
 	})

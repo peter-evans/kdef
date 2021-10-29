@@ -51,9 +51,15 @@ func Configure() error {
 
 	// Load config
 	var k = koanf.New(".")
-	k.Load(confmap.Provider(rootConfig, "."), nil)
-	k.Load(confmap.Provider(tlsConfig, "."), nil)
-	k.Load(confmap.Provider(saslConfig, "."), nil)
+	if err := k.Load(confmap.Provider(rootConfig, "."), nil); err != nil {
+		return err
+	}
+	if err := k.Load(confmap.Provider(tlsConfig, "."), nil); err != nil {
+		return err
+	}
+	if err := k.Load(confmap.Provider(saslConfig, "."), nil); err != nil {
+		return err
+	}
 
 	// Unmarshal to config struct
 	cc := &client.ClientConfig{}

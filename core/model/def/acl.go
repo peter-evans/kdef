@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bradfitz/slice"
+	"github.com/bradfitz/slice" //nolint
 	"github.com/gotidy/copy"
 	"github.com/peter-evans/kdef/core/util/str"
 )
@@ -81,6 +81,7 @@ func (a AclEntryGroups) Contains(
 // Sort acl entry groups
 func (a AclEntryGroups) Sort() {
 	// TODO: Use sort.Slice in the standard library after upgrading to Go 1.8
+	//nolint
 	slice.Sort(a[:], func(i, j int) bool {
 		return a[i].Principals[0] < a[j].Principals[0] ||
 			a[i].Principals[0] == a[j].Principals[0] &&
