@@ -1,0 +1,58 @@
+project_name: kdef
+
+before:
+  hooks:
+    - go mod tidy
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+gomod:
+  proxy: true
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+archives:
+  - replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+      # - docs/* # TODO
+
+checksum:
+  name_template: 'checksums.txt'
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^docs'
+      - '^test'
+      - '^chore'
+      - Merge branch
+
+release:
+  draft: true
