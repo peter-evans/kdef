@@ -2,3 +2,5 @@ kdef
 config.yml
 
 !examples/**
+
+dist/
