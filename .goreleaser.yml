@@ -41,10 +41,24 @@ changelog:
   use: github
   filters:
     exclude:
-      - '^docs'
-      - '^test'
-      - '^chore'
       - Merge branch
 
 release:
   draft: true
+
+brews:
+  - tap:
+      owner: peter-evans
+      name: homebrew-kdef
+    folder: Formula
+    commit_author:
+      name: Peter Evans
+      email: mail@peterevans.dev
+    homepage:  https://github.com/peter-evans/kdef
+    description: Declarative resource management for Kafka
+    license: MIT
+    install: |-
+      bin.install "kdef"
+    test: |
+      system "#{bin}/kdef --version"
+    skip_upload: false
