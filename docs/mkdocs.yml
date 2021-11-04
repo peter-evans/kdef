@@ -1,6 +1,8 @@
 site_name: kdef
-site_url: https://peter-evans.github.io/kdef/
 site_description: Declarative resource management for Kafka
+site_author: Peter Evans
+site_url: https://peter-evans.github.io/kdef
+copyright: Copyright &copy; 2021 Peter Evans
 repo_name: peter-evans/kdef
 repo_url: https://github.com/peter-evans/kdef
 edit_uri: edit/main/docs/docs/
@@ -25,3 +27,10 @@ theme:
       toggle:
         icon: material/lightbulb
         name: Switch to dark mode
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/peter-evans
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/peterevans0
