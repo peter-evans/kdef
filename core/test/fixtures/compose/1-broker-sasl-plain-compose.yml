@@ -27,17 +27,17 @@ services:
       KAFKA_SUPER_USERS: User:admin;User:alice
       KAFKA_LISTENER_NAME_INTER_SASL_ENABLED_MECHANISMS: PLAIN
       KAFKA_LISTENER_NAME_INTER_PLAIN_SASL_JAAS_CONFIG: |
-              org.apache.kafka.common.security.plain.PlainLoginModule required \
-              username="admin" \
-              password="admin-secret" \
-              user_admin="admin-secret";
+        org.apache.kafka.common.security.plain.PlainLoginModule required \
+        username="admin" \
+        password="admin-secret" \
+        user_admin="admin-secret";
       KAFKA_LISTENER_NAME_HOST_SASL_ENABLED_MECHANISMS: PLAIN
       KAFKA_LISTENER_NAME_HOST_PLAIN_SASL_JAAS_CONFIG: |
-              org.apache.kafka.common.security.plain.PlainLoginModule required \
-              username="admin" \
-              password="admin-secret" \
-              user_admin="admin-secret" \
-              user_alice="alice-secret";
+        org.apache.kafka.common.security.plain.PlainLoginModule required \
+        username="admin" \
+        password="admin-secret" \
+        user_admin="admin-secret" \
+        user_alice="alice-secret";
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:${ZOOKEEPER_PORT}
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
       KAFKA_PASSWORD_ENCODER_SECRET: 123foo

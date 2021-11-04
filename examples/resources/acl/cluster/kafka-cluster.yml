@@ -9,7 +9,7 @@ spec:
       operations: ["DESCRIBE_CONFIGS"]
       permissionType: ALLOW
       principals:
-      - User:foo
-      - User:bar
-      - User:baz
+        - User:foo
+        - User:bar
+        - User:baz
   deleteUndefinedAcls: true
