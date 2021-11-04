@@ -22,7 +22,7 @@ var (
 	yamlCommentRegExp      = regexp.MustCompile(`(?m)^([^#]*)#?.*$`)
 )
 
-// Parses a file to an array of separated documents
+// Parses a file to a slice of separated documents
 func FromFile(filepath string, format Format) ([]string, error) {
 	fileBytes, err := ioutil.ReadFile(filepath)
 	if err != nil {
@@ -47,7 +47,7 @@ func FromFile(filepath string, format Format) ([]string, error) {
 	}
 }
 
-// Parses stdin to an array of separated documents
+// Parses stdin to a slice of separated documents
 func FromStdin(format Format) ([]string, error) {
 	var stdinBytes []byte
 	scanner := bufio.NewScanner(os.Stdin)
@@ -77,7 +77,7 @@ func FromStdin(format Format) ([]string, error) {
 	}
 }
 
-// Converts bytes to an array of yaml documents
+// Converts bytes to a slice of yaml documents
 func bytesToYamlDocs(bytes []byte) ([]string, error) {
 	// Remove yaml comments
 	cleanFileBytes := yamlCommentRegExp.ReplaceAll(bytes, []byte("$1"))
@@ -95,7 +95,7 @@ func bytesToYamlDocs(bytes []byte) ([]string, error) {
 	return yamlDocs, nil
 }
 
-// Converts bytes to an array of json documents
+// Converts bytes to a slice of json documents
 func bytesToJsonDocs(bytes []byte) ([]string, error) {
 	var iBytes interface{}
 	if err := json.Unmarshal(bytes, &iBytes); err != nil {

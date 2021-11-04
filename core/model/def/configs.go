@@ -34,7 +34,7 @@ func (c ConfigKey) IsDynamic() bool {
 		c.Source == ConfigSourceDynamicBrokerLoggerConfig
 }
 
-// An array of ConfigKey
+// A slice of ConfigKey
 type Configs []ConfigKey
 
 // A map of the configs

@@ -31,7 +31,7 @@ func (a ApplyResult) HasUnappliedChanges() bool {
 	return len(a.Diff) > 0 && !a.Applied
 }
 
-// An array of ApplyResult pointers
+// A slice of ApplyResult pointers
 type ApplyResults []*ApplyResult
 
 // Determine if any apply result has an error

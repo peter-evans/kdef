@@ -20,9 +20,9 @@ func Norm(s string) string {
 	return s
 }
 
-// Determine if a value is contained in a list
-func Contains(str string, list []string) bool {
-	for _, item := range list {
+// Determine if a value is contained in a slice
+func Contains(str string, s []string) bool {
+	for _, item := range s {
 		if item == str {
 			return true
 		}
@@ -53,12 +53,12 @@ func UnorderedEqual(a, b []string) bool {
 
 func Deduplicate(s []string) []string {
 	k := make(map[string]bool)
-	list := []string{}
+	l := []string{}
 	for _, ss := range s {
 		if _, ok := k[ss]; !ok {
 			k[ss] = true
-			list = append(list, ss)
+			l = append(l, ss)
 		}
 	}
-	return list
+	return l
 }

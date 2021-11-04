@@ -41,7 +41,7 @@ type AclEntryGroup struct {
 	PermissionType string   `json:"permissionType"`
 }
 
-// An array of acl entry groups
+// A slice of acl entry groups
 type AclEntryGroups []AclEntryGroup
 
 // Validate acl entry groups

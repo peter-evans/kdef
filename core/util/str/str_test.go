@@ -68,8 +68,8 @@ func TestNorm(t *testing.T) {
 
 func TestContains(t *testing.T) {
 	type args struct {
-		str  string
-		list []string
+		str string
+		s   []string
 	}
 	tests := []struct {
 		name string
@@ -77,25 +77,25 @@ func TestContains(t *testing.T) {
 		want bool
 	}{
 		{
-			name: "Tests a list containing a string",
+			name: "Tests a slice containing a string",
 			args: args{
-				str:  "bar",
-				list: []string{"foo", "bar", "baz"},
+				str: "bar",
+				s:   []string{"foo", "bar", "baz"},
 			},
 			want: true,
 		},
 		{
-			name: "Tests a list not containing a string",
+			name: "Tests a slice not containing a string",
 			args: args{
-				str:  "ba",
-				list: []string{"foo", "bar", "baz"},
+				str: "ba",
+				s:   []string{"foo", "bar", "baz"},
 			},
 			want: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Contains(tt.args.str, tt.args.list); got != tt.want {
+			if got := Contains(tt.args.str, tt.args.s); got != tt.want {
 				t.Errorf("Contains() = %v, want %v", got, tt.want)
 			}
 		})
