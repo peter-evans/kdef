@@ -7,21 +7,21 @@ spec:
   acls:
     - hosts: ["*"]
       operations:
-      - "READ"
-      - "WRITE"
-      - "CREATE"
-      - "DESCRIBE"
-      - "DESCRIBE_CONFIGS"
+        - "READ"
+        - "WRITE"
+        - "CREATE"
+        - "DESCRIBE"
+        - "DESCRIBE_CONFIGS"
       permissionType: ALLOW
       principals:
-      - User:foo
-      - User:bar
-      - User:baz
+        - User:foo
+        - User:bar
+        - User:baz
     - hosts: ["*"]
       operations:
-      - "DELETE"
-      - "ALTER"
-      - "ALTER_CONFIGS"
+        - "DELETE"
+        - "ALTER"
+        - "ALTER_CONFIGS"
       permissionType: ALLOW
       principals: ["User:baz"]
     - hosts: ["*"]
