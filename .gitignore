@@ -4,3 +4,4 @@ config.yml
 !examples/**
 
 dist/
+docs/site/
