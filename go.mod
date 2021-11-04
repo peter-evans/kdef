@@ -14,7 +14,7 @@ require (
 	github.com/iancoleman/strcase v0.2.0
 	github.com/jedib0t/go-pretty/v6 v6.2.4
 	github.com/knadh/koanf v1.3.2
-	github.com/sergi/go-diff v1.1.0
+	github.com/sergi/go-diff v1.2.0
 	github.com/spf13/cobra v1.2.1
 	github.com/testcontainers/testcontainers-go v0.11.1
 	github.com/twmb/franz-go v1.2.2
