@@ -83,7 +83,7 @@ func (e *exportController) Execute() error {
 
 	stdout := len(e.opts.OutputDir) == 0
 	if stdout && e.opts.DefinitionFormat == opt.JsonFormat {
-		// For JSON to stdout the def docs are returned as an array
+		// For JSON to stdout the def docs are returned as a slice
 		defDocBytes, err := getDefDocBytes(results.Defs(), e.opts.DefinitionFormat)
 		if err != nil {
 			return err
@@ -162,7 +162,7 @@ func (e *exportController) exportResources() (res.ExportResults, error) {
 	return results, nil
 }
 
-// Get the byte array of a definition document
+// Get the byte slice of a definition document
 func getDefDocBytes(def interface{}, format opt.DefinitionFormat) ([]byte, error) {
 	var defDocBytes []byte
 	var err error

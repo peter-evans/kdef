@@ -25,7 +25,7 @@ func ErrorContains(out error, want string) bool {
 	return strings.Contains(out.Error(), want)
 }
 
-// Return the byte array of a test fixture
+// Return the byte slice of a test fixture
 func Fixture(t *testing.T, path string) []byte {
 	fileBytes, err := ioutil.ReadFile(path)
 	if err != nil {

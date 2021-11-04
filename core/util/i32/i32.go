@@ -2,9 +2,9 @@ package i32
 
 import "strconv"
 
-// Determine if a value is contained in a list
-func Contains(i int32, list []int32) bool {
-	for _, item := range list {
+// Determine if a value is contained in a slice
+func Contains(i int32, s []int32) bool {
+	for _, item := range s {
 		if item == i {
 			return true
 		}

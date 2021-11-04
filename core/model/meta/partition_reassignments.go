@@ -10,7 +10,7 @@ type PartitionReassignment struct {
 	RemovingReplicas []int32 `json:"removingReplicas"`
 }
 
-// An array of PartitionReassignment
+// A slice of PartitionReassignment
 type PartitionReassignments []PartitionReassignment
 
 // Sort by partition ID

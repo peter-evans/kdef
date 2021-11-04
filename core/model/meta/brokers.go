@@ -8,10 +8,10 @@ type Broker struct {
 	Rack string
 }
 
-// An array of Broker
+// A slice of Broker
 type Brokers []Broker
 
-// An array of the broker IDs
+// A slice of the broker IDs
 func (b Brokers) Ids() []int32 {
 	ids := make([]int32, len(b))
 	for i, broker := range b {
@@ -31,7 +31,7 @@ func (b Brokers) BrokersByRack() map[string][]int32 {
 	return k
 }
 
-// A unique, sorted array of non-empty broker rack IDs
+// A unique, sorted slice of non-empty broker rack IDs
 func (b Brokers) Racks() []string {
 	var ids []string
 	for id := range b.BrokersByRack() {

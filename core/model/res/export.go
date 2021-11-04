@@ -14,7 +14,7 @@ type ExportResult struct {
 	Def  interface{} `json:"definition"`
 }
 
-// An array of ExportResult
+// A slice of ExportResult
 type ExportResults []ExportResult
 
 // Sort by ID
@@ -27,7 +27,7 @@ func (e ExportResults) Sort() {
 	})
 }
 
-// An array of the IDs
+// A slice of the IDs
 func (e ExportResults) Ids() []string {
 	ids := make([]string, len(e))
 	for i, r := range e {
@@ -36,7 +36,7 @@ func (e ExportResults) Ids() []string {
 	return ids
 }
 
-// An array of the definitions
+// A slice of the definitions
 func (e ExportResults) Defs() []interface{} {
 	defs := make([]interface{}, len(e))
 	for i, r := range e {

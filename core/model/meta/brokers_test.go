@@ -12,7 +12,7 @@ func TestBrokers_Ids(t *testing.T) {
 		want []int32
 	}{
 		{
-			name: "Test return of a broker ID array",
+			name: "Test return of a broker ID slice",
 			b: Brokers{
 				Broker{Id: 1, Rack: "zone-a"},
 				Broker{Id: 2, Rack: "zone-b"},
@@ -69,7 +69,7 @@ func TestBrokers_Racks(t *testing.T) {
 		want []string
 	}{
 		{
-			name: "Test return of a unique rack ID array",
+			name: "Test return of a unique rack ID slice",
 			b: Brokers{
 				Broker{Id: 1, Rack: "zone-a"},
 				Broker{Id: 2, Rack: "zone-b"},

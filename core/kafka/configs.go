@@ -23,7 +23,7 @@ type ConfigOperation struct {
 	Op    int8 // 0: SET, 1: DELETE, 2: APPEND, 3: SUBTRACT
 }
 
-// An array of ConfigOperation
+// A slice of ConfigOperation
 type ConfigOperations []ConfigOperation
 
 // Determine if the specified config key name exists

@@ -7,8 +7,8 @@ import (
 
 func TestContains(t *testing.T) {
 	type args struct {
-		i    int32
-		list []int32
+		i int32
+		s []int32
 	}
 	tests := []struct {
 		name string
@@ -16,25 +16,25 @@ func TestContains(t *testing.T) {
 		want bool
 	}{
 		{
-			name: "Tests a list containing a value",
+			name: "Tests a slice containing a value",
 			args: args{
-				i:    4,
-				list: []int32{3, 7, 2, 4, 9, 1},
+				i: 4,
+				s: []int32{3, 7, 2, 4, 9, 1},
 			},
 			want: true,
 		},
 		{
-			name: "Tests a list not containing a value",
+			name: "Tests a slice not containing a value",
 			args: args{
-				i:    8,
-				list: []int32{3, 7, 2, 4, 9, 1},
+				i: 8,
+				s: []int32{3, 7, 2, 4, 9, 1},
 			},
 			want: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Contains(tt.args.i, tt.args.list); got != tt.want {
+			if got := Contains(tt.args.i, tt.args.s); got != tt.want {
 				t.Errorf("Contains() = %v, want %v", got, tt.want)
 			}
 		})
