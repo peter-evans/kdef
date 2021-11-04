@@ -17,11 +17,11 @@ builds:
     goarch:
       - amd64
       - arm64
-    mod_timestamp: '{{ .CommitTimestamp }}'
+    mod_timestamp: "{{ .CommitTimestamp }}"
     flags:
       - -trimpath
     ldflags:
-      - -s -w -X main.version={{.Version}}
+      - -s -w -X main.version={{ .Version }}
 
 archives:
   - replacements:
@@ -35,7 +35,7 @@ archives:
       # - docs/* # TODO
 
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 
 changelog:
   use: github
@@ -54,7 +54,7 @@ brews:
     commit_author:
       name: Peter Evans
       email: mail@peterevans.dev
-    homepage:  https://github.com/peter-evans/kdef
+    homepage: https://github.com/peter-evans/kdef
     description: Declarative resource management for Kafka
     license: MIT
     install: |-
@@ -62,3 +62,18 @@ brews:
     test: |
       system "#{bin}/kdef --version"
     skip_upload: false
+
+dockers:
+  - image_templates:
+      # - "peterevans/kdef:{{ .Version }}" # TODO
+      - "ghcr.io/peter-evans/kdef:{{ .Version }}"
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.name={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+      - "--label=org.opencontainers.image.source={{ .GitURL }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.licenses=MIT"
+      - "--platform=linux/amd64"
+    skip_push: false
