@@ -690,8 +690,8 @@ github.com/testcontainers/testcontainers-go v0.11.1 h1:FiYsB83LSGbiawoV8TpAZGfcC
 github.com/testcontainers/testcontainers-go v0.11.1/go.mod h1:/V0UVq+1e7NWYoqTPog179clf0Qp9TOyp4EcXaEFQz8=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
-github.com/twmb/franz-go v1.1.4 h1:5La8ZyUDj0dzj0D6AMWGLFBlS/4MF+ke45RCC/bAS6s=
-github.com/twmb/franz-go v1.1.4/go.mod h1:KerrVhzNpasYrWJLr2Yj6Cui43f1BxH4U9SJEDVOjqQ=
+github.com/twmb/franz-go v1.2.2 h1:Nv+Fb6eUklF8pB8VhDZm0RJ9diaRw9nQybcl+livhI8=
+github.com/twmb/franz-go v1.2.2/go.mod h1:KerrVhzNpasYrWJLr2Yj6Cui43f1BxH4U9SJEDVOjqQ=
 github.com/twmb/franz-go/pkg/kmsg v0.0.0-20210914042331-106aef61b693/go.mod h1:SxG/xJKhgPu25SamAq0rrucfp7lbzCpEXOC+vH/ELrY=
 github.com/twmb/franz-go/pkg/kmsg v0.0.0-20211012005532-1508c3b8fa7d h1:NCNm43/b+sDghyZSy49giIgrwCnlCWC/1S9zMCXMtFM=
 github.com/twmb/franz-go/pkg/kmsg v0.0.0-20211012005532-1508c3b8fa7d/go.mod h1:SxG/xJKhgPu25SamAq0rrucfp7lbzCpEXOC+vH/ELrY=
