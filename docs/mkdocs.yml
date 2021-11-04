@@ -1,4 +1,27 @@
-site_name: My Docs
+site_name: kdef
+site_url: https://peter-evans.github.io/kdef/
+site_description: Declarative resource management for Kafka
+repo_name: peter-evans/kdef
+repo_url: https://github.com/peter-evans/kdef
+edit_uri: edit/main/docs/docs/
 
 theme:
   name: material
+  language: en
+  include_search_page: false
+  search_index_only: true
+  palette:
+    - media: "(prefers-color-scheme: light)"  # Light mode
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/lightbulb-outline
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: dark)"  # Dark mode
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/lightbulb
+        name: Switch to dark mode
