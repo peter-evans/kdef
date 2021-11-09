@@ -15,7 +15,7 @@ services:
     ports:
       - "${BROKER1_PORT}:${BROKER1_PORT}"
     environment:
-      KAFKA_BROKER_ID: 1
+      KAFKA_BROKER_ID: 101
       KAFKA_BROKER_RACK: zone-a
       KAFKA_LISTENERS: INTER://broker1:9092,HOST://broker1:${BROKER1_PORT}
       KAFKA_ADVERTISED_LISTENERS: INTER://broker1:9092,HOST://localhost:${BROKER1_PORT}
@@ -32,7 +32,7 @@ services:
     ports:
       - "${BROKER2_PORT}:${BROKER2_PORT}"
     environment:
-      KAFKA_BROKER_ID: 2
+      KAFKA_BROKER_ID: 102
       KAFKA_BROKER_RACK: zone-a
       KAFKA_LISTENERS: INTER://broker2:9092,HOST://broker2:${BROKER2_PORT}
       KAFKA_ADVERTISED_LISTENERS: INTER://broker2:9092,HOST://localhost:${BROKER2_PORT}
@@ -49,7 +49,7 @@ services:
     ports:
       - "${BROKER3_PORT}:${BROKER3_PORT}"
     environment:
-      KAFKA_BROKER_ID: 3
+      KAFKA_BROKER_ID: 103
       KAFKA_BROKER_RACK: zone-b
       KAFKA_LISTENERS: INTER://broker3:9092,HOST://broker3:${BROKER3_PORT}
       KAFKA_ADVERTISED_LISTENERS: INTER://broker3:9092,HOST://localhost:${BROKER3_PORT}
@@ -66,7 +66,7 @@ services:
     ports:
       - "${BROKER4_PORT}:${BROKER4_PORT}"
     environment:
-      KAFKA_BROKER_ID: 4
+      KAFKA_BROKER_ID: 104
       KAFKA_BROKER_RACK: zone-b
       KAFKA_LISTENERS: INTER://broker4:9092,HOST://broker4:${BROKER4_PORT}
       KAFKA_ADVERTISED_LISTENERS: INTER://broker4:9092,HOST://localhost:${BROKER4_PORT}
@@ -83,7 +83,7 @@ services:
     ports:
       - "${BROKER5_PORT}:${BROKER5_PORT}"
     environment:
-      KAFKA_BROKER_ID: 5
+      KAFKA_BROKER_ID: 105
       KAFKA_BROKER_RACK: zone-c
       KAFKA_LISTENERS: INTER://broker5:9092,HOST://broker5:${BROKER5_PORT}
       KAFKA_ADVERTISED_LISTENERS: INTER://broker5:9092,HOST://localhost:${BROKER5_PORT}
@@ -100,7 +100,7 @@ services:
     ports:
       - "${BROKER6_PORT}:${BROKER6_PORT}"
     environment:
-      KAFKA_BROKER_ID: 6
+      KAFKA_BROKER_ID: 106
       KAFKA_BROKER_RACK: zone-c
       KAFKA_LISTENERS: INTER://broker6:9092,HOST://broker6:${BROKER6_PORT}
       KAFKA_ADVERTISED_LISTENERS: INTER://broker6:9092,HOST://localhost:${BROKER6_PORT}
