@@ -17,8 +17,8 @@ require (
 	github.com/sergi/go-diff v1.1.0
 	github.com/spf13/cobra v1.2.1
 	github.com/testcontainers/testcontainers-go v0.11.1
-	github.com/twmb/franz-go v1.2.2
-	github.com/twmb/franz-go/pkg/kmsg v0.0.0-20211012005532-1508c3b8fa7d
+	github.com/twmb/franz-go v1.2.3
+	github.com/twmb/franz-go/pkg/kmsg v0.0.0-20211104051938-70808186d5f7
 )
 
 require (
