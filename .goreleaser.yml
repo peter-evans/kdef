@@ -65,7 +65,9 @@ brews:
 
 dockers:
   - image_templates:
+      - "peterevans/kdef:latest"
       - "peterevans/kdef:{{ .Version }}"
+      - "ghcr.io/peter-evans/kdef:latest"
       - "ghcr.io/peter-evans/kdef:{{ .Version }}"
     build_flag_templates:
       - "--pull"
