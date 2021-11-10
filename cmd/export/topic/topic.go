@@ -37,8 +37,8 @@ kdef export topic --match "myapp.*"`,
 			if opts.DefinitionFormat == opt.UnsupportedFormat {
 				return fmt.Errorf("\"format\" must be one of %q", strings.Join(opt.DefinitionFormatValidValues, "|"))
 			}
-			opts.Assignments = opt.ParseAssignments(assignments)
-			if opts.Assignments == opt.UnsupportedAssignments {
+			opts.TopicAssignments = opt.ParseAssignments(assignments)
+			if opts.TopicAssignments == opt.UnsupportedAssignments {
 				return fmt.Errorf("\"assignments\" must be one of %q", strings.Join(opt.AssignmentsValidValues, "|"))
 			}
 			return nil
@@ -68,7 +68,7 @@ kdef export topic --match "myapp.*"`,
 	cmd.Flags().BoolVar(&opts.Overwrite, "overwrite", false, "overwrite existing files in output directory")
 	cmd.Flags().StringVarP(&opts.Match, "match", "m", ".*", "regular expression matching topic names to include")
 	cmd.Flags().StringVarP(&opts.Exclude, "exclude", "e", ".^", "regular expression matching topic names to exclude")
-	cmd.Flags().BoolVarP(&opts.IncludeInternal, "include-internal", "i", false, "include internal topics")
+	cmd.Flags().BoolVarP(&opts.TopicIncludeInternal, "include-internal", "i", false, "include internal topics")
 	cmd.Flags().StringVar(
 		&assignments,
 		"assignments",

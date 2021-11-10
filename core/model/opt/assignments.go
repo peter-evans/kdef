@@ -3,10 +3,10 @@ package opt
 type Assignments int8
 
 const (
-	UnsupportedAssignments Assignments = -1
-	NoAssignments          Assignments = 0
-	BrokerAssignments      Assignments = 1
-	RackAssignments        Assignments = 2
+	UnsupportedAssignments Assignments = 0
+	NoAssignments          Assignments = 1
+	BrokerAssignments      Assignments = 2
+	RackAssignments        Assignments = 3
 )
 
 // Valid values for assignments

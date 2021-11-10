@@ -2,11 +2,10 @@ package opt
 
 type DefinitionFormat int8
 
-// TODO: Fix this so that 0 is unknown format
 const (
-	UnsupportedFormat DefinitionFormat = -1
-	YamlFormat        DefinitionFormat = 0
-	JsonFormat        DefinitionFormat = 1
+	UnsupportedFormat DefinitionFormat = 0
+	YamlFormat        DefinitionFormat = 1
+	JsonFormat        DefinitionFormat = 2
 )
 
 // Valid values for definition format
