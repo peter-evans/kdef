@@ -30,9 +30,9 @@ type applier interface {
 // Options to configure an apply controller
 type ApplyControllerOptions struct {
 	// ApplierOptions
+	ReassAwaitTimeout int
 	DefinitionFormat  opt.DefinitionFormat
 	DryRun            bool
-	ReassAwaitTimeout int
 
 	// Apply controller specific
 	ContinueOnError bool

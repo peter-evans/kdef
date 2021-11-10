@@ -13,8 +13,8 @@ import (
 type Format int8
 
 const (
-	Yaml Format = 0
-	Json Format = 1
+	Yaml Format = 1
+	Json Format = 2
 )
 
 var (

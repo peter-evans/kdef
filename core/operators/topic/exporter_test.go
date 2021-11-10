@@ -59,7 +59,9 @@ func Test_exporter_Execute(t *testing.T) {
 
 	// Apply the fixtures
 	for _, yamlDoc := range yamlDocs {
-		applier := NewApplier(cl, yamlDoc, ApplierOptions{})
+		applier := NewApplier(cl, yamlDoc, ApplierOptions{
+			DefinitionFormat: opt.YamlFormat,
+		})
 		res := applier.Execute()
 		if err := res.GetErr(); err != nil {
 			t.Errorf("failed to apply fixture: %v", err)

@@ -29,10 +29,9 @@ type ExportControllerOptions struct {
 	Match   string
 	Exclude string
 
-	// TODO: add topic prefix
 	// ExporterOptions for topic
-	IncludeInternal bool
-	Assignments     opt.Assignments
+	TopicIncludeInternal bool
+	TopicAssignments     opt.Assignments
 
 	// ExporterOptions for acl
 	AclResourceType string
@@ -149,8 +148,8 @@ func (e *exportController) exportResources() (res.ExportResults, error) {
 		exporter = topic.NewExporter(e.cl, topic.ExporterOptions{
 			Match:           e.opts.Match,
 			Exclude:         e.opts.Exclude,
-			IncludeInternal: e.opts.IncludeInternal,
-			Assignments:     e.opts.Assignments,
+			IncludeInternal: e.opts.TopicIncludeInternal,
+			Assignments:     e.opts.TopicAssignments,
 		})
 	}
 
