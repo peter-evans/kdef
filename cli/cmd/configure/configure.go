@@ -1,7 +1,7 @@
 package configure
 
 import (
-	"github.com/peter-evans/kdef/config"
+	"github.com/peter-evans/kdef/cli/config"
 	"github.com/spf13/cobra"
 )
 

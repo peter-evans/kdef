@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/peter-evans/kdef/config"
+	"github.com/peter-evans/kdef/cli/config"
+	"github.com/peter-evans/kdef/cli/ctl/export"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/util/str"
-	"github.com/peter-evans/kdef/ctl/export"
 )
 
 // Creates the export acl command

@@ -9,6 +9,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/ghodss/yaml"
+	"github.com/peter-evans/kdef/cli/ctl/apply/docparse"
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/model/def"
@@ -18,7 +19,6 @@ import (
 	"github.com/peter-evans/kdef/core/operators/broker"
 	"github.com/peter-evans/kdef/core/operators/brokers"
 	"github.com/peter-evans/kdef/core/operators/topic"
-	"github.com/peter-evans/kdef/ctl/apply/docparse"
 )
 
 const cannotContinueOnError = "cannot continue on error"

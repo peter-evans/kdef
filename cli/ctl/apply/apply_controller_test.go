@@ -4,9 +4,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/peter-evans/kdef/cli/test/tutil"
 	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/opt"
-	"github.com/peter-evans/kdef/test/tutil"
 )
 
 func Test_getResourceDefinitions(t *testing.T) {

@@ -6,11 +6,11 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
+	"github.com/peter-evans/kdef/cli/cmd/apply"
+	"github.com/peter-evans/kdef/cli/cmd/configure"
+	"github.com/peter-evans/kdef/cli/cmd/export"
+	"github.com/peter-evans/kdef/cli/config"
 	"github.com/peter-evans/kdef/cli/log"
-	"github.com/peter-evans/kdef/cmd/apply"
-	"github.com/peter-evans/kdef/cmd/configure"
-	"github.com/peter-evans/kdef/cmd/export"
-	"github.com/peter-evans/kdef/config"
 )
 
 // Execute the root command
