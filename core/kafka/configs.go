@@ -69,7 +69,7 @@ func newConfigOps(
 			}
 			if vv != cvv {
 				// Config value has changed
-				log.Debug("Value of config key %q has changed from %q to %q and will be updated", k, cvv, vv)
+				log.Debugf("Value of config key %q has changed from %q to %q and will be updated", k, cvv, vv)
 				configOps = append(configOps, ConfigOperation{
 					Name:  k,
 					Value: v,
@@ -78,7 +78,7 @@ func newConfigOps(
 			}
 		} else {
 			// Config does not exist
-			log.Debug("Config key %q is missing from remote config and will be added", k)
+			log.Debugf("Config key %q is missing from remote config and will be added", k)
 			configOps = append(configOps, ConfigOperation{
 				Name:  k,
 				Value: v,
@@ -95,21 +95,19 @@ func newConfigOps(
 				continue
 			}
 			if _, ok := localConfigs[config.Name]; !ok {
-				log.Debug("Config key %q is missing from local definition and will be deleted", config.Name)
+				log.Debugf("Config key %q is missing from local definition and will be deleted", config.Name)
 				configOps = append(configOps, ConfigOperation{
 					Name: config.Name,
 					Op:   DeleteConfigOperation,
 				})
-			} else {
+			} else if nonIncremental && !configOps.Contains(config.Name) {
 				// For non-incremental, make sure all dynamic keys that exist in local are added
-				if nonIncremental && !configOps.Contains(config.Name) {
-					log.Debug("Config key %q is unchanged and will be preserved", config.Name)
-					configOps = append(configOps, ConfigOperation{
-						Name:  config.Name,
-						Value: config.Value,
-						Op:    SetConfigOperation,
-					})
-				}
+				log.Debugf("Config key %q is unchanged and will be preserved", config.Name)
+				configOps = append(configOps, ConfigOperation{
+					Name:  config.Name,
+					Value: config.Value,
+					Op:    SetConfigOperation,
+				})
 			}
 		}
 	}
@@ -118,12 +116,12 @@ func newConfigOps(
 }
 
 // Execute a request to describe broker configs (Kafka 0.11.0+)
-func describeBrokerConfigs(cl *client.Client, brokerId string) (def.Configs, error) {
+func describeBrokerConfigs(cl *client.Client, brokerID string) (def.Configs, error) {
 	req := kmsg.NewDescribeConfigsRequest()
 
 	res := kmsg.NewDescribeConfigsRequestResource()
 	res.ResourceType = kmsg.ConfigResourceTypeBroker
-	res.ResourceName = brokerId
+	res.ResourceName = brokerID
 	req.Resources = append(req.Resources, res)
 
 	resp, err := describeConfigs(cl, req)
@@ -156,12 +154,12 @@ func describeTopicConfigs(cl *client.Client, topics []string) ([]ResourceConfigs
 		return nil, err
 	}
 
-	var resourceConfigs []ResourceConfigs
-	for _, resource := range resp {
-		resourceConfigs = append(resourceConfigs, ResourceConfigs{
+	resourceConfigs := make([]ResourceConfigs, len(resp))
+	for i, resource := range resp {
+		resourceConfigs[i] = ResourceConfigs{
 			ResourceName: resource.ResourceName,
 			Configs:      newConfigs(resource.Configs),
-		})
+		}
 	}
 
 	return resourceConfigs, nil
@@ -222,13 +220,13 @@ func describeConfigs(cl *client.Client, req kmsg.DescribeConfigsRequest) ([]kmsg
 // Execute a request to perform a non-incremental alter broker configs (Kafka 0.11.0+)
 func alterBrokerConfigs(
 	cl *client.Client,
-	brokerId string,
+	brokerID string,
 	configOps ConfigOperations,
 	validateOnly bool,
 ) error {
 	reqR := kmsg.NewAlterConfigsRequestResource()
 	reqR.ResourceType = kmsg.ConfigResourceTypeBroker
-	reqR.ResourceName = brokerId
+	reqR.ResourceName = brokerID
 	reqR.Configs = buildAlterConfigsResourceConfig(configOps)
 
 	if err := alterConfigs(
@@ -317,13 +315,13 @@ func alterConfigs(
 // Execute a request to perform an incremental alter broker configs (Kafka 2.3.0+)
 func incrementalAlterBrokerConfigs(
 	cl *client.Client,
-	brokerId string,
+	brokerID string,
 	configOps ConfigOperations,
 	validateOnly bool,
 ) error {
 	reqR := kmsg.NewIncrementalAlterConfigsRequestResource()
 	reqR.ResourceType = kmsg.ConfigResourceTypeBroker
-	reqR.ResourceName = brokerId
+	reqR.ResourceName = brokerID
 	reqR.Configs = buildIncrementalAlterConfigsResourceConfig(configOps)
 
 	if err := incrementalAlterConfigs(
@@ -364,13 +362,13 @@ func incrementalAlterTopicConfigs(
 func buildIncrementalAlterConfigsResourceConfig(
 	configOps ConfigOperations,
 ) []kmsg.IncrementalAlterConfigsRequestResourceConfig {
-	var configs []kmsg.IncrementalAlterConfigsRequestResourceConfig
-	for _, co := range configOps {
-		configs = append(configs, kmsg.IncrementalAlterConfigsRequestResourceConfig{
+	configs := make([]kmsg.IncrementalAlterConfigsRequestResourceConfig, len(configOps))
+	for i, co := range configOps {
+		configs[i] = kmsg.IncrementalAlterConfigsRequestResourceConfig{
 			Name:  co.Name,
 			Value: co.Value,
 			Op:    kmsg.IncrementalAlterConfigOp(co.Op),
-		})
+		}
 	}
 	return configs
 }

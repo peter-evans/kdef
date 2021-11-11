@@ -11,7 +11,7 @@ import (
 // Create a new exporter
 func NewExporter(
 	cl *client.Client,
-) *exporter {
+) *exporter { //revive:disable-line:unexported-return
 	return &exporter{
 		srv: kafka.NewService(cl),
 	}
@@ -25,7 +25,7 @@ type exporter struct {
 
 // Execute the export operation
 func (e *exporter) Execute() (res.ExportResults, error) {
-	log.Info("Fetching cluster-wide broker configuration...")
+	log.Infof("Fetching cluster-wide broker configuration...")
 	brokersDef, err := e.getBrokersDefinition()
 	if err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 
 	results := make(res.ExportResults, 1)
 	results[0] = res.ExportResult{
-		Id:  brokersDef.Metadata.Name,
+		ID:  brokersDef.Metadata.Name,
 		Def: brokersDef,
 	}
 

@@ -1,4 +1,4 @@
-package compose_fixture
+package harness
 
 import "fmt"
 
@@ -7,14 +7,14 @@ const (
 	zookeeperPort = 2181
 )
 
-type ComposeFixture struct {
+type ComposeHarness struct {
 	ComposeFilePaths []string
 	ZookeeperPort    int
 	BrokerPort       int
 	Brokers          int
 }
 
-func (t ComposeFixture) Env() map[string]string {
+func (t ComposeHarness) Env() map[string]string {
 	env := map[string]string{
 		"ZOOKEEPER_PORT": fmt.Sprintf("%d", t.ZookeeperPort),
 	}
@@ -29,56 +29,56 @@ func (t ComposeFixture) Env() map[string]string {
 
 // *** Offset ports in use by tests to allow parallel execution ***
 
-var BrokerApplierComposeFixture = ComposeFixture{
+var BrokerApplier = ComposeHarness{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/1-broker-plaintext-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10000,
 	BrokerPort:       brokerPort + 10000,
 	Brokers:          1,
 }
 
-var BrokerExporterComposeFixture = ComposeFixture{
+var BrokerExporter = ComposeHarness{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/2-broker-plaintext-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10100,
 	BrokerPort:       brokerPort + 10100,
 	Brokers:          2,
 }
 
-var BrokersApplierComposeFixture = ComposeFixture{
+var BrokersApplier = ComposeHarness{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/1-broker-plaintext-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10200,
 	BrokerPort:       brokerPort + 10200,
 	Brokers:          1,
 }
 
-var BrokersExporterComposeFixture = ComposeFixture{
+var BrokersExporter = ComposeHarness{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/1-broker-plaintext-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10300,
 	BrokerPort:       brokerPort + 10300,
 	Brokers:          1,
 }
 
-var TopicsApplierComposeFixture = ComposeFixture{
+var TopicsApplier = ComposeHarness{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/6-broker-plaintext-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10400,
 	BrokerPort:       brokerPort + 10400,
 	Brokers:          6,
 }
 
-var TopicsExporterComposeFixture = ComposeFixture{
+var TopicsExporter = ComposeHarness{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/1-broker-plaintext-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10500,
 	BrokerPort:       brokerPort + 10500,
 	Brokers:          1,
 }
 
-var AclApplierComposeFixture = ComposeFixture{
+var ACLApplier = ComposeHarness{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/1-broker-sasl-plain-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10200,
 	BrokerPort:       brokerPort + 10200,
 	Brokers:          1,
 }
 
-var AclExporterComposeFixture = ComposeFixture{
+var ACLExporter = ComposeHarness{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/1-broker-sasl-plain-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10300,
 	BrokerPort:       brokerPort + 10300,

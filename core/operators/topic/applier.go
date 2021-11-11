@@ -33,7 +33,7 @@ func NewApplier(
 	cl *client.Client,
 	defDoc string,
 	opts ApplierOptions,
-) *applier {
+) *applier { //revive:disable-line:unexported-return
 	return &applier{
 		srv:    kafka.NewService(cl),
 		defDoc: defDoc,
@@ -82,11 +82,9 @@ func (a *applier) Execute() *res.ApplyResult {
 	if err := a.apply(); err != nil {
 		a.res.Err = err.Error()
 		log.Error(err)
-	} else {
+	} else if a.ops.pending() && !a.opts.DryRun {
 		// Consider the definition applied if there were ops and this is not a dry run
-		if a.ops.pending() && !a.opts.DryRun {
-			a.res.Applied = true
-		}
+		a.res.Applied = true
 	}
 
 	a.res.Data = res.TopicApplyResultData{
@@ -103,7 +101,7 @@ func (a *applier) apply() error {
 		return err
 	}
 
-	log.Debug("Validating topic definition")
+	log.Debugf("Validating topic definition")
 	if err := a.localDef.Validate(); err != nil {
 		return err
 	}
@@ -114,7 +112,7 @@ func (a *applier) apply() error {
 	}
 
 	// Perform further validations with metadata
-	log.Debug("Validating topic definition using cluster metadata")
+	log.Debugf("Validating topic definition using cluster metadata")
 	if err := a.localDef.ValidateWithMetadata(a.brokers); err != nil {
 		return err
 	}
@@ -158,9 +156,9 @@ func (a *applier) apply() error {
 			}
 		}
 
-		log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Completed apply for topic %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Completed apply for topic %q", a.localDef.Metadata.Name)
 	} else {
-		log.Info("No changes to apply for topic %q", a.localDef.Metadata.Name)
+		log.Infof("No changes to apply for topic %q", a.localDef.Metadata.Name)
 	}
 
 	return nil
@@ -169,11 +167,11 @@ func (a *applier) apply() error {
 // Create the local definition
 func (a *applier) createLocal() error {
 	switch a.opts.DefinitionFormat {
-	case opt.YamlFormat:
+	case opt.YAMLFormat:
 		if err := yaml.Unmarshal([]byte(a.defDoc), &a.localDef); err != nil {
 			return err
 		}
-	case opt.JsonFormat:
+	case opt.JSONFormat:
 		if err := json.Unmarshal([]byte(a.defDoc), &a.localDef); err != nil {
 			return err
 		}
@@ -189,7 +187,7 @@ func (a *applier) createLocal() error {
 
 // Fetch the remote definition and necessary metadata
 func (a *applier) tryFetchRemote() error {
-	log.Info("Checking if topic %q exists...", a.localDef.Metadata.Name)
+	log.Infof("Checking if topic %q exists...", a.localDef.Metadata.Name)
 	var err error
 	a.remoteDef, a.remoteConfigs, a.brokers, err = a.srv.TryRequestTopic(a.localDef.Metadata.Name)
 	if err != nil {
@@ -198,7 +196,7 @@ func (a *applier) tryFetchRemote() error {
 
 	a.ops.create = (a.remoteDef == nil)
 	if a.ops.create {
-		log.Debug("Topic %q does not exist", a.localDef.Metadata.Name)
+		log.Debugf("Topic %q does not exist", a.localDef.Metadata.Name)
 	}
 
 	return nil
@@ -276,10 +274,10 @@ func (a *applier) updateApplyResult() error {
 // Display pending operations
 func (a *applier) displayPendingOps() {
 	if a.ops.create {
-		log.Info("Topic %q does not exist and will be created", a.localDef.Metadata.Name)
+		log.Infof("Topic %q does not exist and will be created", a.localDef.Metadata.Name)
 	}
 
-	log.Info("Topic %q diff (local -> remote):", a.localDef.Metadata.Name)
+	log.Infof("Topic %q diff (local -> remote):", a.localDef.Metadata.Name)
 	fmt.Print(a.res.Diff)
 }
 
@@ -333,7 +331,7 @@ func (a *applier) buildCreateOp() {
 
 // Execute a request to create a topic
 func (a *applier) createTopic() error {
-	log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Creating topic %q...", a.localDef.Metadata.Name)
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Creating topic %q...", a.localDef.Metadata.Name)
 
 	if err := a.srv.CreateTopic(
 		a.localDef,
@@ -341,16 +339,15 @@ func (a *applier) createTopic() error {
 		a.opts.DryRun,
 	); err != nil {
 		return err
-	} else {
-		log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Created topic %q", a.localDef.Metadata.Name)
 	}
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Created topic %q", a.localDef.Metadata.Name)
 
 	return nil
 }
 
 // Build alter configs operations
 func (a *applier) buildConfigOps() error {
-	log.Debug("Comparing local and remote definition configs for topic %q", a.localDef.Metadata.Name)
+	log.Debugf("Comparing local and remote definition configs for topic %q", a.localDef.Metadata.Name)
 
 	var err error
 	a.ops.config, err = a.srv.NewConfigOps(
@@ -373,16 +370,15 @@ func (a *applier) updateConfigs() error {
 		return errors.New("cannot apply configs because deletion of undefined configs is not enabled")
 	}
 
-	log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Altering configs...")
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Altering configs...")
 	if err := a.srv.AlterTopicConfigs(
 		a.localDef.Metadata.Name,
 		a.ops.config,
 		a.opts.DryRun,
 	); err != nil {
 		return err
-	} else {
-		log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Altered configs for topic %q", a.localDef.Metadata.Name)
 	}
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Altered configs for topic %q", a.localDef.Metadata.Name)
 
 	return nil
 }
@@ -394,7 +390,7 @@ func (a *applier) buildPartitionsOp() error {
 	}
 
 	if a.localDef.Spec.Partitions > a.remoteDef.Spec.Partitions {
-		log.Debug(
+		log.Debugf(
 			"The number of partitions has changed and will be increased from %d to %d",
 			a.remoteDef.Spec.Partitions,
 			a.localDef.Spec.Partitions,
@@ -413,7 +409,7 @@ func (a *applier) buildPartitionsOp() error {
 
 // Execute a request to create partitions
 func (a *applier) updatePartitions() error {
-	log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Creating partitions...")
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Creating partitions...")
 
 	if err := a.srv.CreatePartitions(
 		a.localDef.Metadata.Name,
@@ -422,21 +418,21 @@ func (a *applier) updatePartitions() error {
 		a.opts.DryRun,
 	); err != nil {
 		return err
-	} else {
-		log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Created partitions for topic %q", a.localDef.Metadata.Name)
 	}
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Created partitions for topic %q", a.localDef.Metadata.Name)
 
 	return nil
 }
 
 // Build assignments operation
 func (a *applier) buildAssignmentsOp() {
-	if a.localDef.Spec.HasAssignments() {
+	switch {
+	case a.localDef.Spec.HasAssignments():
 		if !cmp.Equal(a.remoteDef.Spec.Assignments, a.localDef.Spec.Assignments) {
-			log.Debug("Partition assignments have changed and will be updated")
+			log.Debugf("Partition assignments have changed and will be updated")
 			a.ops.assignments = a.localDef.Spec.Assignments
 		}
-	} else if a.localDef.Spec.HasRackAssignments() {
+	case a.localDef.Spec.HasRackAssignments():
 		var newAssignments def.PartitionAssignments
 		newAssignments = assignments.Copy(a.remoteDef.Spec.Assignments)
 		if len(a.ops.partitions) > 0 {
@@ -450,31 +446,29 @@ func (a *applier) buildAssignmentsOp() {
 			a.brokers.BrokersByRack(),
 		)
 		if !cmp.Equal(a.remoteDef.Spec.Assignments, newAssignments) {
-			log.Debug("Partition assignments are out of sync with defined racks and will be updated")
+			log.Debugf("Partition assignments are out of sync with defined racks and will be updated")
 			a.ops.assignments = newAssignments
 		}
-	} else {
-		if a.localDef.Spec.ReplicationFactor != a.remoteDef.Spec.ReplicationFactor {
-			log.Debug("Replication factor has changed and will be updated")
-			var newAssignments def.PartitionAssignments
-			newAssignments = assignments.Copy(a.remoteDef.Spec.Assignments)
-			if len(a.ops.partitions) > 0 {
-				// Assignments will include new partitions that will be added
-				newAssignments = append(newAssignments, a.ops.partitions...)
-			}
-			a.ops.assignments = assignments.AlterReplicationFactor(
-				newAssignments,
-				a.localDef.Spec.ReplicationFactor,
-				a.brokers.Ids(),
-			)
+	case a.localDef.Spec.ReplicationFactor != a.remoteDef.Spec.ReplicationFactor:
+		log.Debugf("Replication factor has changed and will be updated")
+		var newAssignments def.PartitionAssignments
+		newAssignments = assignments.Copy(a.remoteDef.Spec.Assignments)
+		if len(a.ops.partitions) > 0 {
+			// Assignments will include new partitions that will be added
+			newAssignments = append(newAssignments, a.ops.partitions...)
 		}
+		a.ops.assignments = assignments.AlterReplicationFactor(
+			newAssignments,
+			a.localDef.Spec.ReplicationFactor,
+			a.brokers.Ids(),
+		)
 	}
 }
 
 // Execute a request to list partition reassignments
 func (a *applier) fetchPartitionReassignments(suppressLog bool) error {
 	if !(suppressLog) {
-		log.Debug("Fetching in-progress partition reassignments for topic %q", a.localDef.Metadata.Name)
+		log.Debugf("Fetching in-progress partition reassignments for topic %q", a.localDef.Metadata.Name)
 	}
 
 	partitions := make([]int32, a.localDef.Spec.Partitions)
@@ -496,7 +490,7 @@ func (a *applier) fetchPartitionReassignments(suppressLog bool) error {
 
 // Display in-progress partition reassignments
 func (a *applier) displayPartitionReassignments() {
-	log.Info("In-progress partition reassignments for topic %q:", a.localDef.Metadata.Name)
+	log.Infof("In-progress partition reassignments for topic %q:", a.localDef.Metadata.Name)
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Partition", "Replicas", "Adding Replicas", "Removing Replicas"})
@@ -525,18 +519,17 @@ func (a *applier) updateAssignments() error {
 			return fmt.Errorf("a partition reassignment is in progress for the topic %q", a.localDef.Metadata.Name)
 		}
 
-		log.Info("Skipped altering partition assignments (dry-run not available)")
+		log.Infof("Skipped altering partition assignments (dry-run not available)")
 	} else {
-		log.Info("Altering partition assignments...")
+		log.Infof("Altering partition assignments...")
 
 		if err := a.srv.AlterPartitionAssignments(
 			a.localDef.Metadata.Name,
 			a.ops.assignments,
 		); err != nil {
 			return err
-		} else {
-			log.Info("Altered partition assignments for topic %q", a.localDef.Metadata.Name)
 		}
+		log.Infof("Altered partition assignments for topic %q", a.localDef.Metadata.Name)
 	}
 
 	return nil
@@ -544,14 +537,14 @@ func (a *applier) updateAssignments() error {
 
 // Await the completion of in-progress partition reassignments
 func (a *applier) awaitReassignments(timeoutSec int) error {
-	log.Info("Awaiting completion of partition reassignments (timeout: %d seconds)...", timeoutSec)
+	log.Infof("Awaiting completion of partition reassignments (timeout: %d seconds)...", timeoutSec)
 	timeout := time.After(time.Duration(timeoutSec) * time.Second)
 
 	remaining := 0
 	for {
 		select {
 		case <-timeout:
-			log.Info("Awaiting completion of partition reassignments timed out after %d seconds", timeoutSec)
+			log.Infof("Awaiting completion of partition reassignments timed out after %d seconds", timeoutSec)
 			return nil
 		default:
 			if err := a.fetchPartitionReassignments(true); err != nil {
@@ -563,7 +556,7 @@ func (a *applier) awaitReassignments(timeoutSec int) error {
 				}
 				remaining = len(a.reassignments)
 			} else {
-				log.Info("Partition reassignments completed")
+				log.Infof("Partition reassignments completed")
 				return nil
 			}
 

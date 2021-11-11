@@ -1,7 +1,7 @@
 package client
 
 // Client configuration
-type ClientConfig struct {
+type Config struct {
 	SeedBrokers []string    `json:"seedBrokers,omitempty"`
 	TLS         *tlsConfig  `json:"tls,omitempty"`
 	SASL        *saslConfig `json:"sasl,omitempty"`

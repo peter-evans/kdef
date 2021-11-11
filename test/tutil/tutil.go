@@ -19,6 +19,7 @@ func ErrorContains(out error, want string) bool {
 
 // Return the byte slice of a test fixture
 func Fixture(t *testing.T, path string) []byte {
+	t.Helper()
 	fileBytes, err := ioutil.ReadFile(path)
 	if err != nil {
 		t.Errorf("failed to load test fixture %q: %v", path, err)

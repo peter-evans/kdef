@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package acl
@@ -13,7 +14,7 @@ import (
 	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/test/compose"
-	"github.com/peter-evans/kdef/core/test/compose_fixture"
+	"github.com/peter-evans/kdef/core/test/harness"
 	"github.com/peter-evans/kdef/core/test/tutil"
 )
 
@@ -24,7 +25,7 @@ func Test_exporter_Execute(t *testing.T) {
 	// Create client
 	cl := tutil.CreateClient(t,
 		[]string{
-			fmt.Sprintf("seedBrokers=localhost:%d", compose_fixture.AclExporterComposeFixture.BrokerPort),
+			fmt.Sprintf("seedBrokers=localhost:%d", harness.ACLExporter.BrokerPort),
 			"sasl.method=plain",
 			"sasl.user=alice",
 			"sasl.pass=alice-secret",
@@ -39,16 +40,16 @@ func Test_exporter_Execute(t *testing.T) {
 		start := time.Now()
 		c := compose.Up(
 			t,
-			compose_fixture.AclExporterComposeFixture.ComposeFilePaths,
-			compose_fixture.AclExporterComposeFixture.Env(),
+			harness.ACLExporter.ComposeFilePaths,
+			harness.ACLExporter.Env(),
 		)
-		if srv.IsKafkaReady(compose_fixture.AclExporterComposeFixture.Brokers, 90) {
+		if srv.IsKafkaReady(harness.ACLExporter.Brokers, 90) {
 			duration := time.Since(start)
-			log.Info("kafka cluster ready in %v", duration)
+			log.Infof("kafka cluster ready in %v", duration)
 			defer compose.Down(t, c)
 			break
 		} else {
-			log.Warn("kafka failed to be ready within timeout")
+			log.Warnf("kafka failed to be ready within timeout")
 			compose.Down(t, c)
 			try++
 		}
@@ -60,12 +61,12 @@ func Test_exporter_Execute(t *testing.T) {
 	}
 
 	// Load YAML doc test fixtures
-	yamlDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/acl/core.operators.acl.exporter.yml")
+	yamlDocs := tutil.FileToYAMLDocs(t, "../../test/fixtures/acl/core.operators.acl.exporter.yml")
 
 	// Apply the fixtures
 	for _, yamlDoc := range yamlDocs {
 		applier := NewApplier(cl, yamlDoc, ApplierOptions{
-			DefinitionFormat: opt.YamlFormat,
+			DefinitionFormat: opt.YAMLFormat,
 		})
 		res := applier.Execute()
 		if err := res.GetErr(); err != nil {
@@ -84,7 +85,7 @@ func Test_exporter_Execute(t *testing.T) {
 	tests := []struct {
 		name     string
 		fields   fields
-		wantJson string
+		wantJSON string
 		wantErr  bool
 	}{
 		{
@@ -98,7 +99,7 @@ func Test_exporter_Execute(t *testing.T) {
 					AutoGroup:    true,
 				},
 			},
-			wantJson: string(tutil.Fixture(t, "../../test/fixtures/acl/core.operators.acl.exporter.1.json")),
+			wantJSON: string(tutil.Fixture(t, "../../test/fixtures/acl/core.operators.acl.exporter.1.json")),
 			wantErr:  false,
 		},
 		{
@@ -112,7 +113,7 @@ func Test_exporter_Execute(t *testing.T) {
 					AutoGroup:    true,
 				},
 			},
-			wantJson: string(tutil.Fixture(t, "../../test/fixtures/acl/core.operators.acl.exporter.2.json")),
+			wantJSON: string(tutil.Fixture(t, "../../test/fixtures/acl/core.operators.acl.exporter.2.json")),
 			wantErr:  false,
 		},
 		{
@@ -126,7 +127,7 @@ func Test_exporter_Execute(t *testing.T) {
 					AutoGroup:    true,
 				},
 			},
-			wantJson: string(tutil.Fixture(t, "../../test/fixtures/acl/core.operators.acl.exporter.3.json")),
+			wantJSON: string(tutil.Fixture(t, "../../test/fixtures/acl/core.operators.acl.exporter.3.json")),
 			wantErr:  false,
 		},
 		{
@@ -140,7 +141,7 @@ func Test_exporter_Execute(t *testing.T) {
 					AutoGroup:    true,
 				},
 			},
-			wantJson: string(tutil.Fixture(t, "../../test/fixtures/acl/core.operators.acl.exporter.4.json")),
+			wantJSON: string(tutil.Fixture(t, "../../test/fixtures/acl/core.operators.acl.exporter.4.json")),
 			wantErr:  false,
 		},
 	}
@@ -157,8 +158,8 @@ func Test_exporter_Execute(t *testing.T) {
 				t.Errorf("failed to convert export result to json: %v", err)
 				t.FailNow()
 			}
-			if !tutil.EqualJSON(t, j, tt.wantJson) {
-				t.Errorf("exporter.Execute().JSON() = %v, want %v", j, tt.wantJson)
+			if !tutil.EqualJSON(t, j, tt.wantJSON) {
+				t.Errorf("exporter.Execute().JSON() = %v, want %v", j, tt.wantJSON)
 			}
 
 			if log.Verbose {

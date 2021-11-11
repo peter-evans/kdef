@@ -12,8 +12,8 @@ import (
 )
 
 // Creates the export topic command
-func Command(cOpts *config.ConfigOptions) *cobra.Command {
-	opts := export.ExportControllerOptions{}
+func Command(cOpts *config.Options) *cobra.Command {
+	opts := export.ControllerOptions{}
 	var definitionFormat string
 	var assignments string
 

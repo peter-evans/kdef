@@ -8,19 +8,19 @@ import (
 )
 
 func TestDiffPatchIntersection(t *testing.T) {
-	fooGroup := def.AclEntryGroup{
+	fooGroup := def.ACLEntryGroup{
 		Principals:     []string{"foo"},
 		Hosts:          []string{"*"},
 		Operations:     []string{"READ"},
 		PermissionType: "ALLOW",
 	}
-	barGroup := def.AclEntryGroup{
+	barGroup := def.ACLEntryGroup{
 		Principals:     []string{"foo"},
 		Hosts:          []string{"*"},
 		Operations:     []string{"WRITE"},
 		PermissionType: "ALLOW",
 	}
-	bazGroup := def.AclEntryGroup{
+	bazGroup := def.ACLEntryGroup{
 		Principals:     []string{"bar"},
 		Hosts:          []string{"*"},
 		Operations:     []string{"CREATE"},
@@ -28,20 +28,20 @@ func TestDiffPatchIntersection(t *testing.T) {
 	}
 
 	type args struct {
-		a def.AclEntryGroups
-		b def.AclEntryGroups
+		a def.ACLEntryGroups
+		b def.ACLEntryGroups
 	}
 	tests := []struct {
 		name             string
 		args             args
-		wantPatch        def.AclEntryGroups
-		wantIntersection def.AclEntryGroups
+		wantPatch        def.ACLEntryGroups
+		wantIntersection def.ACLEntryGroups
 	}{
 		{
 			name: "Tests empty acl entry groups",
 			args: args{
-				a: def.AclEntryGroups{},
-				b: def.AclEntryGroups{},
+				a: def.ACLEntryGroups{},
+				b: def.ACLEntryGroups{},
 			},
 			wantPatch:        nil,
 			wantIntersection: nil,
@@ -49,29 +49,29 @@ func TestDiffPatchIntersection(t *testing.T) {
 		{
 			name: "Tests identical acl entry groups",
 			args: args{
-				a: def.AclEntryGroups{fooGroup, barGroup, bazGroup},
-				b: def.AclEntryGroups{fooGroup, barGroup, bazGroup},
+				a: def.ACLEntryGroups{fooGroup, barGroup, bazGroup},
+				b: def.ACLEntryGroups{fooGroup, barGroup, bazGroup},
 			},
 			wantPatch:        nil,
-			wantIntersection: def.AclEntryGroups{fooGroup, barGroup, bazGroup},
+			wantIntersection: def.ACLEntryGroups{fooGroup, barGroup, bazGroup},
 		},
 		{
 			name: "Tests acl entry groups with no intersection",
 			args: args{
-				a: def.AclEntryGroups{fooGroup, bazGroup},
-				b: def.AclEntryGroups{barGroup},
+				a: def.ACLEntryGroups{fooGroup, bazGroup},
+				b: def.ACLEntryGroups{barGroup},
 			},
-			wantPatch:        def.AclEntryGroups{fooGroup, bazGroup},
+			wantPatch:        def.ACLEntryGroups{fooGroup, bazGroup},
 			wantIntersection: nil,
 		},
 		{
 			name: "Tests acl entry groups with patch and intersection",
 			args: args{
-				a: def.AclEntryGroups{fooGroup, barGroup, bazGroup},
-				b: def.AclEntryGroups{fooGroup, bazGroup},
+				a: def.ACLEntryGroups{fooGroup, barGroup, bazGroup},
+				b: def.ACLEntryGroups{fooGroup, bazGroup},
 			},
-			wantPatch:        def.AclEntryGroups{barGroup},
-			wantIntersection: def.AclEntryGroups{fooGroup, bazGroup},
+			wantPatch:        def.ACLEntryGroups{barGroup},
+			wantIntersection: def.ACLEntryGroups{fooGroup, bazGroup},
 		},
 	}
 	for _, tt := range tests {
@@ -89,42 +89,42 @@ func TestDiffPatchIntersection(t *testing.T) {
 
 func TestMergeGroups(t *testing.T) {
 	type args struct {
-		groups def.AclEntryGroups
+		groups def.ACLEntryGroups
 	}
 	tests := []struct {
 		name string
 		args args
-		want def.AclEntryGroups
+		want def.ACLEntryGroups
 	}{
 		{
 			name: "Test merging acl entry groups (2 iterations)",
 			args: args{
-				groups: def.AclEntryGroups{
-					def.AclEntryGroup{
+				groups: def.ACLEntryGroups{
+					def.ACLEntryGroup{
 						Principals:     []string{"foo"},
 						Hosts:          []string{"*"},
 						Operations:     []string{"READ"},
 						PermissionType: "ALLOW",
 					},
-					def.AclEntryGroup{
+					def.ACLEntryGroup{
 						Principals:     []string{"bar"},
 						Hosts:          []string{"*"},
 						Operations:     []string{"CREATE"},
 						PermissionType: "DENY",
 					},
-					def.AclEntryGroup{
+					def.ACLEntryGroup{
 						Principals:     []string{"foo"},
 						Hosts:          []string{"*"},
 						Operations:     []string{"WRITE"},
 						PermissionType: "ALLOW",
 					},
-					def.AclEntryGroup{
+					def.ACLEntryGroup{
 						Principals:     []string{"baz"},
 						Hosts:          []string{"*"},
 						Operations:     []string{"CREATE"},
 						PermissionType: "DENY",
 					},
-					def.AclEntryGroup{
+					def.ACLEntryGroup{
 						Principals:     []string{"foo"},
 						Hosts:          []string{"*"},
 						Operations:     []string{"CREATE"},
@@ -132,14 +132,14 @@ func TestMergeGroups(t *testing.T) {
 					},
 				},
 			},
-			want: def.AclEntryGroups{
-				def.AclEntryGroup{
+			want: def.ACLEntryGroups{
+				def.ACLEntryGroup{
 					Principals:     []string{"foo"},
 					Hosts:          []string{"*"},
 					Operations:     []string{"READ", "WRITE"},
 					PermissionType: "ALLOW",
 				},
-				def.AclEntryGroup{
+				def.ACLEntryGroup{
 					Principals:     []string{"bar", "baz", "foo"},
 					Hosts:          []string{"*"},
 					Operations:     []string{"CREATE"},
@@ -150,38 +150,38 @@ func TestMergeGroups(t *testing.T) {
 		{
 			name: "Test merging acl entry groups (3 iterations)",
 			args: args{
-				groups: def.AclEntryGroups{
-					def.AclEntryGroup{
+				groups: def.ACLEntryGroups{
+					def.ACLEntryGroup{
 						Principals:     []string{"baz"},
 						Hosts:          []string{"*"},
 						Operations:     []string{"READ", "WRITE"},
 						PermissionType: "ALLOW",
 					},
-					def.AclEntryGroup{
+					def.ACLEntryGroup{
 						Principals:     []string{"bar", "baz"},
 						Hosts:          []string{"*"},
 						Operations:     []string{"DELETE"},
 						PermissionType: "DENY",
 					},
-					def.AclEntryGroup{
+					def.ACLEntryGroup{
 						Principals:     []string{"foo"},
 						Hosts:          []string{"*"},
 						Operations:     []string{"READ"},
 						PermissionType: "ALLOW",
 					},
-					def.AclEntryGroup{
+					def.ACLEntryGroup{
 						Principals:     []string{"bar"},
 						Hosts:          []string{"*"},
 						Operations:     []string{"CREATE"},
 						PermissionType: "DENY",
 					},
-					def.AclEntryGroup{
+					def.ACLEntryGroup{
 						Principals:     []string{"foo"},
 						Hosts:          []string{"*"},
 						Operations:     []string{"WRITE"},
 						PermissionType: "ALLOW",
 					},
-					def.AclEntryGroup{
+					def.ACLEntryGroup{
 						Principals:     []string{"baz"},
 						Hosts:          []string{"*"},
 						Operations:     []string{"CREATE"},
@@ -189,14 +189,14 @@ func TestMergeGroups(t *testing.T) {
 					},
 				},
 			},
-			want: def.AclEntryGroups{
-				def.AclEntryGroup{
+			want: def.ACLEntryGroups{
+				def.ACLEntryGroup{
 					Principals:     []string{"baz", "foo"},
 					Hosts:          []string{"*"},
 					Operations:     []string{"READ", "WRITE"},
 					PermissionType: "ALLOW",
 				},
-				def.AclEntryGroup{
+				def.ACLEntryGroup{
 					Principals:     []string{"bar", "baz"},
 					Hosts:          []string{"*"},
 					Operations:     []string{"DELETE", "CREATE"},

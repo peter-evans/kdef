@@ -13,8 +13,8 @@ import (
 )
 
 // Creates the export acl command
-func Command(cOpts *config.ConfigOptions) *cobra.Command {
-	opts := export.ExportControllerOptions{}
+func Command(cOpts *config.Options) *cobra.Command {
+	opts := export.ControllerOptions{}
 	var definitionFormat string
 
 	cmd := &cobra.Command{
@@ -37,8 +37,8 @@ kdef export acl --match "myapp.*"`,
 			if opts.DefinitionFormat == opt.UnsupportedFormat {
 				return fmt.Errorf("\"format\" must be one of %q", strings.Join(opt.DefinitionFormatValidValues, "|"))
 			}
-			if !str.Contains(opts.AclResourceType, opt.AclResourceTypeValidValues) {
-				return fmt.Errorf("\"type\" must be one of %q", strings.Join(opt.AclResourceTypeValidValues, "|"))
+			if !str.Contains(opts.ACLResourceType, opt.ACLResourceTypeValidValues) {
+				return fmt.Errorf("\"type\" must be one of %q", strings.Join(opt.ACLResourceTypeValidValues, "|"))
 			}
 			return nil
 		},
@@ -69,12 +69,12 @@ kdef export acl --match "myapp.*"`,
 	cmd.Flags().StringVarP(&opts.Match, "match", "m", ".*", "regular expression matching topic names to include")
 	cmd.Flags().StringVarP(&opts.Exclude, "exclude", "e", ".^", "regular expression matching topic names to exclude")
 	cmd.Flags().StringVar(
-		&opts.AclResourceType,
+		&opts.ACLResourceType,
 		"type",
 		"any",
-		fmt.Sprintf("acl resource type [%s]", strings.Join(opt.AclResourceTypeValidValues, "|")),
+		fmt.Sprintf("acl resource type [%s]", strings.Join(opt.ACLResourceTypeValidValues, "|")),
 	)
-	cmd.Flags().BoolVarP(&opts.AclAutoGroup, "auto-group", "g", true, "combine acls into groups for easier management")
+	cmd.Flags().BoolVarP(&opts.ACLAutoGroup, "auto-group", "g", true, "combine acls into groups for easier management")
 
 	return cmd
 }

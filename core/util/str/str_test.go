@@ -6,7 +6,7 @@ import (
 )
 
 func TestDeref(t *testing.T) {
-	var str = "foo"
+	str := "foo"
 
 	type args struct {
 		s *string

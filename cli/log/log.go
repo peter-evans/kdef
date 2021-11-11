@@ -13,14 +13,14 @@ var (
 )
 
 // Print an info level message
-func Info(format string, args ...interface{}) {
+func Infof(format string, args ...interface{}) {
 	if !Quiet {
 		fmt.Printf(format+"\n", args...)
 	}
 }
 
 // Print an info level message with prefixed key
-func InfoWithKey(key string, format string, args ...interface{}) {
+func InfoWithKeyf(key string, format string, args ...interface{}) {
 	if !Quiet {
 		k := color.MagentaString("[%s] ", key)
 		fmt.Printf(k+format+"\n", args...)
@@ -28,23 +28,23 @@ func InfoWithKey(key string, format string, args ...interface{}) {
 }
 
 // Print an info level message optionally with prefixed key
-func InfoMaybeWithKey(key string, showKey bool, format string, args ...interface{}) {
+func InfoMaybeWithKeyf(key string, showKey bool, format string, args ...interface{}) {
 	if showKey {
-		InfoWithKey(key, format, args...)
+		InfoWithKeyf(key, format, args...)
 	} else {
-		Info(format, args...)
+		Infof(format, args...)
 	}
 }
 
 // Print a debug level message
-func Debug(format string, args ...interface{}) {
+func Debugf(format string, args ...interface{}) {
 	if !Quiet && Verbose {
 		color.HiBlack(format, args...)
 	}
 }
 
 // Print a warn level message
-func Warn(format string, args ...interface{}) {
+func Warnf(format string, args ...interface{}) {
 	if !Quiet {
 		k := color.YellowString("[warn] ")
 		fmt.Printf(k+format+"\n", args...)

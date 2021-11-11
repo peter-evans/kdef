@@ -50,10 +50,10 @@ func DefaultConfigPath() string {
 }
 
 // Loads and merges the client configuration from multiple sources
-func loadConfig(configPath string, configOpts []string) (*client.ClientConfig, error) {
-	log.Debug("Loading client config")
+func loadConfig(configPath string, configOpts []string) (*client.Config, error) {
+	log.Debugf("Loading client config")
 
-	var k = koanf.New(".")
+	k := koanf.New(".")
 
 	// Load default values
 	if err := k.Load(confmap.Provider(defaultClientConfig, "."), nil); err != nil {
@@ -63,7 +63,7 @@ func loadConfig(configPath string, configOpts []string) (*client.ClientConfig, e
 	// Load config file
 	if err := k.Load(file.Provider(configPath), yaml.Parser()); err != nil {
 		if os.IsNotExist(err) {
-			log.Debug("No config file found at path %q", configPath)
+			log.Debugf("No config file found at path %q", configPath)
 		} else {
 			return nil, fmt.Errorf("failed to load config file %q: %v", configPath, err)
 		}
@@ -82,7 +82,7 @@ func loadConfig(configPath string, configOpts []string) (*client.ClientConfig, e
 	// Load environment variable overrides
 	if err := k.Load(env.ProviderWithValue(envVarPrefix, ".", func(s string, v string) (string, interface{}) {
 		// Trim the prefix, lowercase, and replace "__" with the "." key delimiter
-		key := strings.Replace(strings.ToLower(strings.TrimPrefix(s, envVarPrefix)), "__", ".", -1)
+		key := strings.ReplaceAll(strings.ToLower(strings.TrimPrefix(s, envVarPrefix)), "__", ".")
 		// Convert to camelcase, e.g. "seed_brokers" -> "seedBrokers"
 		key = strcase.ToLowerCamel(key)
 
@@ -105,13 +105,13 @@ func loadConfig(configPath string, configOpts []string) (*client.ClientConfig, e
 	}
 
 	// Unmarshal to config struct
-	cc := &client.ClientConfig{}
+	cc := &client.Config{}
 	if err := k.UnmarshalWithConf("", cc, koanf.UnmarshalConf{Tag: "json"}); err != nil {
 		return nil, err
 	}
 
 	for _, key := range k.Keys() {
-		log.Debug("%s: %v", key, k.Get(key))
+		log.Debugf("%s: %v", key, k.Get(key))
 	}
 
 	return cc, nil

@@ -24,7 +24,7 @@ import (
 )
 
 // Create a new client
-func New(cc *ClientConfig) (*Client, error) {
+func New(cc *Config) (*Client, error) {
 	cl := &Client{
 		cc: cc,
 		kgoOpts: []kgo.Opt{
@@ -46,7 +46,7 @@ func New(cc *ClientConfig) (*Client, error) {
 // A client providing broker APIs
 type Client struct {
 	Client  *kgo.Client
-	cc      *ClientConfig
+	cc      *Config
 	kgoOpts []kgo.Opt
 }
 
@@ -75,7 +75,7 @@ func (cl *Client) validateNonClientOptConfig() error {
 
 // Build the internal client
 func (cl *Client) buildClient() error {
-	log.Debug("Building Kafka client")
+	log.Debugf("Building Kafka client")
 
 	// Build options to configure a kgo.Client instance
 	if err := cl.buildOptions(); err != nil {
@@ -204,7 +204,7 @@ func (cl *Client) buildTLSOpt() error {
 		candidates := make(map[string]uint16)
 		for _, suite := range append(tls.CipherSuites(), tls.InsecureCipherSuites()...) {
 			candidates[str.Norm(suite.Name)] = suite.ID
-			candidates[str.Norm(strings.TrimPrefix("TLS_", suite.Name))] = suite.ID
+			candidates[str.Norm(strings.TrimPrefix(suite.Name, "TLS_"))] = suite.ID
 		}
 
 		for _, suite := range cl.cc.TLS.CipherSuites {

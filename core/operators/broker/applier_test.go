@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package broker
@@ -14,7 +15,7 @@ import (
 	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/test/compose"
-	"github.com/peter-evans/kdef/core/test/compose_fixture"
+	"github.com/peter-evans/kdef/core/test/harness"
 	"github.com/peter-evans/kdef/core/test/tutil"
 )
 
@@ -79,13 +80,13 @@ func Test_applier_Execute(t *testing.T) {
 
 	// Create client
 	cl := tutil.CreateClient(t,
-		[]string{fmt.Sprintf("seedBrokers=localhost:%d", compose_fixture.BrokerApplierComposeFixture.BrokerPort)},
+		[]string{fmt.Sprintf("seedBrokers=localhost:%d", harness.BrokerApplier.BrokerPort)},
 	)
 
 	// Create client set to use non-incremental alter configs
 	clNonInc := tutil.CreateClient(t,
 		[]string{
-			fmt.Sprintf("seedBrokers=localhost:%d", compose_fixture.BrokerApplierComposeFixture.BrokerPort),
+			fmt.Sprintf("seedBrokers=localhost:%d", harness.BrokerApplier.BrokerPort),
 			"alterConfigsMethod=non-incremental",
 		},
 	)
@@ -98,16 +99,16 @@ func Test_applier_Execute(t *testing.T) {
 		start := time.Now()
 		c := compose.Up(
 			t,
-			compose_fixture.BrokerApplierComposeFixture.ComposeFilePaths,
-			compose_fixture.BrokerApplierComposeFixture.Env(),
+			harness.BrokerApplier.ComposeFilePaths,
+			harness.BrokerApplier.Env(),
 		)
-		if srv.IsKafkaReady(compose_fixture.BrokerApplierComposeFixture.Brokers, 90) {
+		if srv.IsKafkaReady(harness.BrokerApplier.Brokers, 90) {
 			duration := time.Since(start)
-			log.Info("kafka cluster ready in %v", duration)
+			log.Infof("kafka cluster ready in %v", duration)
 			defer compose.Down(t, c)
 			break
 		} else {
-			log.Warn("kafka failed to be ready within timeout")
+			log.Warnf("kafka failed to be ready within timeout")
 			compose.Down(t, c)
 			try++
 		}
@@ -119,7 +120,7 @@ func Test_applier_Execute(t *testing.T) {
 	}
 
 	// Tests changes to configs
-	broker1Docs := tutil.FileToYamlDocs(t, "../../test/fixtures/broker/core.operators.broker.applier.1.yml")
+	broker1Docs := tutil.FileToYAMLDocs(t, "../../test/fixtures/broker/core.operators.broker.applier.1.yml")
 	broker1Diffs := getDiffsFixture(t, "../../test/fixtures/broker/core.operators.broker.applier.1.json")
 	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
@@ -130,7 +131,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: broker1Docs[0],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -145,7 +146,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: broker1Docs[0],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    broker1Diffs[0],
@@ -159,7 +160,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: broker1Docs[1],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -174,7 +175,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: broker1Docs[1],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    broker1Diffs[1],
@@ -188,7 +189,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: broker1Docs[2],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -203,7 +204,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: broker1Docs[2],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    broker1Diffs[2],
@@ -217,7 +218,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      clNonInc,
 				yamlDoc: broker1Docs[3],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -232,7 +233,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      clNonInc,
 				yamlDoc: broker1Docs[3],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    broker1Diffs[3],
@@ -247,7 +248,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      clNonInc,
 				yamlDoc: broker1Docs[4],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -262,7 +263,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      clNonInc,
 				yamlDoc: broker1Docs[5],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    broker1Diffs[5],

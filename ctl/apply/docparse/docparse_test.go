@@ -5,15 +5,14 @@ import (
 	"testing"
 )
 
-func Test_bytesToYamlDocs(t *testing.T) {
+func Test_bytesToYAMLDocs(t *testing.T) {
 	type args struct {
 		bytes []byte
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    []string
-		wantErr bool
+		name string
+		args args
+		want []string
 	}{
 		{
 			name: "Tests basic doc split",
@@ -25,7 +24,6 @@ func Test_bytesToYamlDocs(t *testing.T) {
 				"doc2",
 				"doc3",
 			},
-			wantErr: false,
 		},
 		{
 			name: "Tests doc split with leading separator",
@@ -37,7 +35,6 @@ func Test_bytesToYamlDocs(t *testing.T) {
 				"doc2",
 				"doc3",
 			},
-			wantErr: false,
 		},
 		{
 			name: "Tests doc split with unnecessary whitespace",
@@ -49,7 +46,6 @@ func Test_bytesToYamlDocs(t *testing.T) {
 				"doc2",
 				"doc3",
 			},
-			wantErr: false,
 		},
 		{
 			name: "Tests doc split with YAML comments",
@@ -61,24 +57,18 @@ func Test_bytesToYamlDocs(t *testing.T) {
 				"doc2",
 				"doc3",
 			},
-			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := bytesToYamlDocs(tt.args.bytes)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("bytesToYamlDocs() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("bytesToYamlDocs() = %v, want %v", got, tt.want)
+			if got := bytesToYAMLDocs(tt.args.bytes); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("bytesToYAMLDocs() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_bytesToJsonDocs(t *testing.T) {
+func Test_bytesToJSONDocs(t *testing.T) {
 	type args struct {
 		bytes []byte
 	}
@@ -112,13 +102,13 @@ func Test_bytesToJsonDocs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := bytesToJsonDocs(tt.args.bytes)
+			got, err := bytesToJSONDocs(tt.args.bytes)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("bytesToJsonDocs() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("bytesToJSONDocs() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("bytesToJsonDocs() = %v, want %v", got, tt.want)
+				t.Errorf("bytesToJSONDocs() = %v, want %v", got, tt.want)
 			}
 		})
 	}

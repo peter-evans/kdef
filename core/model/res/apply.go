@@ -21,9 +21,8 @@ type ApplyResult struct {
 func (a ApplyResult) GetErr() error {
 	if len(a.Err) > 0 {
 		return fmt.Errorf(a.Err)
-	} else {
-		return nil
 	}
+	return nil
 }
 
 // Determine if the apply has unapplied changes

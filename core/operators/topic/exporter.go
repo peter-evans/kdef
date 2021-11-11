@@ -24,7 +24,7 @@ type ExporterOptions struct {
 func NewExporter(
 	cl *client.Client,
 	opts ExporterOptions,
-) *exporter {
+) *exporter { //revive:disable-line:unexported-return
 	return &exporter{
 		srv:  kafka.NewService(cl),
 		opts: opts,
@@ -40,7 +40,7 @@ type exporter struct {
 
 // Execute the export operation
 func (e *exporter) Execute() (res.ExportResults, error) {
-	log.Info("Fetching topics...")
+	log.Infof("Fetching topics...")
 	topicDefs, err := e.getTopicDefinitions()
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 	results := make(res.ExportResults, len(topicDefs))
 	for i, topicDef := range topicDefs {
 		results[i] = res.ExportResult{
-			Id:  topicDef.Metadata.Name,
+			ID:  topicDef.Metadata.Name,
 			Def: topicDef,
 		}
 	}

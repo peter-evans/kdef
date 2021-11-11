@@ -23,7 +23,7 @@ type ExporterOptions struct {
 func NewExporter(
 	cl *client.Client,
 	opts ExporterOptions,
-) *exporter {
+) *exporter { //revive:disable-line:unexported-return
 	return &exporter{
 		srv:  kafka.NewService(cl),
 		opts: opts,
@@ -39,8 +39,8 @@ type exporter struct {
 
 // Execute the export operation
 func (e *exporter) Execute() (res.ExportResults, error) {
-	log.Info("Fetching acls...")
-	aclDefs, err := e.getAclDefinitions()
+	log.Infof("Fetching acls...")
+	aclDefs, err := e.getACLDefinitions()
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 	results := make(res.ExportResults, len(aclDefs))
 	for i, aclDef := range aclDefs {
 		results[i] = res.ExportResult{
-			Id:   aclDef.Metadata.Name,
+			ID:   aclDef.Metadata.Name,
 			Type: aclDef.Metadata.Type,
 			Def:  aclDef,
 		}
@@ -64,7 +64,7 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 }
 
 // Return acl definitions for existing resources in a cluster
-func (e *exporter) getAclDefinitions() ([]def.AclDefinition, error) {
+func (e *exporter) getACLDefinitions() ([]def.ACLDefinition, error) {
 	resourceAcls, err := e.srv.DescribeAllResourceAcls(
 		e.opts.ResourceType,
 	)
@@ -81,7 +81,7 @@ func (e *exporter) getAclDefinitions() ([]def.AclDefinition, error) {
 		return nil, err
 	}
 
-	aclDefs := []def.AclDefinition{}
+	aclDefs := []def.ACLDefinition{}
 	for _, resource := range resourceAcls {
 		if !matchRegExp.MatchString(resource.ResourceName) {
 			continue
@@ -95,7 +95,7 @@ func (e *exporter) getAclDefinitions() ([]def.AclDefinition, error) {
 			resAcls = acls.MergeGroups(resAcls)
 		}
 
-		aclDef := def.NewAclDefinition(
+		aclDef := def.NewACLDefinition(
 			resource.ResourceName,
 			resource.ResourceType,
 			resAcls,

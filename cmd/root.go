@@ -27,7 +27,7 @@ func rootCmd(version string) *cobra.Command {
 	var quiet bool
 	var verbose bool
 
-	cOpts := &config.ConfigOptions{}
+	cOpts := &config.Options{}
 
 	cmd := &cobra.Command{
 		Use:   "kdef",

@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package topic
@@ -15,7 +16,7 @@ import (
 	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/test/compose"
-	"github.com/peter-evans/kdef/core/test/compose_fixture"
+	"github.com/peter-evans/kdef/core/test/harness"
 	"github.com/peter-evans/kdef/core/test/tutil"
 	"github.com/twmb/franz-go/pkg/kgo"
 )
@@ -81,13 +82,13 @@ func Test_applier_Execute(t *testing.T) {
 
 	// Create client
 	cl := tutil.CreateClient(t,
-		[]string{fmt.Sprintf("seedBrokers=localhost:%d", compose_fixture.TopicsApplierComposeFixture.BrokerPort)},
+		[]string{fmt.Sprintf("seedBrokers=localhost:%d", harness.TopicsApplier.BrokerPort)},
 	)
 
 	// Create client set to use non-incremental alter configs
 	clNonInc := tutil.CreateClient(t,
 		[]string{
-			fmt.Sprintf("seedBrokers=localhost:%d", compose_fixture.TopicsApplierComposeFixture.BrokerPort),
+			fmt.Sprintf("seedBrokers=localhost:%d", harness.TopicsApplier.BrokerPort),
 			"alterConfigsMethod=non-incremental",
 		},
 	)
@@ -100,16 +101,16 @@ func Test_applier_Execute(t *testing.T) {
 		start := time.Now()
 		c := compose.Up(
 			t,
-			compose_fixture.TopicsApplierComposeFixture.ComposeFilePaths,
-			compose_fixture.TopicsApplierComposeFixture.Env(),
+			harness.TopicsApplier.ComposeFilePaths,
+			harness.TopicsApplier.Env(),
 		)
-		if srv.IsKafkaReady(compose_fixture.TopicsApplierComposeFixture.Brokers, 90) {
+		if srv.IsKafkaReady(harness.TopicsApplier.Brokers, 90) {
 			duration := time.Since(start)
-			log.Info("kafka cluster ready in %v", duration)
+			log.Infof("kafka cluster ready in %v", duration)
 			defer compose.Down(t, c)
 			break
 		} else {
-			log.Warn("kafka failed to be ready within timeout")
+			log.Warnf("kafka failed to be ready within timeout")
 			compose.Down(t, c)
 			try++
 		}
@@ -121,7 +122,7 @@ func Test_applier_Execute(t *testing.T) {
 	}
 
 	// Tests changes to configs
-	fooDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topic/core.operators.topic.applier.foo.yml")
+	fooDocs := tutil.FileToYAMLDocs(t, "../../test/fixtures/topic/core.operators.topic.applier.foo.yml")
 	fooDiffs := getDiffsFixture(t, "../../test/fixtures/topic/core.operators.topic.applier.foo.json")
 	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
@@ -132,7 +133,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: fooDocs[0],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -147,7 +148,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: fooDocs[0],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    fooDiffs[0],
@@ -161,7 +162,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: fooDocs[0],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -176,7 +177,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: fooDocs[1],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -191,7 +192,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: fooDocs[1],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    fooDiffs[1],
@@ -205,7 +206,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: fooDocs[2],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -220,7 +221,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: fooDocs[2],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    fooDiffs[2],
@@ -234,7 +235,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      clNonInc,
 				yamlDoc: fooDocs[3],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -249,7 +250,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      clNonInc,
 				yamlDoc: fooDocs[3],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    fooDiffs[3],
@@ -264,7 +265,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      clNonInc,
 				yamlDoc: fooDocs[4],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -279,7 +280,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      clNonInc,
 				yamlDoc: fooDocs[5],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    fooDiffs[5],
@@ -289,7 +290,7 @@ func Test_applier_Execute(t *testing.T) {
 	})
 
 	// Tests changes to assignments and handling of in-progress reassignments
-	barDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topic/core.operators.topic.applier.bar.yml")
+	barDocs := tutil.FileToYAMLDocs(t, "../../test/fixtures/topic/core.operators.topic.applier.bar.yml")
 	barDiffs := getDiffsFixture(t, "../../test/fixtures/topic/core.operators.topic.applier.bar.json")
 	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
@@ -300,7 +301,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[0],
 				opts: ApplierOptions{
-					DefinitionFormat:  opt.YamlFormat,
+					DefinitionFormat:  opt.YAMLFormat,
 					DryRun:            true,
 					ReassAwaitTimeout: 30,
 				},
@@ -316,7 +317,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[0],
 				opts: ApplierOptions{
-					DefinitionFormat:  opt.YamlFormat,
+					DefinitionFormat:  opt.YAMLFormat,
 					ReassAwaitTimeout: 30,
 				},
 			},
@@ -354,7 +355,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[1],
 				opts: ApplierOptions{
-					DefinitionFormat:  opt.YamlFormat,
+					DefinitionFormat:  opt.YAMLFormat,
 					DryRun:            true,
 					ReassAwaitTimeout: 30,
 				},
@@ -370,7 +371,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[1],
 				opts: ApplierOptions{
-					DefinitionFormat:  opt.YamlFormat,
+					DefinitionFormat:  opt.YAMLFormat,
 					ReassAwaitTimeout: 30,
 				},
 			},
@@ -385,7 +386,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[2],
 				opts: ApplierOptions{
-					DefinitionFormat:  opt.YamlFormat,
+					DefinitionFormat:  opt.YAMLFormat,
 					DryRun:            true,
 					ReassAwaitTimeout: 30,
 				},
@@ -401,7 +402,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[2],
 				opts: ApplierOptions{
-					DefinitionFormat:  opt.YamlFormat,
+					DefinitionFormat:  opt.YAMLFormat,
 					ReassAwaitTimeout: 30,
 				},
 			},
@@ -416,7 +417,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[3],
 				opts: ApplierOptions{
-					DefinitionFormat:  opt.YamlFormat,
+					DefinitionFormat:  opt.YAMLFormat,
 					DryRun:            true,
 					ReassAwaitTimeout: 30,
 				},
@@ -432,7 +433,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[3],
 				opts: ApplierOptions{
-					DefinitionFormat:  opt.YamlFormat,
+					DefinitionFormat:  opt.YAMLFormat,
 					ReassAwaitTimeout: 30,
 				},
 			},
@@ -447,7 +448,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[4],
 				opts: ApplierOptions{
-					DefinitionFormat:  opt.YamlFormat,
+					DefinitionFormat:  opt.YAMLFormat,
 					DryRun:            true,
 					ReassAwaitTimeout: 30,
 				},
@@ -463,7 +464,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: barDocs[4],
 				opts: ApplierOptions{
-					DefinitionFormat:  opt.YamlFormat,
+					DefinitionFormat:  opt.YAMLFormat,
 					ReassAwaitTimeout: 30,
 				},
 			},
@@ -474,7 +475,7 @@ func Test_applier_Execute(t *testing.T) {
 	})
 
 	// Tests partition and replication factor changes (without static assignments)
-	bazDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topic/core.operators.topic.applier.baz.yml")
+	bazDocs := tutil.FileToYAMLDocs(t, "../../test/fixtures/topic/core.operators.topic.applier.baz.yml")
 	bazDiffs := getDiffsFixture(t, "../../test/fixtures/topic/core.operators.topic.applier.baz.json")
 	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
@@ -485,7 +486,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: bazDocs[0],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -500,7 +501,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: bazDocs[0],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    bazDiffs[0],
@@ -514,7 +515,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: bazDocs[1],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -529,7 +530,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: bazDocs[1],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    bazDiffs[1],
@@ -543,7 +544,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: bazDocs[2],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -558,7 +559,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: bazDocs[2],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    bazDiffs[2],
@@ -572,7 +573,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: bazDocs[3],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -587,7 +588,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: bazDocs[3],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    bazDiffs[3],
@@ -601,7 +602,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: bazDocs[4],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -616,7 +617,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: bazDocs[4],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    bazDiffs[4],
@@ -626,7 +627,7 @@ func Test_applier_Execute(t *testing.T) {
 	})
 
 	// Tests rack assignments
-	quxDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topic/core.operators.topic.applier.qux.yml")
+	quxDocs := tutil.FileToYAMLDocs(t, "../../test/fixtures/topic/core.operators.topic.applier.qux.yml")
 	quxDiffs := getDiffsFixture(t, "../../test/fixtures/topic/core.operators.topic.applier.qux.json")
 	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
@@ -637,7 +638,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: quxDocs[0],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -652,7 +653,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: quxDocs[0],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    quxDiffs[0],
@@ -666,7 +667,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: quxDocs[1],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -681,7 +682,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: quxDocs[1],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    quxDiffs[1],
@@ -695,7 +696,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: quxDocs[2],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -710,7 +711,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: quxDocs[2],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    quxDiffs[2],
@@ -724,7 +725,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: quxDocs[3],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -739,7 +740,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: quxDocs[3],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    quxDiffs[3],
@@ -753,7 +754,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: quxDocs[4],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -768,7 +769,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: quxDocs[4],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    quxDiffs[4],

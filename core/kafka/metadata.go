@@ -16,7 +16,7 @@ import (
 
 // Cluster metadata
 type Metadata struct {
-	ClusterId string
+	ClusterID string
 	Brokers   meta.Brokers
 	Topics    []TopicMetadata
 }
@@ -58,13 +58,13 @@ func describeMetadata(cl *client.Client, topics []string, errorOnNonExistence bo
 	var brokers meta.Brokers
 	for _, broker := range resp.Brokers {
 		brokers = append(brokers, meta.Broker{
-			Id:   broker.NodeID,
+			ID:   broker.NodeID,
 			Rack: str.Deref(broker.Rack),
 		})
 	}
 
-	var tms []TopicMetadata
-	for _, t := range resp.Topics {
+	tms := make([]TopicMetadata, len(resp.Topics))
+	for i, t := range resp.Topics {
 		exists := t.ErrorCode != kerr.UnknownTopicOrPartition.Code
 		if err := kerr.ErrorForCode(t.ErrorCode); err != nil && (errorOnNonExistence || exists) {
 			return nil, err
@@ -91,11 +91,11 @@ func describeMetadata(cl *client.Client, topics []string, errorOnNonExistence bo
 			}
 		}
 
-		tms = append(tms, tm)
+		tms[i] = tm
 	}
 
 	metadata := Metadata{
-		ClusterId: str.Deref(resp.ClusterID),
+		ClusterID: str.Deref(resp.ClusterID),
 		Brokers:   brokers,
 		Topics:    tms,
 	}

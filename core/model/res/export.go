@@ -8,8 +8,8 @@ import (
 
 // An export result
 type ExportResult struct {
-	// TODO: Change Id to name?
-	Id   string      `json:"id"`
+	// TODO: Change ID to name?
+	ID   string      `json:"id"`
 	Type string      `json:"type,omitempty"`
 	Def  interface{} `json:"definition"`
 }
@@ -23,7 +23,7 @@ func (e ExportResults) Sort() {
 	//nolint
 	slice.Sort(e[:], func(i, j int) bool {
 		return e[i].Type < e[j].Type ||
-			e[i].Type == e[j].Type && e[i].Id < e[j].Id
+			e[i].Type == e[j].Type && e[i].ID < e[j].ID
 	})
 }
 
@@ -31,7 +31,7 @@ func (e ExportResults) Sort() {
 func (e ExportResults) Ids() []string {
 	ids := make([]string, len(e))
 	for i, r := range e {
-		ids[i] = r.Id
+		ids[i] = r.ID
 	}
 	return ids
 }

@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package broker
@@ -12,7 +13,7 @@ import (
 	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/test/compose"
-	"github.com/peter-evans/kdef/core/test/compose_fixture"
+	"github.com/peter-evans/kdef/core/test/harness"
 	"github.com/peter-evans/kdef/core/test/tutil"
 )
 
@@ -22,7 +23,7 @@ func Test_exporter_Execute(t *testing.T) {
 
 	// Create client
 	cl := tutil.CreateClient(t,
-		[]string{fmt.Sprintf("seedBrokers=localhost:%d", compose_fixture.BrokerExporterComposeFixture.BrokerPort)},
+		[]string{fmt.Sprintf("seedBrokers=localhost:%d", harness.BrokerExporter.BrokerPort)},
 	)
 
 	// Create the test cluster
@@ -33,16 +34,16 @@ func Test_exporter_Execute(t *testing.T) {
 		start := time.Now()
 		c := compose.Up(
 			t,
-			compose_fixture.BrokerExporterComposeFixture.ComposeFilePaths,
-			compose_fixture.BrokerExporterComposeFixture.Env(),
+			harness.BrokerExporter.ComposeFilePaths,
+			harness.BrokerExporter.Env(),
 		)
-		if srv.IsKafkaReady(compose_fixture.BrokerExporterComposeFixture.Brokers, 90) {
+		if srv.IsKafkaReady(harness.BrokerExporter.Brokers, 90) {
 			duration := time.Since(start)
-			log.Info("kafka cluster ready in %v", duration)
+			log.Infof("kafka cluster ready in %v", duration)
 			defer compose.Down(t, c)
 			break
 		} else {
-			log.Warn("kafka failed to be ready within timeout")
+			log.Warnf("kafka failed to be ready within timeout")
 			compose.Down(t, c)
 			try++
 		}
@@ -59,7 +60,7 @@ func Test_exporter_Execute(t *testing.T) {
 	tests := []struct {
 		name     string
 		fields   fields
-		wantJson string
+		wantJSON string
 		wantErr  bool
 	}{
 		{
@@ -67,7 +68,7 @@ func Test_exporter_Execute(t *testing.T) {
 			fields: fields{
 				cl: cl,
 			},
-			wantJson: string(tutil.Fixture(t, "../../test/fixtures/broker/core.operators.broker.exporter.1.json")),
+			wantJSON: string(tutil.Fixture(t, "../../test/fixtures/broker/core.operators.broker.exporter.1.json")),
 			wantErr:  false,
 		},
 	}
@@ -84,8 +85,8 @@ func Test_exporter_Execute(t *testing.T) {
 				t.Errorf("failed to convert export result to json: %v", err)
 				t.FailNow()
 			}
-			if !tutil.EqualJSON(t, j, tt.wantJson) {
-				t.Errorf("exporter.Execute().JSON() = %v, want %v", j, tt.wantJson)
+			if !tutil.EqualJSON(t, j, tt.wantJSON) {
+				t.Errorf("exporter.Execute().JSON() = %v, want %v", j, tt.wantJSON)
 			}
 
 			if log.Verbose {

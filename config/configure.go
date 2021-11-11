@@ -41,7 +41,7 @@ func Configure() error {
 	fmt.Println(intro)
 
 	fmt.Println(promptSeedBrokers)
-	var seedBrokers = s.PromptMultiline(">", []string{"localhost:9092"})
+	seedBrokers := s.PromptMultiline(">", []string{"localhost:9092"})
 	rootConfig := map[string]interface{}{
 		"seedBrokers": seedBrokers,
 	}
@@ -50,7 +50,7 @@ func Configure() error {
 	saslConfig := configureSASL(s)
 
 	// Load config
-	var k = koanf.New(".")
+	k := koanf.New(".")
 	if err := k.Load(confmap.Provider(rootConfig, "."), nil); err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func Configure() error {
 	}
 
 	// Unmarshal to config struct
-	cc := &client.ClientConfig{}
+	cc := &client.Config{}
 	if err := k.UnmarshalWithConf("", cc, koanf.UnmarshalConf{Tag: "json"}); err != nil {
 		return fmt.Errorf("failed to unmarshal config: %v", err)
 	}
@@ -89,10 +89,10 @@ func Configure() error {
 	}
 
 	// Write the config file
-	if err := os.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
 		return fmt.Errorf("failed to create configuration directory: %v", err)
 	}
-	if err = ioutil.WriteFile(configPath, y, 0666); err != nil {
+	if err = ioutil.WriteFile(configPath, y, 0o666); err != nil {
 		return fmt.Errorf("failed to write configuration file: %v", err)
 	}
 	fmt.Printf("\nCreated configuration file at %s\n", configPath)

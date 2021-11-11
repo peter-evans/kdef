@@ -34,7 +34,7 @@ var aclOperations = []string{
 var aclPermissionTypes = []string{"ALLOW", "DENY"}
 
 // Acl entry group
-type AclEntryGroup struct {
+type ACLEntryGroup struct {
 	Principals     []string `json:"principals"`
 	Hosts          []string `json:"hosts"`
 	Operations     []string `json:"operations"`
@@ -42,10 +42,10 @@ type AclEntryGroup struct {
 }
 
 // A slice of acl entry groups
-type AclEntryGroups []AclEntryGroup
+type ACLEntryGroups []ACLEntryGroup
 
 // Validate acl entry groups
-func (a AclEntryGroups) Validate() error {
+func (a ACLEntryGroups) Validate() error {
 	for _, group := range a {
 		for _, operation := range group.Operations {
 			if !str.Contains(operation, aclOperations) {
@@ -61,7 +61,7 @@ func (a AclEntryGroups) Validate() error {
 }
 
 // Determine if an acl entry is contained in any group
-func (a AclEntryGroups) Contains(
+func (a ACLEntryGroups) Contains(
 	principal string,
 	host string,
 	operation string,
@@ -79,7 +79,7 @@ func (a AclEntryGroups) Contains(
 }
 
 // Sort acl entry groups
-func (a AclEntryGroups) Sort() {
+func (a ACLEntryGroups) Sort() {
 	// TODO: Use sort.Slice in the standard library after upgrading to Go 1.8
 	//nolint
 	slice.Sort(a[:], func(i, j int) bool {
@@ -97,28 +97,28 @@ func (a AclEntryGroups) Sort() {
 }
 
 // Acl spec definition
-type AclSpecDefinition struct {
-	Acls                AclEntryGroups `json:"acls,omitempty"`
+type ACLSpecDefinition struct {
+	Acls                ACLEntryGroups `json:"acls,omitempty"`
 	DeleteUndefinedAcls bool           `json:"deleteUndefinedAcls"`
 }
 
 // Top-level acl definition
-type AclDefinition struct {
+type ACLDefinition struct {
 	ResourceDefinition
-	Spec AclSpecDefinition `json:"spec"`
+	Spec ACLSpecDefinition `json:"spec"`
 }
 
 // Create a copy of this AclDefinition
-func (a AclDefinition) Copy() AclDefinition {
+func (a ACLDefinition) Copy() ACLDefinition {
 	copiers := copy.New()
-	copier := copiers.Get(&AclDefinition{}, &AclDefinition{})
-	aclDefCopy := AclDefinition{}
+	copier := copiers.Get(&ACLDefinition{}, &ACLDefinition{})
+	aclDefCopy := ACLDefinition{}
 	copier.Copy(&aclDefCopy, &a)
 	return aclDefCopy
 }
 
 // Validate definition
-func (a AclDefinition) Validate() error {
+func (a ACLDefinition) Validate() error {
 	if err := a.ValidateResource(); err != nil {
 		return err
 	}
@@ -143,21 +143,21 @@ func (a AclDefinition) Validate() error {
 }
 
 // Create a acl definition from metadata and config
-func NewAclDefinition(
+func NewACLDefinition(
 	name string,
 	resourceType string,
-	acls AclEntryGroups,
-) AclDefinition {
-	aclDef := AclDefinition{
+	acls ACLEntryGroups,
+) ACLDefinition {
+	aclDef := ACLDefinition{
 		ResourceDefinition: ResourceDefinition{
-			ApiVersion: "v1",
+			APIVersion: "v1",
 			Kind:       "acl",
 			Metadata: ResourceMetadataDefinition{
 				Name: name,
 				Type: resourceType,
 			},
 		},
-		Spec: AclSpecDefinition{
+		Spec: ACLSpecDefinition{
 			Acls: acls,
 		},
 	}

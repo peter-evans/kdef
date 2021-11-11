@@ -1,0 +1,10 @@
+linters:
+  enable:
+    - gocritic
+    - gofumpt
+    - prealloc
+    - predeclared
+    - revive
+    - thelper
+    - unconvert
+    - unparam
