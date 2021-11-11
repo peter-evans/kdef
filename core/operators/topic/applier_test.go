@@ -21,7 +21,7 @@ import (
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
-// VERBOSE_TESTS=1 go test -run ^Test_applier_Execute$ ./core/operators/topic -v
+// VERBOSE_TESTS=1 go test --tags=integration -run ^Test_applier_Execute$ ./core/operators/topic -v
 func Test_applier_Execute(t *testing.T) {
 	_, log.Verbose = os.LookupEnv("VERBOSE_TESTS")
 

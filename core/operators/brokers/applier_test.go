@@ -19,7 +19,7 @@ import (
 	"github.com/peter-evans/kdef/core/test/tutil"
 )
 
-// VERBOSE_TESTS=1 go test -run ^Test_applier_Execute$ ./core/operators/brokers -v
+// VERBOSE_TESTS=1 go test --tags=integration -run ^Test_applier_Execute$ ./core/operators/brokers -v
 func Test_applier_Execute(t *testing.T) {
 	_, log.Verbose = os.LookupEnv("VERBOSE_TESTS")
 
