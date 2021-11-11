@@ -26,7 +26,7 @@ type ResourceMetadataDefinition struct {
 
 // Top-level definition of a resource
 type ResourceDefinition struct {
-	ApiVersion string                     `json:"apiVersion"`
+	APIVersion string                     `json:"apiVersion"`
 	Kind       string                     `json:"kind"`
 	Metadata   ResourceMetadataDefinition `json:"metadata"`
 }
@@ -34,8 +34,8 @@ type ResourceDefinition struct {
 // Validate resource definition
 func (r ResourceDefinition) ValidateResource() error {
 	if versions, ok := definitionKindVersions[r.Kind]; ok {
-		if !str.Contains(r.ApiVersion, versions) {
-			return fmt.Errorf("invalid definition apiVersion %q", r.ApiVersion)
+		if !str.Contains(r.APIVersion, versions) {
+			return fmt.Errorf("invalid definition apiVersion %q", r.APIVersion)
 		}
 	} else {
 		return fmt.Errorf("invalid definition kind %q", r.Kind)

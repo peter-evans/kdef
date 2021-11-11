@@ -9,7 +9,7 @@ import (
 // Compute the line-oriented diff between the JSON representation of two structs
 func Diff(a interface{}, b interface{}) (string, error) {
 	// Convert interface to JSON handling null pointers
-	toJson := func(d interface{}) (string, error) {
+	toJSON := func(d interface{}) (string, error) {
 		j := "null"
 		if d != nil {
 			jBytes, err := json.MarshalIndent(d, "", "  ")
@@ -21,19 +21,19 @@ func Diff(a interface{}, b interface{}) (string, error) {
 		return j, nil
 	}
 
-	aJson, err := toJson(a)
+	aJSON, err := toJSON(a)
 	if err != nil {
 		return "", err
 	}
 
-	bJson, err := toJson(b)
+	bJSON, err := toJSON(b)
 	if err != nil {
 		return "", err
 	}
 
-	if aJson != bJson {
-		return diff.LineOriented(aJson, bJson), nil
-	} else {
-		return "", nil
+	if aJSON != bJSON {
+		return diff.LineOriented(aJSON, bJSON), nil
 	}
+
+	return "", nil
 }

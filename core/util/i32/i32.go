@@ -18,9 +18,8 @@ func ContainsDuplicate(s []int32) bool {
 	for _, ss := range s {
 		if k[ss] {
 			return true
-		} else {
-			k[ss] = true
 		}
+		k[ss] = true
 	}
 	return false
 }
@@ -42,7 +41,7 @@ func Diff(a []int32, b []int32) []int32 {
 
 // Return the maximum element in the slice
 func Max(s []int32) int32 {
-	var max int32 = s[0]
+	max := s[0]
 	for _, v := range s {
 		if max < v {
 			max = v

@@ -11,7 +11,7 @@ import (
 )
 
 // Creates the export command
-func Command(cOpts *config.ConfigOptions) *cobra.Command {
+func Command(cOpts *config.Options) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export cluster resources to YAML definitions",

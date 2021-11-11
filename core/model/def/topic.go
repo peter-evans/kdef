@@ -95,8 +95,8 @@ func (t TopicDefinition) Validate() error {
 				return fmt.Errorf("number of replicas in each rack assignment must match replication factor")
 			}
 
-			for _, rackId := range replicas {
-				if len(rackId) == 0 {
+			for _, rackID := range replicas {
+				if len(rackID) == 0 {
 					return fmt.Errorf("rack ids cannot be an empty string")
 				}
 			}
@@ -131,7 +131,7 @@ func (t TopicDefinition) ValidateWithMetadata(brokers meta.Brokers) error {
 		// Warn if the cluster has no rack ID set on brokers
 		for _, broker := range brokers {
 			if len(broker.Rack) == 0 {
-				log.Warn("unable to use broker id %q in rack assignments because it has no rack id", fmt.Sprint(broker.Id))
+				log.Warnf("unable to use broker id %q in rack assignments because it has no rack id", fmt.Sprint(broker.ID))
 			}
 		}
 
@@ -140,23 +140,23 @@ func (t TopicDefinition) ValidateWithMetadata(brokers meta.Brokers) error {
 
 		// Check the rack IDs in the rack assignments are valid
 		for partition, replicas := range t.Spec.RackAssignments {
-			rackIdCounts := make(map[string]int)
-			for _, rackId := range replicas {
-				if !str.Contains(rackId, brokers.Racks()) {
-					return fmt.Errorf("invalid rack id %q in rack assignments", rackId)
+			rackIDCounts := make(map[string]int)
+			for _, rackID := range replicas {
+				if !str.Contains(rackID, brokers.Racks()) {
+					return fmt.Errorf("invalid rack id %q in rack assignments", rackID)
 				}
-				rackIdCounts[rackId]++
+				rackIDCounts[rackID]++
 			}
 
 			// Check there are enough available brokers for the number of times a rack ID has been used in this partition
 			// e.g. if rack id "zone-a" is specified for three replicas in the same partition, but "zone-a" only contains
 			// two brokers, then the assignment is not possible.
-			for rackId, count := range rackIdCounts {
-				rackBrokerCount := len(brokersByRack[rackId])
+			for rackID, count := range rackIDCounts {
+				rackBrokerCount := len(brokersByRack[rackID])
 				if count > rackBrokerCount {
 					return fmt.Errorf(
 						"rack id %q contains %d brokers, but is specified for %d replicas in partition %d",
-						rackId,
+						rackID,
 						rackBrokerCount,
 						count,
 						partition,
@@ -181,7 +181,7 @@ func NewTopicDefinition(
 ) TopicDefinition {
 	topicDef := TopicDefinition{
 		ResourceDefinition: ResourceDefinition{
-			ApiVersion: "v1",
+			APIVersion: "v1",
 			Kind:       "topic",
 			Metadata: ResourceMetadataDefinition{
 				Name: name,

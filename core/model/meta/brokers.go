@@ -4,7 +4,7 @@ import "sort"
 
 // A cluster broker
 type Broker struct {
-	Id   int32
+	ID   int32
 	Rack string
 }
 
@@ -15,7 +15,7 @@ type Brokers []Broker
 func (b Brokers) Ids() []int32 {
 	ids := make([]int32, len(b))
 	for i, broker := range b {
-		ids[i] = broker.Id
+		ids[i] = broker.ID
 	}
 	return ids
 }
@@ -25,7 +25,7 @@ func (b Brokers) BrokersByRack() map[string][]int32 {
 	k := make(map[string][]int32)
 	for _, broker := range b {
 		if len(broker.Rack) > 0 {
-			k[broker.Rack] = append(k[broker.Rack], broker.Id)
+			k[broker.Rack] = append(k[broker.Rack], broker.ID)
 		}
 	}
 	return k
@@ -33,9 +33,12 @@ func (b Brokers) BrokersByRack() map[string][]int32 {
 
 // A unique, sorted slice of non-empty broker rack IDs
 func (b Brokers) Racks() []string {
-	var ids []string
-	for id := range b.BrokersByRack() {
-		ids = append(ids, id)
+	bbr := b.BrokersByRack()
+	ids := make([]string, len(bbr))
+	i := 0
+	for id := range bbr {
+		ids[i] = id
+		i++
 	}
 	sort.Strings(ids)
 	return ids
@@ -45,7 +48,7 @@ func (b Brokers) Racks() []string {
 func (b Brokers) RacksByBroker() map[int32]string {
 	k := make(map[int32]string)
 	for _, broker := range b {
-		k[broker.Id] = broker.Rack
+		k[broker.ID] = broker.Rack
 	}
 	return k
 }

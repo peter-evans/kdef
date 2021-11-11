@@ -9,7 +9,7 @@ import (
 
 func TestTopicDefinition_Validate(t *testing.T) {
 	resDef := ResourceDefinition{
-		ApiVersion: "v1",
+		APIVersion: "v1",
 		Kind:       "topic",
 		Metadata: ResourceMetadataDefinition{
 			Name: "foo",
@@ -178,19 +178,19 @@ func TestTopicDefinition_Validate(t *testing.T) {
 
 func TestTopicDefinition_ValidateWithMetadata(t *testing.T) {
 	resDef := ResourceDefinition{
-		ApiVersion: "v1",
+		APIVersion: "v1",
 		Kind:       "topic",
 		Metadata: ResourceMetadataDefinition{
 			Name: "foo",
 		},
 	}
 	brokers := meta.Brokers{
-		meta.Broker{Id: 1, Rack: "zone-a"},
-		meta.Broker{Id: 2, Rack: "zone-a"},
-		meta.Broker{Id: 3, Rack: "zone-b"},
-		meta.Broker{Id: 4, Rack: "zone-b"},
-		meta.Broker{Id: 5, Rack: "zone-c"},
-		meta.Broker{Id: 6, Rack: "zone-c"},
+		meta.Broker{ID: 1, Rack: "zone-a"},
+		meta.Broker{ID: 2, Rack: "zone-a"},
+		meta.Broker{ID: 3, Rack: "zone-b"},
+		meta.Broker{ID: 4, Rack: "zone-b"},
+		meta.Broker{ID: 5, Rack: "zone-c"},
+		meta.Broker{ID: 6, Rack: "zone-c"},
 	}
 
 	type args struct {

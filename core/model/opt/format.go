@@ -4,8 +4,8 @@ type DefinitionFormat int8
 
 const (
 	UnsupportedFormat DefinitionFormat = 0
-	YamlFormat        DefinitionFormat = 1
-	JsonFormat        DefinitionFormat = 2
+	YAMLFormat        DefinitionFormat = 1
+	JSONFormat        DefinitionFormat = 2
 )
 
 // Valid values for definition format
@@ -15,9 +15,9 @@ var DefinitionFormatValidValues = []string{"yaml", "json"}
 func ParseDefinitionFormat(format string) DefinitionFormat {
 	switch format {
 	case "yaml":
-		return YamlFormat
+		return YAMLFormat
 	case "json":
-		return JsonFormat
+		return JSONFormat
 	default:
 		return UnsupportedFormat
 	}
@@ -26,9 +26,9 @@ func ParseDefinitionFormat(format string) DefinitionFormat {
 // File extension for the format
 func (d DefinitionFormat) Ext() string {
 	switch d {
-	case YamlFormat:
+	case YAMLFormat:
 		return "yml"
-	case JsonFormat:
+	case JSONFormat:
 		return "json"
 	default:
 		return "unsupported"

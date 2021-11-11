@@ -26,7 +26,7 @@ func NewApplier(
 	cl *client.Client,
 	defDoc string,
 	opts ApplierOptions,
-) *applier {
+) *applier { //revive:disable-line:unexported-return
 	return &applier{
 		srv:    kafka.NewService(cl),
 		defDoc: defDoc,
@@ -36,8 +36,8 @@ func NewApplier(
 
 // Applier operations
 type applierOps struct {
-	addAcls    def.AclEntryGroups
-	deleteAcls def.AclEntryGroups
+	addAcls    def.ACLEntryGroups
+	deleteAcls def.ACLEntryGroups
 }
 
 // Determine if there are any pending operations
@@ -54,9 +54,9 @@ type applier struct {
 	opts   ApplierOptions
 
 	// internal
-	localDef   def.AclDefinition
-	remoteDef  def.AclDefinition
-	remoteAcls def.AclEntryGroups
+	localDef   def.ACLDefinition
+	remoteDef  def.ACLDefinition
+	remoteAcls def.ACLEntryGroups
 	ops        applierOps
 
 	// result
@@ -68,11 +68,9 @@ func (a *applier) Execute() *res.ApplyResult {
 	if err := a.apply(); err != nil {
 		a.res.Err = err.Error()
 		log.Error(err)
-	} else {
+	} else if a.ops.pending() && !a.opts.DryRun {
 		// Consider the definition applied if there were ops and this is not a dry run
-		if a.ops.pending() && !a.opts.DryRun {
-			a.res.Applied = true
-		}
+		a.res.Applied = true
 	}
 
 	return &a.res
@@ -85,7 +83,7 @@ func (a *applier) apply() error {
 		return err
 	}
 
-	log.Debug("Validating acl definition")
+	log.Debugf("Validating acl definition")
 	if err := a.localDef.Validate(); err != nil {
 		return err
 	}
@@ -116,9 +114,9 @@ func (a *applier) apply() error {
 			return err
 		}
 
-		log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Completed apply for acl %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Completed apply for acl %q", a.localDef.Metadata.Name)
 	} else {
-		log.Info("No changes to apply for acl %q", a.localDef.Metadata.Name)
+		log.Infof("No changes to apply for acl %q", a.localDef.Metadata.Name)
 	}
 
 	return nil
@@ -127,11 +125,11 @@ func (a *applier) apply() error {
 // Create the local definition
 func (a *applier) createLocal() error {
 	switch a.opts.DefinitionFormat {
-	case opt.YamlFormat:
+	case opt.YAMLFormat:
 		if err := yaml.Unmarshal([]byte(a.defDoc), &a.localDef); err != nil {
 			return err
 		}
-	case opt.JsonFormat:
+	case opt.JSONFormat:
 		if err := json.Unmarshal([]byte(a.defDoc), &a.localDef); err != nil {
 			return err
 		}
@@ -140,12 +138,12 @@ func (a *applier) createLocal() error {
 	}
 
 	// Explode the local acl entry groups to one entry per group
-	var explodedAcls def.AclEntryGroups
+	var explodedAcls def.ACLEntryGroups
 	for _, group := range a.localDef.Spec.Acls {
 		for _, principal := range group.Principals {
 			for _, host := range group.Hosts {
 				for _, operation := range group.Operations {
-					explodedAcls = append(explodedAcls, def.AclEntryGroup{
+					explodedAcls = append(explodedAcls, def.ACLEntryGroup{
 						Principals:     []string{principal},
 						Hosts:          []string{host},
 						Operations:     []string{operation},
@@ -166,7 +164,7 @@ func (a *applier) createLocal() error {
 
 // Fetch the remote definition and necessary metadata
 func (a *applier) fetchRemote() error {
-	log.Info("Fetching acls...")
+	log.Infof("Fetching acls...")
 	var err error
 	a.remoteAcls, err = a.srv.DescribeResourceAcls(
 		a.localDef.Metadata.Name,
@@ -176,7 +174,7 @@ func (a *applier) fetchRemote() error {
 		return err
 	}
 
-	a.remoteDef = def.NewAclDefinition(
+	a.remoteDef = def.NewACLDefinition(
 		a.localDef.Metadata.Name,
 		a.localDef.Metadata.Type,
 		a.remoteAcls,
@@ -187,7 +185,7 @@ func (a *applier) fetchRemote() error {
 
 // Build acl operations
 func (a *applier) buildOps() error {
-	if err := a.buildAclOps(); err != nil {
+	if err := a.buildACLOps(); err != nil {
 		return err
 	}
 	return nil
@@ -229,7 +227,7 @@ func (a *applier) updateApplyResult() error {
 
 // Display pending operations
 func (a *applier) displayPendingOps() {
-	log.Info("Acl %q diff (local -> remote):", a.localDef.Metadata.Name)
+	log.Infof("Acl %q diff (local -> remote):", a.localDef.Metadata.Name)
 	fmt.Print(a.res.Diff)
 }
 
@@ -251,8 +249,8 @@ func (a *applier) executeOps() error {
 }
 
 // Build acl operations
-func (a *applier) buildAclOps() error {
-	log.Debug("Comparing local and remote definition acls for %q", a.localDef.Metadata.Name)
+func (a *applier) buildACLOps() error {
+	log.Debugf("Comparing local and remote definition acls for %q", a.localDef.Metadata.Name)
 
 	a.ops.addAcls, _ = acls.DiffPatchIntersection(a.localDef.Spec.Acls, a.remoteAcls)
 	if a.localDef.Spec.DeleteUndefinedAcls {
@@ -265,18 +263,17 @@ func (a *applier) buildAclOps() error {
 // Add acls
 func (a *applier) addAcls() error {
 	if a.opts.DryRun {
-		log.Info("Skipped adding acls (dry-run not available)")
+		log.Infof("Skipped adding acls (dry-run not available)")
 	} else {
-		log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Adding acls...")
+		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Adding acls...")
 		if err := a.srv.CreateAcls(
 			a.localDef.Metadata.Name,
 			a.localDef.Metadata.Type,
 			a.ops.addAcls,
 		); err != nil {
 			return err
-		} else {
-			log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Added acls for %q", a.localDef.Metadata.Name)
 		}
+		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Added acls for %q", a.localDef.Metadata.Name)
 	}
 
 	return nil
@@ -285,18 +282,17 @@ func (a *applier) addAcls() error {
 // Delete acls
 func (a *applier) deleteAcls() error {
 	if a.opts.DryRun {
-		log.Info("Skipped deleting acls (dry-run not available)")
+		log.Infof("Skipped deleting acls (dry-run not available)")
 	} else {
-		log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Deleting acls...")
+		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Deleting acls...")
 		if err := a.srv.DeleteAcls(
 			a.localDef.Metadata.Name,
 			a.localDef.Metadata.Type,
 			a.ops.deleteAcls,
 		); err != nil {
 			return err
-		} else {
-			log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Deleted acls for %q", a.localDef.Metadata.Name)
 		}
+		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Deleted acls for %q", a.localDef.Metadata.Name)
 	}
 
 	return nil

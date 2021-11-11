@@ -14,9 +14,9 @@ func TestBrokers_Ids(t *testing.T) {
 		{
 			name: "Test return of a broker ID slice",
 			b: Brokers{
-				Broker{Id: 1, Rack: "zone-a"},
-				Broker{Id: 2, Rack: "zone-b"},
-				Broker{Id: 3, Rack: "zone-c"},
+				Broker{ID: 1, Rack: "zone-a"},
+				Broker{ID: 2, Rack: "zone-b"},
+				Broker{ID: 3, Rack: "zone-c"},
 			},
 			want: []int32{1, 2, 3},
 		},
@@ -39,12 +39,12 @@ func TestBrokers_BrokersByRack(t *testing.T) {
 		{
 			name: "Test return of brokers by rack ID",
 			b: Brokers{
-				Broker{Id: 1, Rack: "zone-a"},
-				Broker{Id: 2, Rack: "zone-b"},
-				Broker{Id: 3, Rack: "zone-c"},
-				Broker{Id: 4, Rack: "zone-a"},
-				Broker{Id: 5, Rack: ""}, // Rack id not set on broker
-				Broker{Id: 6, Rack: "zone-c"},
+				Broker{ID: 1, Rack: "zone-a"},
+				Broker{ID: 2, Rack: "zone-b"},
+				Broker{ID: 3, Rack: "zone-c"},
+				Broker{ID: 4, Rack: "zone-a"},
+				Broker{ID: 5, Rack: ""}, // Rack id not set on broker
+				Broker{ID: 6, Rack: "zone-c"},
 			},
 			want: map[string][]int32{
 				"zone-a": {1, 4},
@@ -71,12 +71,12 @@ func TestBrokers_Racks(t *testing.T) {
 		{
 			name: "Test return of a unique rack ID slice",
 			b: Brokers{
-				Broker{Id: 1, Rack: "zone-a"},
-				Broker{Id: 2, Rack: "zone-b"},
-				Broker{Id: 3, Rack: "zone-c"},
-				Broker{Id: 4, Rack: "zone-a"},
-				Broker{Id: 5, Rack: ""}, // Rack id not set on broker
-				Broker{Id: 6, Rack: "zone-c"},
+				Broker{ID: 1, Rack: "zone-a"},
+				Broker{ID: 2, Rack: "zone-b"},
+				Broker{ID: 3, Rack: "zone-c"},
+				Broker{ID: 4, Rack: "zone-a"},
+				Broker{ID: 5, Rack: ""}, // Rack id not set on broker
+				Broker{ID: 6, Rack: "zone-c"},
 			},
 			want: []string{"zone-a", "zone-b", "zone-c"},
 		},
@@ -99,12 +99,12 @@ func TestBrokers_RacksByBroker(t *testing.T) {
 		{
 			name: "Test return of racks by broker ID",
 			b: Brokers{
-				Broker{Id: 1, Rack: "zone-a"},
-				Broker{Id: 2, Rack: "zone-b"},
-				Broker{Id: 3, Rack: "zone-c"},
-				Broker{Id: 4, Rack: "zone-a"},
-				Broker{Id: 5, Rack: ""}, // Rack id not set on broker
-				Broker{Id: 6, Rack: "zone-c"},
+				Broker{ID: 1, Rack: "zone-a"},
+				Broker{ID: 2, Rack: "zone-b"},
+				Broker{ID: 3, Rack: "zone-c"},
+				Broker{ID: 4, Rack: "zone-a"},
+				Broker{ID: 5, Rack: ""}, // Rack id not set on broker
+				Broker{ID: 6, Rack: "zone-c"},
 			},
 			want: map[int32]string{
 				1: "zone-a",

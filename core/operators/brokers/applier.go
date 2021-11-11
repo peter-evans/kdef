@@ -26,7 +26,7 @@ func NewApplier(
 	cl *client.Client,
 	defDoc string,
 	opts ApplierOptions,
-) *applier {
+) *applier { //revive:disable-line:unexported-return
 	return &applier{
 		srv:    kafka.NewService(cl),
 		defDoc: defDoc,
@@ -66,11 +66,9 @@ func (a *applier) Execute() *res.ApplyResult {
 	if err := a.apply(); err != nil {
 		a.res.Err = err.Error()
 		log.Error(err)
-	} else {
+	} else if a.ops.pending() && !a.opts.DryRun {
 		// Consider the definition applied if there were ops and this is not a dry run
-		if a.ops.pending() && !a.opts.DryRun {
-			a.res.Applied = true
-		}
+		a.res.Applied = true
 	}
 
 	return &a.res
@@ -83,7 +81,7 @@ func (a *applier) apply() error {
 		return err
 	}
 
-	log.Debug("Validating brokers definition")
+	log.Debugf("Validating brokers definition")
 	if err := a.localDef.Validate(); err != nil {
 		return err
 	}
@@ -114,9 +112,9 @@ func (a *applier) apply() error {
 			return err
 		}
 
-		log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Completed apply for brokers %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Completed apply for brokers %q", a.localDef.Metadata.Name)
 	} else {
-		log.Info("No changes to apply for brokers %q", a.localDef.Metadata.Name)
+		log.Infof("No changes to apply for brokers %q", a.localDef.Metadata.Name)
 	}
 
 	return nil
@@ -125,11 +123,11 @@ func (a *applier) apply() error {
 // Create the local definition
 func (a *applier) createLocal() error {
 	switch a.opts.DefinitionFormat {
-	case opt.YamlFormat:
+	case opt.YAMLFormat:
 		if err := yaml.Unmarshal([]byte(a.defDoc), &a.localDef); err != nil {
 			return err
 		}
-	case opt.JsonFormat:
+	case opt.JSONFormat:
 		if err := json.Unmarshal([]byte(a.defDoc), &a.localDef); err != nil {
 			return err
 		}
@@ -145,7 +143,7 @@ func (a *applier) createLocal() error {
 
 // Fetch the remote definition and necessary metadata
 func (a *applier) fetchRemote() error {
-	log.Info("Fetching brokers configuration...")
+	log.Infof("Fetching brokers configuration...")
 	var err error
 	a.remoteConfigs, err = a.srv.DescribeAllBrokerConfigs()
 	if err != nil {
@@ -208,7 +206,7 @@ func (a *applier) updateApplyResult() error {
 
 // Display pending operations
 func (a *applier) displayPendingOps() {
-	log.Info("Brokers %q diff (local -> remote):", a.localDef.Metadata.Name)
+	log.Infof("Brokers %q diff (local -> remote):", a.localDef.Metadata.Name)
 	fmt.Print(a.res.Diff)
 }
 
@@ -225,7 +223,7 @@ func (a *applier) executeOps() error {
 
 // Build alter configs operations
 func (a *applier) buildConfigOps() error {
-	log.Debug("Comparing local and remote definition configs for brokers %q", a.localDef.Metadata.Name)
+	log.Debugf("Comparing local and remote definition configs for brokers %q", a.localDef.Metadata.Name)
 
 	var err error
 	a.ops.config, err = a.srv.NewConfigOps(
@@ -248,15 +246,14 @@ func (a *applier) updateConfigs() error {
 		return errors.New("cannot apply configs because deletion of undefined configs is not enabled")
 	}
 
-	log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Altering configs...")
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Altering configs...")
 	if err := a.srv.AlterAllBrokerConfigs(
 		a.ops.config,
 		a.opts.DryRun,
 	); err != nil {
 		return err
-	} else {
-		log.InfoMaybeWithKey("dry-run", a.opts.DryRun, "Altered configs for brokers %q", a.localDef.Metadata.Name)
 	}
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Altered configs for brokers %q", a.localDef.Metadata.Name)
 
 	return nil
 }

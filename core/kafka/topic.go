@@ -57,12 +57,14 @@ func createTopic(
 	assignments def.PartitionAssignments,
 	validateOnly bool,
 ) error {
-	var configs []kmsg.CreateTopicsRequestTopicConfig
+	configs := make([]kmsg.CreateTopicsRequestTopicConfig, len(topicDef.Spec.Configs))
+	i := 0
 	for k, v := range topicDef.Spec.Configs {
-		configs = append(configs, kmsg.CreateTopicsRequestTopicConfig{
+		configs[i] = kmsg.CreateTopicsRequestTopicConfig{
 			Name:  k,
 			Value: v,
-		})
+		}
+		i++
 	}
 
 	reqT := kmsg.NewCreateTopicsRequestTopic()
@@ -121,11 +123,11 @@ func createPartitions(
 	assignments def.PartitionAssignments,
 	validateOnly bool,
 ) error {
-	var assignment []kmsg.CreatePartitionsRequestTopicAssignment
-	for _, replicas := range assignments {
-		assignment = append(assignment, kmsg.CreatePartitionsRequestTopicAssignment{
+	assignment := make([]kmsg.CreatePartitionsRequestTopicAssignment, len(assignments))
+	for i, replicas := range assignments {
+		assignment[i] = kmsg.CreatePartitionsRequestTopicAssignment{
 			Replicas: replicas,
-		})
+		}
 	}
 
 	t := kmsg.NewCreatePartitionsRequestTopic()
@@ -167,12 +169,12 @@ func alterPartitionAssignments(
 	topic string,
 	assignments def.PartitionAssignments,
 ) error {
-	var partitions []kmsg.AlterPartitionAssignmentsRequestTopicPartition
+	partitions := make([]kmsg.AlterPartitionAssignmentsRequestTopicPartition, len(assignments))
 	for i, replicas := range assignments {
-		partitions = append(partitions, kmsg.AlterPartitionAssignmentsRequestTopicPartition{
+		partitions[i] = kmsg.AlterPartitionAssignmentsRequestTopicPartition{
 			Partition: int32(i),
 			Replicas:  replicas,
-		})
+		}
 	}
 
 	t := kmsg.NewAlterPartitionAssignmentsRequestTopic()

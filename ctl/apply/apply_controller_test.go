@@ -24,7 +24,7 @@ func Test_getResourceDefinitions(t *testing.T) {
 			name: "Tests invalid doc (YAML)",
 			args: args{
 				defDocs: []string{"foo"},
-				format:  opt.YamlFormat,
+				format:  opt.YAMLFormat,
 			},
 			want:    nil,
 			wantErr: "error unmarshaling JSON",
@@ -33,7 +33,7 @@ func Test_getResourceDefinitions(t *testing.T) {
 			name: "Tests invalid kind (YAML)",
 			args: args{
 				defDocs: []string{"apiVersion: v1\nkind: foo"},
-				format:  opt.YamlFormat,
+				format:  opt.YAMLFormat,
 			},
 			want:    nil,
 			wantErr: "invalid definition kind",
@@ -42,7 +42,7 @@ func Test_getResourceDefinitions(t *testing.T) {
 			name: "Tests invalid apiVersion (YAML)",
 			args: args{
 				defDocs: []string{"apiVersion: foo\nkind: topic"},
-				format:  opt.YamlFormat,
+				format:  opt.YAMLFormat,
 			},
 			want:    nil,
 			wantErr: "invalid definition apiVersion",
@@ -56,11 +56,11 @@ func Test_getResourceDefinitions(t *testing.T) {
 					"apiVersion: v1\nkind: brokers\nmetadata:\n  name: brokers_foo",
 					"apiVersion: v1\nkind: topic\nmetadata:\n  name: topic_foo",
 				},
-				format: opt.YamlFormat,
+				format: opt.YAMLFormat,
 			},
 			want: []def.ResourceDefinition{
 				{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "acl",
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "topic_foo",
@@ -68,21 +68,21 @@ func Test_getResourceDefinitions(t *testing.T) {
 					},
 				},
 				{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "broker",
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "1",
 					},
 				},
 				{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "brokers",
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "brokers_foo",
 					},
 				},
 				{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "topic",
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "topic_foo",
@@ -95,7 +95,7 @@ func Test_getResourceDefinitions(t *testing.T) {
 			name: "Tests invalid doc (JSON)",
 			args: args{
 				defDocs: []string{"invalid json"},
-				format:  opt.JsonFormat,
+				format:  opt.JSONFormat,
 			},
 			want:    nil,
 			wantErr: "invalid character 'i' looking for beginning of value",
@@ -104,7 +104,7 @@ func Test_getResourceDefinitions(t *testing.T) {
 			name: "Tests invalid kind (JSON)",
 			args: args{
 				defDocs: []string{"{\"apiVersion\": \"v1\", \"kind\": \"foo\"}"},
-				format:  opt.JsonFormat,
+				format:  opt.JSONFormat,
 			},
 			want:    nil,
 			wantErr: "invalid definition kind",
@@ -113,7 +113,7 @@ func Test_getResourceDefinitions(t *testing.T) {
 			name: "Tests invalid apiVersion (JSON)",
 			args: args{
 				defDocs: []string{"{\"apiVersion\": \"foo\", \"kind\": \"topic\"}"},
-				format:  opt.JsonFormat,
+				format:  opt.JSONFormat,
 			},
 			want:    nil,
 			wantErr: "invalid definition apiVersion",
@@ -127,11 +127,11 @@ func Test_getResourceDefinitions(t *testing.T) {
 					"{\"apiVersion\": \"v1\", \"kind\": \"brokers\", \"metadata\": {\"name\": \"brokers_foo\"}}",
 					"{\"apiVersion\": \"v1\", \"kind\": \"topic\", \"metadata\": {\"name\": \"topic_foo\"}}",
 				},
-				format: opt.YamlFormat,
+				format: opt.YAMLFormat,
 			},
 			want: []def.ResourceDefinition{
 				{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "acl",
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "topic_foo",
@@ -139,21 +139,21 @@ func Test_getResourceDefinitions(t *testing.T) {
 					},
 				},
 				{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "broker",
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "1",
 					},
 				},
 				{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "brokers",
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "brokers_foo",
 					},
 				},
 				{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "topic",
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "topic_foo",

@@ -13,7 +13,7 @@ import (
 // Create a new exporter
 func NewExporter(
 	cl *client.Client,
-) *exporter {
+) *exporter { //revive:disable-line:unexported-return
 	return &exporter{
 		srv: kafka.NewService(cl),
 	}
@@ -27,7 +27,7 @@ type exporter struct {
 
 // Execute the export operation
 func (e *exporter) Execute() (res.ExportResults, error) {
-	log.Info("Fetching per-broker configuration...")
+	log.Infof("Fetching per-broker configuration...")
 	brokerDefs, err := e.getBrokerDefinitions()
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 	results := make(res.ExportResults, len(brokerDefs))
 	for i, brokerDef := range brokerDefs {
 		results[i] = res.ExportResult{
-			Id:  brokerDef.Metadata.Name,
+			ID:  brokerDef.Metadata.Name,
 			Def: brokerDef,
 		}
 	}
@@ -60,13 +60,13 @@ func (e *exporter) getBrokerDefinitions() ([]def.BrokerDefinition, error) {
 
 	brokerDefs := []def.BrokerDefinition{}
 	for _, broker := range metadata.Brokers {
-		brokerIdStr := fmt.Sprint(broker.Id)
-		brokerConfigs, err := e.srv.DescribeBrokerConfigs(brokerIdStr)
+		brokerIDStr := fmt.Sprint(broker.ID)
+		brokerConfigs, err := e.srv.DescribeBrokerConfigs(brokerIDStr)
 		if err != nil {
 			return nil, err
 		}
 		brokerDefs = append(
-			brokerDefs, def.NewBrokerDefinition(brokerIdStr, brokerConfigs.ToExportableMap()),
+			brokerDefs, def.NewBrokerDefinition(brokerIDStr, brokerConfigs.ToExportableMap()),
 		)
 	}
 

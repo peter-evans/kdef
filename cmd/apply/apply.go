@@ -13,8 +13,8 @@ import (
 )
 
 // Creates the apply command
-func Command(cOpts *config.ConfigOptions) *cobra.Command {
-	opts := apply.ApplyControllerOptions{}
+func Command(cOpts *config.Options) *cobra.Command {
+	opts := apply.ControllerOptions{}
 	var definitionFormat string
 
 	cmd := &cobra.Command{
@@ -52,14 +52,14 @@ cat topics/my_topic.yml | kdef apply - --dry-run`,
 			return nil
 		},
 		RunE: func(_ *cobra.Command, args []string) error {
-			if opts.JsonOutput {
+			if opts.JSONOutput {
 				log.Quiet = true
 			}
 			if opts.ExitCode {
 				opts.DryRun = true
 			}
 			if opts.DryRun {
-				log.InfoWithKey("dry-run", "Enabled")
+				log.InfoWithKeyf("dry-run", "Enabled")
 			}
 
 			cl, err := config.NewClient(cOpts)
@@ -85,7 +85,7 @@ cat topics/my_topic.yml | kdef apply - --dry-run`,
 	)
 	cmd.Flags().BoolVarP(&opts.DryRun, "dry-run", "d", false, "validate and review the operation only")
 	cmd.Flags().BoolVarP(&opts.ExitCode, "exit-code", "e", false, "implies --dry-run and causes the program to exit with 1 if there are unapplied changes and 0 otherwise")
-	cmd.Flags().BoolVar(&opts.JsonOutput, "json-output", false, "implies --quiet and outputs JSON apply results")
+	cmd.Flags().BoolVar(&opts.JSONOutput, "json-output", false, "implies --quiet and outputs JSON apply results")
 	cmd.Flags().BoolVarP(&opts.ContinueOnError, "continue-on-error", "c", false, "applying resource definitions is not interrupted if there are errors")
 	cmd.Flags().IntVarP(&opts.ReassAwaitTimeout, "reass-await-timeout", "r", 0, "time in seconds to wait for topic partition reassignments to complete before timing out")
 

@@ -13,8 +13,8 @@ import (
 type Format int8
 
 const (
-	Yaml Format = 1
-	Json Format = 2
+	YAML Format = 1
+	JSON Format = 2
 )
 
 var (
@@ -30,14 +30,10 @@ func FromFile(filepath string, format Format) ([]string, error) {
 	}
 
 	switch format {
-	case Yaml:
-		yamlDocs, err := bytesToYamlDocs(fileBytes)
-		if err != nil {
-			return nil, err
-		}
-		return yamlDocs, nil
-	case Json:
-		jsonDocs, err := bytesToJsonDocs(fileBytes)
+	case YAML:
+		return bytesToYAMLDocs(fileBytes), nil
+	case JSON:
+		jsonDocs, err := bytesToJSONDocs(fileBytes)
 		if err != nil {
 			return nil, err
 		}
@@ -60,14 +56,10 @@ func FromStdin(format Format) ([]string, error) {
 	}
 
 	switch format {
-	case Yaml:
-		yamlDocs, err := bytesToYamlDocs(stdinBytes)
-		if err != nil {
-			return nil, err
-		}
-		return yamlDocs, nil
-	case Json:
-		jsonDocs, err := bytesToJsonDocs(stdinBytes)
+	case YAML:
+		return bytesToYAMLDocs(stdinBytes), nil
+	case JSON:
+		jsonDocs, err := bytesToJSONDocs(stdinBytes)
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +70,7 @@ func FromStdin(format Format) ([]string, error) {
 }
 
 // Converts bytes to a slice of yaml documents
-func bytesToYamlDocs(bytes []byte) ([]string, error) {
+func bytesToYAMLDocs(bytes []byte) []string {
 	// Remove yaml comments
 	cleanFileBytes := yamlCommentRegExp.ReplaceAll(bytes, []byte("$1"))
 
@@ -92,11 +84,11 @@ func bytesToYamlDocs(bytes []byte) ([]string, error) {
 			yamlDocs = append(yamlDocs, doc)
 		}
 	}
-	return yamlDocs, nil
+	return yamlDocs
 }
 
 // Converts bytes to a slice of json documents
-func bytesToJsonDocs(bytes []byte) ([]string, error) {
+func bytesToJSONDocs(bytes []byte) ([]string, error) {
 	var iBytes interface{}
 	if err := json.Unmarshal(bytes, &iBytes); err != nil {
 		return nil, err

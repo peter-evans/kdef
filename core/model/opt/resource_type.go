@@ -1,7 +1,7 @@
 package opt
 
 // Valid values for acl resource type
-var AclResourceTypeValidValues = []string{
+var ACLResourceTypeValidValues = []string{
 	"any",
 	"topic",
 	"group",

@@ -45,11 +45,11 @@ func (b BrokerDefinition) Validate() error {
 // Further validate definition using metadata
 func (b BrokerDefinition) ValidateWithMetadata(brokers meta.Brokers) error {
 	// Check the value of metadata name is a valid broker ID
-	brokerId, err := i32.ParseStr(b.Metadata.Name)
+	brokerID, err := i32.ParseStr(b.Metadata.Name)
 	if err != nil {
 		return err
 	}
-	if !i32.Contains(brokerId, brokers.Ids()) {
+	if !i32.Contains(brokerID, brokers.Ids()) {
 		return fmt.Errorf("metadata name must be the id of an available broker")
 	}
 
@@ -63,7 +63,7 @@ func NewBrokerDefinition(
 ) BrokerDefinition {
 	brokerDef := BrokerDefinition{
 		ResourceDefinition: ResourceDefinition{
-			ApiVersion: "v1",
+			APIVersion: "v1",
 			Kind:       "broker",
 			Metadata: ResourceMetadataDefinition{
 				Name: name,

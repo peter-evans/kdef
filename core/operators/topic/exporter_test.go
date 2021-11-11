@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package topic
@@ -13,7 +14,7 @@ import (
 	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/test/compose"
-	"github.com/peter-evans/kdef/core/test/compose_fixture"
+	"github.com/peter-evans/kdef/core/test/harness"
 	"github.com/peter-evans/kdef/core/test/tutil"
 )
 
@@ -23,7 +24,7 @@ func Test_exporter_Execute(t *testing.T) {
 
 	// Create client
 	cl := tutil.CreateClient(t,
-		[]string{fmt.Sprintf("seedBrokers=localhost:%d", compose_fixture.TopicsExporterComposeFixture.BrokerPort)},
+		[]string{fmt.Sprintf("seedBrokers=localhost:%d", harness.TopicsExporter.BrokerPort)},
 	)
 
 	// Create the test cluster
@@ -34,16 +35,16 @@ func Test_exporter_Execute(t *testing.T) {
 		start := time.Now()
 		c := compose.Up(
 			t,
-			compose_fixture.TopicsExporterComposeFixture.ComposeFilePaths,
-			compose_fixture.TopicsExporterComposeFixture.Env(),
+			harness.TopicsExporter.ComposeFilePaths,
+			harness.TopicsExporter.Env(),
 		)
-		if srv.IsKafkaReady(compose_fixture.TopicsExporterComposeFixture.Brokers, 90) {
+		if srv.IsKafkaReady(harness.TopicsExporter.Brokers, 90) {
 			duration := time.Since(start)
-			log.Info("kafka cluster ready in %v", duration)
+			log.Infof("kafka cluster ready in %v", duration)
 			defer compose.Down(t, c)
 			break
 		} else {
-			log.Warn("kafka failed to be ready within timeout")
+			log.Warnf("kafka failed to be ready within timeout")
 			compose.Down(t, c)
 			try++
 		}
@@ -55,12 +56,12 @@ func Test_exporter_Execute(t *testing.T) {
 	}
 
 	// Load YAML doc test fixtures
-	yamlDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/topic/core.operators.topic.exporter.yml")
+	yamlDocs := tutil.FileToYAMLDocs(t, "../../test/fixtures/topic/core.operators.topic.exporter.yml")
 
 	// Apply the fixtures
 	for _, yamlDoc := range yamlDocs {
 		applier := NewApplier(cl, yamlDoc, ApplierOptions{
-			DefinitionFormat: opt.YamlFormat,
+			DefinitionFormat: opt.YAMLFormat,
 		})
 		res := applier.Execute()
 		if err := res.GetErr(); err != nil {
@@ -79,7 +80,7 @@ func Test_exporter_Execute(t *testing.T) {
 	tests := []struct {
 		name     string
 		fields   fields
-		wantJson string
+		wantJSON string
 		wantErr  bool
 	}{
 		{
@@ -91,7 +92,7 @@ func Test_exporter_Execute(t *testing.T) {
 					Exclude: ".^",
 				},
 			},
-			wantJson: string(tutil.Fixture(t, "../../test/fixtures/topic/core.operators.topic.exporter.1.json")),
+			wantJSON: string(tutil.Fixture(t, "../../test/fixtures/topic/core.operators.topic.exporter.1.json")),
 			wantErr:  false,
 		},
 		{
@@ -104,7 +105,7 @@ func Test_exporter_Execute(t *testing.T) {
 					IncludeInternal: true,
 				},
 			},
-			wantJson: string(tutil.Fixture(t, "../../test/fixtures/topic/core.operators.topic.exporter.2.json")),
+			wantJSON: string(tutil.Fixture(t, "../../test/fixtures/topic/core.operators.topic.exporter.2.json")),
 			wantErr:  false,
 		},
 		{
@@ -116,7 +117,7 @@ func Test_exporter_Execute(t *testing.T) {
 					Exclude: ".^",
 				},
 			},
-			wantJson: string(tutil.Fixture(t, "../../test/fixtures/topic/core.operators.topic.exporter.3.json")),
+			wantJSON: string(tutil.Fixture(t, "../../test/fixtures/topic/core.operators.topic.exporter.3.json")),
 			wantErr:  false,
 		},
 		{
@@ -128,7 +129,7 @@ func Test_exporter_Execute(t *testing.T) {
 					Exclude: "core.operators.topic.exporter.bar.*",
 				},
 			},
-			wantJson: string(tutil.Fixture(t, "../../test/fixtures/topic/core.operators.topic.exporter.4.json")),
+			wantJSON: string(tutil.Fixture(t, "../../test/fixtures/topic/core.operators.topic.exporter.4.json")),
 			wantErr:  false,
 		},
 		{
@@ -141,7 +142,7 @@ func Test_exporter_Execute(t *testing.T) {
 					Assignments: opt.BrokerAssignments,
 				},
 			},
-			wantJson: string(tutil.Fixture(t, "../../test/fixtures/topic/core.operators.topic.exporter.5.json")),
+			wantJSON: string(tutil.Fixture(t, "../../test/fixtures/topic/core.operators.topic.exporter.5.json")),
 			wantErr:  false,
 		},
 		{
@@ -154,7 +155,7 @@ func Test_exporter_Execute(t *testing.T) {
 					Assignments: opt.RackAssignments,
 				},
 			},
-			wantJson: string(tutil.Fixture(t, "../../test/fixtures/topic/core.operators.topic.exporter.6.json")),
+			wantJSON: string(tutil.Fixture(t, "../../test/fixtures/topic/core.operators.topic.exporter.6.json")),
 			wantErr:  false,
 		},
 	}
@@ -171,8 +172,8 @@ func Test_exporter_Execute(t *testing.T) {
 				t.Errorf("failed to convert export result to json: %v", err)
 				t.FailNow()
 			}
-			if !tutil.EqualJSON(t, j, tt.wantJson) {
-				t.Errorf("exporter.Execute().JSON() = %v, want %v", j, tt.wantJson)
+			if !tutil.EqualJSON(t, j, tt.wantJSON) {
+				t.Errorf("exporter.Execute().JSON() = %v, want %v", j, tt.wantJSON)
 			}
 
 			if log.Verbose {

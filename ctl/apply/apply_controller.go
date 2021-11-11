@@ -28,7 +28,7 @@ type applier interface {
 }
 
 // Options to configure an apply controller
-type ApplyControllerOptions struct {
+type ControllerOptions struct {
 	// ApplierOptions
 	ReassAwaitTimeout int
 	DefinitionFormat  opt.DefinitionFormat
@@ -37,7 +37,20 @@ type ApplyControllerOptions struct {
 	// Apply controller specific
 	ContinueOnError bool
 	ExitCode        bool
-	JsonOutput      bool
+	JSONOutput      bool
+}
+
+// Create a new apply controller
+func NewApplyController(
+	cl *client.Client,
+	args []string,
+	opts ControllerOptions,
+) *applyController { //revive:disable-line:unexported-return
+	return &applyController{
+		cl:   cl,
+		args: args,
+		opts: opts,
+	}
 }
 
 // An apply controller
@@ -45,20 +58,7 @@ type applyController struct {
 	// constructor params
 	cl   *client.Client
 	args []string
-	opts ApplyControllerOptions
-}
-
-// Create a new apply controller
-func NewApplyController(
-	cl *client.Client,
-	args []string,
-	opts ApplyControllerOptions,
-) *applyController {
-	return &applyController{
-		cl:   cl,
-		args: args,
-		opts: opts,
-	}
+	opts ControllerOptions
 }
 
 // Execute the apply controller
@@ -110,7 +110,7 @@ func (a *applyController) Execute() error {
 	}
 
 	// Output JSON
-	if a.opts.JsonOutput {
+	if a.opts.JSONOutput {
 		out, err := results.JSON()
 		if err != nil {
 			return err
@@ -139,7 +139,7 @@ func (a *applyController) Execute() error {
 
 // Apply resource definitions from stdin
 func (a *applyController) applyDefsFromStdin() (res.ApplyResults, error) {
-	log.Info("Reading definition(s) from stdin")
+	log.Infof("Reading definition(s) from stdin")
 	defDocs, err := docparse.FromStdin(docparse.Format(a.opts.DefinitionFormat))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read definition(s): %v", err)
@@ -149,7 +149,7 @@ func (a *applyController) applyDefsFromStdin() (res.ApplyResults, error) {
 
 // Apply resource definitions from file
 func (a *applyController) applyDefsFromFile(filepath string) (res.ApplyResults, error) {
-	log.Info("Reading definition(s) from file %q", filepath)
+	log.Infof("Reading definition(s) from file %q", filepath)
 	defDocs, err := docparse.FromFile(filepath, docparse.Format(a.opts.DefinitionFormat))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read definition(s): %v", err)
@@ -210,11 +210,11 @@ func getResourceDefinitions(defDocs []string, format opt.DefinitionFormat) ([]de
 		var resourceDef def.ResourceDefinition
 
 		switch format {
-		case opt.YamlFormat:
+		case opt.YAMLFormat:
 			if err := yaml.Unmarshal([]byte(defDoc), &resourceDef); err != nil {
 				return nil, err
 			}
-		case opt.JsonFormat:
+		case opt.JSONFormat:
 			if err := json.Unmarshal([]byte(defDoc), &resourceDef); err != nil {
 				return nil, err
 			}

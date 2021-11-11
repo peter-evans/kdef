@@ -43,7 +43,7 @@ func UnorderedEqual(a, b []string) bool {
 		if _, ok := m[bv]; !ok {
 			return false
 		}
-		m[bv] -= 1
+		m[bv]--
 		if m[bv] == 0 {
 			delete(m, bv)
 		}

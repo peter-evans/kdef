@@ -8,7 +8,7 @@ import (
 
 func TestResourceDefinition_ValidateResource(t *testing.T) {
 	type fields struct {
-		ApiVersion string
+		APIVersion string
 		Kind       string
 		Metadata   ResourceMetadataDefinition
 	}
@@ -20,7 +20,7 @@ func TestResourceDefinition_ValidateResource(t *testing.T) {
 		{
 			name: "Tests invalid apiVersion",
 			fields: fields{
-				ApiVersion: "foo",
+				APIVersion: "foo",
 				Kind:       "topic",
 				Metadata: ResourceMetadataDefinition{
 					Name: "foo",
@@ -31,7 +31,7 @@ func TestResourceDefinition_ValidateResource(t *testing.T) {
 		{
 			name: "Tests invalid kind",
 			fields: fields{
-				ApiVersion: "v1",
+				APIVersion: "v1",
 				Kind:       "foo",
 				Metadata: ResourceMetadataDefinition{
 					Name: "foo",
@@ -42,7 +42,7 @@ func TestResourceDefinition_ValidateResource(t *testing.T) {
 		{
 			name: "Tests missing metadata name",
 			fields: fields{
-				ApiVersion: "v1",
+				APIVersion: "v1",
 				Kind:       "topic",
 			},
 			wantErr: "metadata name must be supplied",
@@ -50,7 +50,7 @@ func TestResourceDefinition_ValidateResource(t *testing.T) {
 		{
 			name: "Tests valid resource definition",
 			fields: fields{
-				ApiVersion: "v1",
+				APIVersion: "v1",
 				Kind:       "topic",
 				Metadata: ResourceMetadataDefinition{
 					Name: "foo",
@@ -62,7 +62,7 @@ func TestResourceDefinition_ValidateResource(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := ResourceDefinition{
-				ApiVersion: tt.fields.ApiVersion,
+				APIVersion: tt.fields.APIVersion,
 				Kind:       tt.fields.Kind,
 				Metadata:   tt.fields.Metadata,
 			}

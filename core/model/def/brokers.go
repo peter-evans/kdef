@@ -38,7 +38,7 @@ func (b BrokersDefinition) Validate() error {
 func NewBrokersDefinition(configsMap ConfigsMap) BrokersDefinition {
 	brokersDef := BrokersDefinition{
 		ResourceDefinition: ResourceDefinition{
-			ApiVersion: "v1",
+			APIVersion: "v1",
 			Kind:       "brokers",
 			Metadata: ResourceMetadataDefinition{
 				Name: "brokers",

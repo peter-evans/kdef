@@ -15,7 +15,7 @@ import (
 type ResourceAcls struct {
 	ResourceName string
 	ResourceType string
-	Acls         def.AclEntryGroups
+	Acls         def.ACLEntryGroups
 }
 
 // Execute a request to describe acls of a specific resource (Kafka 0.11.0+)
@@ -23,7 +23,7 @@ func describeResourceAcls(
 	cl *client.Client,
 	name string,
 	resourceType string,
-) (def.AclEntryGroups, error) {
+) (def.ACLEntryGroups, error) {
 	resType, err := kmsg.ParseACLResourceType(resourceType)
 	if err != nil {
 		return nil, err
@@ -43,9 +43,9 @@ func describeResourceAcls(
 
 	if len(resourceAcls) > 0 {
 		return resourceAcls[0].Acls, nil
-	} else {
-		return nil, nil
 	}
+
+	return nil, nil
 }
 
 // Execute a request to describe acls for all resources (Kafka 0.11.0+)
@@ -86,11 +86,11 @@ func describeAcls(
 		return nil, fmt.Errorf(errMsg)
 	}
 
-	var resourceAcls []ResourceAcls
-	for _, resource := range resp.Resources {
-		var acls def.AclEntryGroups
+	resourceAcls := make([]ResourceAcls, len(resp.Resources))
+	for i, resource := range resp.Resources {
+		var acls def.ACLEntryGroups
 		for _, acl := range resource.ACLs {
-			acls = append(acls, def.AclEntryGroup{
+			acls = append(acls, def.ACLEntryGroup{
 				Principals:     []string{acl.Principal},
 				Hosts:          []string{acl.Host},
 				Operations:     []string{acl.Operation.String()},
@@ -104,11 +104,11 @@ func describeAcls(
 
 		acls.Sort()
 
-		resourceAcls = append(resourceAcls, ResourceAcls{
+		resourceAcls[i] = ResourceAcls{
 			ResourceName: resource.ResourceName,
 			ResourceType: strings.ToLower(resource.ResourceType.String()),
 			Acls:         acls,
-		})
+		}
 	}
 
 	return resourceAcls, nil
@@ -119,7 +119,7 @@ func createAcls(
 	cl *client.Client,
 	name string,
 	resourceType string,
-	acls def.AclEntryGroups,
+	acls def.ACLEntryGroups,
 ) error {
 	resType, err := kmsg.ParseACLResourceType(resourceType)
 	if err != nil {
@@ -185,7 +185,7 @@ func deleteAcls(
 	cl *client.Client,
 	name string,
 	resourceType string,
-	acls def.AclEntryGroups,
+	acls def.ACLEntryGroups,
 ) error {
 	resType, err := kmsg.ParseACLResourceType(resourceType)
 	if err != nil {

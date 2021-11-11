@@ -27,6 +27,7 @@ func ErrorContains(out error, want string) bool {
 
 // Return the byte slice of a test fixture
 func Fixture(t *testing.T, path string) []byte {
+	t.Helper()
 	fileBytes, err := ioutil.ReadFile(path)
 	if err != nil {
 		t.Errorf("failed to load test fixture %q: %v", path, err)
@@ -36,8 +37,9 @@ func Fixture(t *testing.T, path string) []byte {
 }
 
 // A wrapper around docparse.FromFile to simplify test usage
-func FileToYamlDocs(t *testing.T, path string) []string {
-	yamlDocs, err := docparse.FromFile(path, docparse.Format(opt.YamlFormat))
+func FileToYAMLDocs(t *testing.T, path string) []string {
+	t.Helper()
+	yamlDocs, err := docparse.FromFile(path, docparse.Format(opt.YAMLFormat))
 	if err != nil {
 		t.Errorf("failed to load test fixture %q: %v", path, err)
 		t.FailNow()
@@ -47,6 +49,7 @@ func FileToYamlDocs(t *testing.T, path string) []string {
 
 // Determine if two strings are equal JSON
 func EqualJSON(t *testing.T, s1 string, s2 string) bool {
+	t.Helper()
 	toInterface := func(s string) interface{} {
 		var i interface{}
 		if err := json.Unmarshal([]byte(s), &i); err != nil {
@@ -73,7 +76,8 @@ func RandomBytes(n int) ([]byte, error) {
 
 // A wrapper around NewClient to simplify test usage
 func CreateClient(t *testing.T, configOpts []string) *client.Client {
-	cl, err := config.NewClient(&config.ConfigOptions{
+	t.Helper()
+	cl, err := config.NewClient(&config.Options{
 		ConfigPath: "does-not-exist",
 		ConfigOpts: configOpts,
 	})

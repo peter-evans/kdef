@@ -30,9 +30,8 @@ func (s *Scanner) PromptLine(prompt string, defaultValue string) string {
 	l := s.line(prompt)
 	if len(l) > 0 {
 		return l
-	} else {
-		return defaultValue
 	}
+	return defaultValue
 }
 
 func (s *Scanner) PromptMultiline(prompt string, defaultValue []string) []string {
@@ -54,9 +53,8 @@ func (s *Scanner) PromptMultiline(prompt string, defaultValue []string) []string
 
 	if len(lines) > 0 {
 		return lines
-	} else {
-		return defaultValue
 	}
+	return defaultValue
 }
 
 func (s *Scanner) PromptYesNo(prompt string, defaultValue bool) bool {

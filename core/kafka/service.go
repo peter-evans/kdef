@@ -38,7 +38,7 @@ func (s *Service) getIncrementalAlter() (bool, error) {
 		case "non-incremental":
 			ia = false
 		case "auto":
-			log.Debug("Checking if incremental alter configs is supported by the target cluster...")
+			log.Debugf("Checking if incremental alter configs is supported by the target cluster...")
 			r := kmsg.NewIncrementalAlterConfigsRequest()
 			var err error
 			ia, err = requestIsSupported(s.cl, r.Key())
@@ -50,7 +50,7 @@ func (s *Service) getIncrementalAlter() (bool, error) {
 			return false, fmt.Errorf("invalid alter configs method")
 		}
 		s.incrementalAlter = &ia
-		log.Debug("Incremental alter configs enabled: %v", *s.incrementalAlter)
+		log.Debugf("Incremental alter configs enabled: %v", *s.incrementalAlter)
 	}
 
 	return *s.incrementalAlter, nil
@@ -91,8 +91,8 @@ func (s *Service) NewConfigOps(
 }
 
 // Execute a request to describe broker configs (Kafka 0.11.0+)
-func (s *Service) DescribeBrokerConfigs(brokerId string) (def.Configs, error) {
-	return describeBrokerConfigs(s.cl, brokerId)
+func (s *Service) DescribeBrokerConfigs(brokerID string) (def.Configs, error) {
+	return describeBrokerConfigs(s.cl, brokerID)
 }
 
 // Execute a request to describe all broker configs (Kafka 0.11.0+)
@@ -102,16 +102,15 @@ func (s *Service) DescribeAllBrokerConfigs() (def.Configs, error) {
 }
 
 // Execute a request to alter broker configs (Kafka 0.11.0+/2.3.0+)
-func (s *Service) AlterBrokerConfigs(brokerId string, configOps ConfigOperations, validateOnly bool) error {
+func (s *Service) AlterBrokerConfigs(brokerID string, configOps ConfigOperations, validateOnly bool) error {
 	incrementalAlter, err := s.getIncrementalAlter()
 	if err != nil {
 		return err
 	}
 	if incrementalAlter {
-		return incrementalAlterBrokerConfigs(s.cl, brokerId, configOps, validateOnly)
-	} else {
-		return alterBrokerConfigs(s.cl, brokerId, configOps, validateOnly)
+		return incrementalAlterBrokerConfigs(s.cl, brokerID, configOps, validateOnly)
 	}
+	return alterBrokerConfigs(s.cl, brokerID, configOps, validateOnly)
 }
 
 // Execute a request to alter cluster-wide broker configs (Kafka 0.11.0+/2.3.0+)
@@ -132,9 +131,8 @@ func (s *Service) AlterTopicConfigs(topic string, configOps ConfigOperations, va
 	}
 	if incrementalAlter {
 		return incrementalAlterTopicConfigs(s.cl, topic, configOps, validateOnly)
-	} else {
-		return alterTopicConfigs(s.cl, topic, configOps, validateOnly)
 	}
+	return alterTopicConfigs(s.cl, topic, configOps, validateOnly)
 }
 
 // ========================= Topic ============================
@@ -190,7 +188,7 @@ func (s *Service) AlterPartitionAssignments(
 func (s *Service) DescribeResourceAcls(
 	name string,
 	resourceType string,
-) (def.AclEntryGroups, error) {
+) (def.ACLEntryGroups, error) {
 	return describeResourceAcls(s.cl, name, resourceType)
 }
 
@@ -205,7 +203,7 @@ func (s *Service) DescribeAllResourceAcls(
 func (s *Service) CreateAcls(
 	name string,
 	resourceType string,
-	acls def.AclEntryGroups,
+	acls def.ACLEntryGroups,
 ) error {
 	return createAcls(s.cl, name, resourceType, acls)
 }
@@ -214,7 +212,7 @@ func (s *Service) CreateAcls(
 func (s *Service) DeleteAcls(
 	name string,
 	resourceType string,
-	acls def.AclEntryGroups,
+	acls def.ACLEntryGroups,
 ) error {
 	return deleteAcls(s.cl, name, resourceType, acls)
 }

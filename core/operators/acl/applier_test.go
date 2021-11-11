@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package acl
@@ -14,7 +15,7 @@ import (
 	"github.com/peter-evans/kdef/core/kafka"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/test/compose"
-	"github.com/peter-evans/kdef/core/test/compose_fixture"
+	"github.com/peter-evans/kdef/core/test/harness"
 	"github.com/peter-evans/kdef/core/test/tutil"
 )
 
@@ -80,7 +81,7 @@ func Test_applier_Execute(t *testing.T) {
 	// Create client
 	cl := tutil.CreateClient(t,
 		[]string{
-			fmt.Sprintf("seedBrokers=localhost:%d", compose_fixture.AclApplierComposeFixture.BrokerPort),
+			fmt.Sprintf("seedBrokers=localhost:%d", harness.ACLApplier.BrokerPort),
 			"sasl.method=plain",
 			"sasl.user=alice",
 			"sasl.pass=alice-secret",
@@ -95,16 +96,16 @@ func Test_applier_Execute(t *testing.T) {
 		start := time.Now()
 		c := compose.Up(
 			t,
-			compose_fixture.AclApplierComposeFixture.ComposeFilePaths,
-			compose_fixture.AclApplierComposeFixture.Env(),
+			harness.ACLApplier.ComposeFilePaths,
+			harness.ACLApplier.Env(),
 		)
-		if srv.IsKafkaReady(compose_fixture.AclApplierComposeFixture.Brokers, 90) {
+		if srv.IsKafkaReady(harness.ACLApplier.Brokers, 90) {
 			duration := time.Since(start)
-			log.Info("kafka cluster ready in %v", duration)
+			log.Infof("kafka cluster ready in %v", duration)
 			defer compose.Down(t, c)
 			break
 		} else {
-			log.Warn("kafka failed to be ready within timeout")
+			log.Warnf("kafka failed to be ready within timeout")
 			compose.Down(t, c)
 			try++
 		}
@@ -115,7 +116,7 @@ func Test_applier_Execute(t *testing.T) {
 		time.Sleep(2 * time.Second)
 	}
 
-	aclDocs := tutil.FileToYamlDocs(t, "../../test/fixtures/acl/core.operators.acl.applier.topic_foo.yml")
+	aclDocs := tutil.FileToYAMLDocs(t, "../../test/fixtures/acl/core.operators.acl.applier.topic_foo.yml")
 	aclDiffs := getDiffsFixture(t, "../../test/fixtures/acl/core.operators.acl.applier.topic_foo.json")
 	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
@@ -126,7 +127,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: aclDocs[0],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -141,7 +142,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: aclDocs[0],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    aclDiffs[0],
@@ -155,7 +156,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: aclDocs[1],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -170,7 +171,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: aclDocs[2],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -185,7 +186,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: aclDocs[2],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    aclDiffs[2],
@@ -199,7 +200,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: aclDocs[3],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},
@@ -214,7 +215,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: aclDocs[3],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 				},
 			},
 			wantDiff:    aclDiffs[3],
@@ -228,7 +229,7 @@ func Test_applier_Execute(t *testing.T) {
 				cl:      cl,
 				yamlDoc: aclDocs[4],
 				opts: ApplierOptions{
-					DefinitionFormat: opt.YamlFormat,
+					DefinitionFormat: opt.YAMLFormat,
 					DryRun:           true,
 				},
 			},

@@ -1,4 +1,4 @@
-package compose_fixture
+package harness
 
 import (
 	"reflect"
@@ -36,7 +36,7 @@ func TestComposeFixture_Env(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tr := ComposeFixture{
+			tr := ComposeHarness{
 				ZookeeperPort: tt.fields.ZookeeperPort,
 				BrokerPort:    tt.fields.BrokerPort,
 				Brokers:       tt.fields.Brokers,

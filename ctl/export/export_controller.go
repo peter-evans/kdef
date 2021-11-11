@@ -24,7 +24,7 @@ type exporter interface {
 }
 
 // Options to configure an export controller
-type ExportControllerOptions struct {
+type ControllerOptions struct {
 	// ExporterOptions for topic/acl
 	Match   string
 	Exclude string
@@ -34,8 +34,8 @@ type ExportControllerOptions struct {
 	TopicAssignments     opt.Assignments
 
 	// ExporterOptions for acl
-	AclResourceType string
-	AclAutoGroup    bool
+	ACLResourceType string
+	ACLAutoGroup    bool
 
 	// Export controller specific
 	DefinitionFormat opt.DefinitionFormat
@@ -43,28 +43,28 @@ type ExportControllerOptions struct {
 	Overwrite        bool
 }
 
-// An export controller
-type exportController struct {
-	// constructor params
-	cl   *client.Client
-	args []string
-	opts ExportControllerOptions
-	kind string
-}
-
 // Create a new export controller
 func NewExportController(
 	cl *client.Client,
 	args []string,
-	opts ExportControllerOptions,
+	opts ControllerOptions,
 	kind string,
-) *exportController {
+) *exportController { //revive:disable-line:unexported-return
 	return &exportController{
 		cl:   cl,
 		args: args,
 		opts: opts,
 		kind: kind,
 	}
+}
+
+// An export controller
+type exportController struct {
+	// constructor params
+	cl   *client.Client
+	args []string
+	opts ControllerOptions
+	kind string
 }
 
 // Execute the export controller
@@ -74,14 +74,14 @@ func (e *exportController) Execute() error {
 		return err
 	}
 	if results == nil {
-		log.Info("No %s(s) found", e.kind)
+		log.Infof("No %s(s) found", e.kind)
 		return nil
 	}
 
-	log.Info("Exporting %d %s definition(s)...", len(results), e.kind)
+	log.Infof("Exporting %d %s definition(s)...", len(results), e.kind)
 
 	stdout := len(e.opts.OutputDir) == 0
-	if stdout && e.opts.DefinitionFormat == opt.JsonFormat {
+	if stdout && e.opts.DefinitionFormat == opt.JSONFormat {
 		// For JSON to stdout the def docs are returned as a slice
 		defDocBytes, err := getDefDocBytes(results.Defs(), e.opts.DefinitionFormat)
 		if err != nil {
@@ -103,23 +103,23 @@ func (e *exportController) Execute() error {
 				outputPath := filepath.Join(
 					e.opts.OutputDir,
 					result.Type,
-					fmt.Sprintf("%s.%s", result.Id, e.opts.DefinitionFormat.Ext()),
+					fmt.Sprintf("%s.%s", result.ID, e.opts.DefinitionFormat.Ext()),
 				)
 
 				dirPath := filepath.Dir(outputPath)
-				if err := os.MkdirAll(dirPath, 0755); err != nil {
+				if err := os.MkdirAll(dirPath, 0o755); err != nil {
 					return fmt.Errorf("failed to create directory path %q: %v", dirPath, err)
 				}
 
 				if !e.opts.Overwrite {
 					if _, err := os.Stat(outputPath); !errors.Is(err, os.ErrNotExist) {
-						log.Info("Skipping overwrite of existing file %q", outputPath)
+						log.Infof("Skipping overwrite of existing file %q", outputPath)
 						continue
 					}
 				}
 
-				log.Info("Writing %s definition file %q", e.kind, outputPath)
-				if err = ioutil.WriteFile(outputPath, defDocBytes, 0666); err != nil {
+				log.Infof("Writing %s definition file %q", e.kind, outputPath)
+				if err = ioutil.WriteFile(outputPath, defDocBytes, 0o666); err != nil {
 					return err
 				}
 			}
@@ -137,8 +137,8 @@ func (e *exportController) exportResources() (res.ExportResults, error) {
 		exporter = acl.NewExporter(e.cl, acl.ExporterOptions{
 			Match:        e.opts.Match,
 			Exclude:      e.opts.Exclude,
-			ResourceType: e.opts.AclResourceType,
-			AutoGroup:    e.opts.AclAutoGroup,
+			ResourceType: e.opts.ACLResourceType,
+			AutoGroup:    e.opts.ACLAutoGroup,
 		})
 	case "broker":
 		exporter = broker.NewExporter(e.cl)
@@ -167,9 +167,9 @@ func getDefDocBytes(def interface{}, format opt.DefinitionFormat) ([]byte, error
 	var err error
 
 	switch format {
-	case opt.YamlFormat:
+	case opt.YAMLFormat:
 		defDocBytes, err = yaml.Marshal(def)
-	case opt.JsonFormat:
+	case opt.JSONFormat:
 		defDocBytes, err = json.MarshalIndent(def, "", "  ")
 		defDocBytes = append(defDocBytes, "\n"...)
 	default:
@@ -178,7 +178,7 @@ func getDefDocBytes(def interface{}, format opt.DefinitionFormat) ([]byte, error
 
 	if err != nil {
 		return nil, err
-	} else {
-		return defDocBytes, nil
 	}
+
+	return defDocBytes, nil
 }

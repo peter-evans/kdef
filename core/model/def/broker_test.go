@@ -17,7 +17,7 @@ func TestBrokerDefinition_Validate(t *testing.T) {
 			name: "Tests an invalid metadata name",
 			brokerDef: BrokerDefinition{
 				ResourceDefinition: ResourceDefinition{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "broker",
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
@@ -30,7 +30,7 @@ func TestBrokerDefinition_Validate(t *testing.T) {
 			name: "Tests a valid broker definition",
 			brokerDef: BrokerDefinition{
 				ResourceDefinition: ResourceDefinition{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "broker",
 					Metadata: ResourceMetadataDefinition{
 						Name: "1",
@@ -51,9 +51,9 @@ func TestBrokerDefinition_Validate(t *testing.T) {
 
 func TestBrokerDefinition_ValidateWithMetadata(t *testing.T) {
 	brokers := meta.Brokers{
-		meta.Broker{Id: 1, Rack: "zone-a"},
-		meta.Broker{Id: 2, Rack: "zone-b"},
-		meta.Broker{Id: 3, Rack: "zone-c"},
+		meta.Broker{ID: 1, Rack: "zone-a"},
+		meta.Broker{ID: 2, Rack: "zone-b"},
+		meta.Broker{ID: 3, Rack: "zone-c"},
 	}
 
 	type args struct {
@@ -69,7 +69,7 @@ func TestBrokerDefinition_ValidateWithMetadata(t *testing.T) {
 			name: "Tests an invalid metadata name",
 			brokerDef: BrokerDefinition{
 				ResourceDefinition: ResourceDefinition{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "broker",
 					Metadata: ResourceMetadataDefinition{
 						Name: "9",
@@ -85,7 +85,7 @@ func TestBrokerDefinition_ValidateWithMetadata(t *testing.T) {
 			name: "Tests a valid broker definition",
 			brokerDef: BrokerDefinition{
 				ResourceDefinition: ResourceDefinition{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "broker",
 					Metadata: ResourceMetadataDefinition{
 						Name: "1",

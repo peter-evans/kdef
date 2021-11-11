@@ -9,14 +9,14 @@ import (
 func TestAclDefinition_Validate(t *testing.T) {
 	tests := []struct {
 		name    string
-		aclDef  AclDefinition
+		aclDef  ACLDefinition
 		wantErr string
 	}{
 		{
 			name: "Tests missing metadata resource type",
-			aclDef: AclDefinition{
+			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "acl",
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
@@ -27,9 +27,9 @@ func TestAclDefinition_Validate(t *testing.T) {
 		},
 		{
 			name: "Tests invalid metadata resource type",
-			aclDef: AclDefinition{
+			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "acl",
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
@@ -41,9 +41,9 @@ func TestAclDefinition_Validate(t *testing.T) {
 		},
 		{
 			name: "Tests invalid metadata name when type is cluster",
-			aclDef: AclDefinition{
+			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "acl",
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
@@ -55,18 +55,18 @@ func TestAclDefinition_Validate(t *testing.T) {
 		},
 		{
 			name: "Tests invalid acl operation",
-			aclDef: AclDefinition{
+			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "acl",
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
 						Type: "topic",
 					},
 				},
-				Spec: AclSpecDefinition{
-					Acls: AclEntryGroups{
-						AclEntryGroup{
+				Spec: ACLSpecDefinition{
+					Acls: ACLEntryGroups{
+						ACLEntryGroup{
 							Principals:     []string{"User:foo"},
 							Hosts:          []string{"*"},
 							Operations:     []string{"BAR"},
@@ -79,18 +79,18 @@ func TestAclDefinition_Validate(t *testing.T) {
 		},
 		{
 			name: "Tests invalid acl permission type",
-			aclDef: AclDefinition{
+			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "acl",
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
 						Type: "topic",
 					},
 				},
-				Spec: AclSpecDefinition{
-					Acls: AclEntryGroups{
-						AclEntryGroup{
+				Spec: ACLSpecDefinition{
+					Acls: ACLEntryGroups{
+						ACLEntryGroup{
 							Principals:     []string{"User:foo"},
 							Hosts:          []string{"*"},
 							Operations:     []string{"READ"},
@@ -103,18 +103,18 @@ func TestAclDefinition_Validate(t *testing.T) {
 		},
 		{
 			name: "Tests a valid AclDefinition",
-			aclDef: AclDefinition{
+			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
-					ApiVersion: "v1",
+					APIVersion: "v1",
 					Kind:       "acl",
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
 						Type: "topic",
 					},
 				},
-				Spec: AclSpecDefinition{
-					Acls: AclEntryGroups{
-						AclEntryGroup{
+				Spec: ACLSpecDefinition{
+					Acls: ACLEntryGroups{
+						ACLEntryGroup{
 							Principals:     []string{"User:foo"},
 							Hosts:          []string{"*"},
 							Operations:     []string{"READ", "WRITE", "CREATE"},

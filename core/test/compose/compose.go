@@ -9,6 +9,7 @@ import (
 )
 
 func Up(t *testing.T, paths []string, env map[string]string) *tc.LocalDockerCompose {
+	t.Helper()
 	identifier := strings.ToLower(uuid.New().String())
 	compose := tc.NewLocalDockerCompose(paths, identifier)
 	execError := compose.
@@ -25,6 +26,7 @@ func Up(t *testing.T, paths []string, env map[string]string) *tc.LocalDockerComp
 }
 
 func Down(t *testing.T, compose *tc.LocalDockerCompose) {
+	t.Helper()
 	execError := compose.Down()
 	err := execError.Error
 	if err != nil {

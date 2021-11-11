@@ -16,11 +16,12 @@ func AlterReplicationFactor(
 	leaderCounts := leaderCounts(assignments)
 	replicaCounts := replicaCounts(assignments)
 
-	if targetReplicationFactor < currentReplicationFactor {
+	switch {
+	case targetReplicationFactor < currentReplicationFactor:
 		return decreaseReplicationFactor(assignments, targetReplicationFactor, replicaCounts)
-	} else if targetReplicationFactor > currentReplicationFactor {
+	case targetReplicationFactor > currentReplicationFactor:
 		return increaseReplicationFactor(assignments, targetReplicationFactor, leaderCounts, replicaCounts, brokers)
-	} else {
+	default:
 		return assignments
 	}
 }
@@ -44,24 +45,24 @@ func decreaseReplicationFactor(
 	}
 
 	newAssignments := Copy(assignments)
-	for len(newAssignments[0]) > int(targetReplicationFactor) {
+	for len(newAssignments[0]) > targetReplicationFactor {
 		for i, replicas := range newAssignments {
 			// Find the broker ID to remove
-			brokerIdToRemove := mostPopulousBroker(replicas, replicaCounts)
+			brokerIDToRemove := mostPopulousBroker(replicas, replicaCounts)
 
 			// Create the modified replica set of broker IDs
 			modifiedReplicas := make([]int32, len(replicas)-1)
 			j := 0
-			for _, brokerId := range replicas {
-				if brokerId == brokerIdToRemove {
+			for _, brokerID := range replicas {
+				if brokerID == brokerIDToRemove {
 					continue
 				}
-				modifiedReplicas[j] = brokerId
+				modifiedReplicas[j] = brokerID
 				j++
 			}
 
 			newAssignments[i] = modifiedReplicas
-			replicaCounts[brokerIdToRemove]--
+			replicaCounts[brokerIDToRemove]--
 		}
 	}
 
@@ -77,7 +78,7 @@ func increaseReplicationFactor(
 	brokers []int32,
 ) [][]int32 {
 	newAssignments := Copy(assignments)
-	for len(newAssignments[0]) < int(targetReplicationFactor) {
+	for len(newAssignments[0]) < targetReplicationFactor {
 		for i, replicas := range newAssignments {
 			// Find unused broker IDs for this partition
 			unusedBrokers := i32.Diff(brokers, replicas)
@@ -87,7 +88,7 @@ func increaseReplicationFactor(
 			isLeader := len(replicas) == 0
 
 			// Determine the last used broker ID for this partition
-			var lastUsedBroker int32 = 0
+			var lastUsedBroker int32
 			if !isLeader {
 				lastUsedBroker = replicas[len(replicas)-1]
 			}
@@ -105,17 +106,17 @@ func increaseReplicationFactor(
 			}
 
 			// Find the broker ID to add
-			brokerIdToAdd := leastPopulousBroker(unusedBrokers, brokerCounts, lastUsedBroker)
+			brokerIDToAdd := leastPopulousBroker(unusedBrokers, brokerCounts, lastUsedBroker)
 
 			// Create the modified replica set of broker IDs
 			modifiedReplicas := make([]int32, len(replicas)+1)
 			copy(modifiedReplicas, replicas)
-			modifiedReplicas[len(modifiedReplicas)-1] = brokerIdToAdd
+			modifiedReplicas[len(modifiedReplicas)-1] = brokerIDToAdd
 
 			newAssignments[i] = modifiedReplicas
-			replicaCounts[brokerIdToAdd]++
+			replicaCounts[brokerIDToAdd]++
 			if isLeader {
-				leaderCounts[brokerIdToAdd]++
+				leaderCounts[brokerIDToAdd]++
 			}
 		}
 	}
@@ -184,7 +185,7 @@ func SyncRackAssignments(
 				unusedRackBrokers := i32.Diff(brokersByRack[rack], usedRackBrokers)
 
 				// Last used broker is not used for rack assignments
-				var lastUsedBroker int32 = 0
+				var lastUsedBroker int32
 
 				// If the chosen broker will be the preferred leader we use leader counts to make sure
 				// leaders are balanced across partitions in the assignments
@@ -194,10 +195,10 @@ func SyncRackAssignments(
 				}
 
 				// Find the broker ID to add
-				brokerIdToAdd := leastPopulousBroker(unusedRackBrokers, brokerCounts, lastUsedBroker)
+				brokerIDToAdd := leastPopulousBroker(unusedRackBrokers, brokerCounts, lastUsedBroker)
 
 				// Replace the broker
-				newAssignments[partition][replica] = brokerIdToAdd
+				newAssignments[partition][replica] = brokerIDToAdd
 			}
 			// Update counts
 			replicaCounts[newAssignments[partition][replica]]++
@@ -212,19 +213,19 @@ func SyncRackAssignments(
 
 // Make a copy of partition assignments
 func Copy(assignments [][]int32) [][]int32 {
-	copy := make([][]int32, len(assignments))
+	c := make([][]int32, len(assignments))
 	for i, replicas := range assignments {
-		copy[i] = append([]int32{}, replicas...)
+		c[i] = append([]int32{}, replicas...)
 	}
-	return copy
+	return c
 }
 
 // A map of the broker ID counts for all replicas
 func replicaCounts(assignments [][]int32) map[int32]int {
 	replicaCounts := make(map[int32]int)
 	for _, replicas := range assignments {
-		for _, brokerId := range replicas {
-			replicaCounts[brokerId]++
+		for _, brokerID := range replicas {
+			replicaCounts[brokerID]++
 		}
 	}
 	return replicaCounts
