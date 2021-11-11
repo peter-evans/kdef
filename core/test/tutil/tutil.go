@@ -36,7 +36,6 @@ func Fixture(t *testing.T, path string) []byte {
 	return fileBytes
 }
 
-// TODO: remove the dep on cli package
 // A wrapper around docparse.FromFile to simplify test usage
 func FileToYAMLDocs(t *testing.T, path string) []string {
 	t.Helper()
@@ -75,7 +74,6 @@ func RandomBytes(n int) ([]byte, error) {
 	return bytes, nil
 }
 
-// TODO: remove the dep on cli package
 // A wrapper around NewClient to simplify test usage
 func CreateClient(t *testing.T, configOpts []string) *client.Client {
 	t.Helper()
