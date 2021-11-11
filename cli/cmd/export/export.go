@@ -3,11 +3,11 @@ package export
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/peter-evans/kdef/cmd/export/acl"
-	"github.com/peter-evans/kdef/cmd/export/broker"
-	"github.com/peter-evans/kdef/cmd/export/brokers"
-	"github.com/peter-evans/kdef/cmd/export/topic"
-	"github.com/peter-evans/kdef/config"
+	"github.com/peter-evans/kdef/cli/cmd/export/acl"
+	"github.com/peter-evans/kdef/cli/cmd/export/broker"
+	"github.com/peter-evans/kdef/cli/cmd/export/brokers"
+	"github.com/peter-evans/kdef/cli/cmd/export/topic"
+	"github.com/peter-evans/kdef/cli/config"
 )
 
 // Creates the export command

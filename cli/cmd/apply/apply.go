@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/peter-evans/kdef/cli/config"
+	"github.com/peter-evans/kdef/cli/ctl/apply"
 	"github.com/peter-evans/kdef/cli/log"
-	"github.com/peter-evans/kdef/config"
 	"github.com/peter-evans/kdef/core/model/opt"
-	"github.com/peter-evans/kdef/ctl/apply"
 )
 
 // Creates the apply command
