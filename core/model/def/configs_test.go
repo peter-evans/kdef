@@ -1,3 +1,4 @@
+// Package def implements definitions for Kafka resources.
 package def
 
 import (

@@ -1,8 +1,9 @@
+// Package i32 implements functions for various int32 operations.
 package i32
 
 import "strconv"
 
-// Determine if a value is contained in a slice
+// Contains determines if a value is contained in a slice.
 func Contains(i int32, s []int32) bool {
 	for _, item := range s {
 		if item == i {
@@ -12,7 +13,7 @@ func Contains(i int32, s []int32) bool {
 	return false
 }
 
-// Determine if there is a duplicate value in the slice
+// ContainsDuplicate determines if there is a duplicate value in a slice.
 func ContainsDuplicate(s []int32) bool {
 	k := make(map[int32]bool, len(s))
 	for _, ss := range s {
@@ -24,7 +25,7 @@ func ContainsDuplicate(s []int32) bool {
 	return false
 }
 
-// Return the elements in slice a that are not in slice b
+// Diff returns the elements in slice a that are not in slice b.
 func Diff(a []int32, b []int32) []int32 {
 	k := make(map[int32]bool, len(b))
 	for _, bb := range b {
@@ -39,7 +40,7 @@ func Diff(a []int32, b []int32) []int32 {
 	return diff
 }
 
-// Return the maximum element in the slice
+// Max returns the maximum element in a slice.
 func Max(s []int32) int32 {
 	max := s[0]
 	for _, v := range s {
@@ -50,7 +51,7 @@ func Max(s []int32) int32 {
 	return max
 }
 
-// Parse a string to int32
+// ParseStr parses a string to int32.
 func ParseStr(s string) (int32, error) {
 	i, err := strconv.ParseInt(s, 10, 32)
 	if err != nil {

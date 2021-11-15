@@ -1,3 +1,4 @@
+// Package export implements the export controller.
 package export
 
 import (
@@ -23,27 +24,27 @@ type exporter interface {
 	Execute() (res.ExportResults, error)
 }
 
-// Options to configure an export controller
+// ControllerOptions represents options to configure an export controller.
 type ControllerOptions struct {
-	// ExporterOptions for topic/acl
+	// ExporterOptions for topic/acl definitions.
 	Match   string
 	Exclude string
 
-	// ExporterOptions for topic
+	// ExporterOptions for topic definitions.
 	TopicIncludeInternal bool
 	TopicAssignments     opt.Assignments
 
-	// ExporterOptions for acl
+	// ExporterOptions for acl definitions.
 	ACLResourceType string
 	ACLAutoGroup    bool
 
-	// Export controller specific
+	// Export controller specific options.
 	DefinitionFormat opt.DefinitionFormat
 	OutputDir        string
 	Overwrite        bool
 }
 
-// Create a new export controller
+// NewExportController creates a new export controller.
 func NewExportController(
 	cl *client.Client,
 	args []string,
@@ -58,16 +59,14 @@ func NewExportController(
 	}
 }
 
-// An export controller
 type exportController struct {
-	// constructor params
 	cl   *client.Client
 	args []string
 	opts ControllerOptions
 	kind string
 }
 
-// Execute the export controller
+// Execute implements the execution of the export controller.
 func (e *exportController) Execute() error {
 	results, err := e.exportResources()
 	if err != nil {
@@ -82,12 +81,11 @@ func (e *exportController) Execute() error {
 
 	stdout := len(e.opts.OutputDir) == 0
 	if stdout && e.opts.DefinitionFormat == opt.JSONFormat {
-		// For JSON to stdout the def docs are returned as a slice
 		defDocBytes, err := getDefDocBytes(results.Defs(), e.opts.DefinitionFormat)
 		if err != nil {
 			return err
 		}
-		// Ignores --quiet
+		// Ignores --quiet.
 		fmt.Print(string(defDocBytes))
 	} else {
 		for _, result := range results {
@@ -97,7 +95,7 @@ func (e *exportController) Execute() error {
 			}
 
 			if stdout {
-				// Ignores --quiet
+				// Ignores --quiet.
 				fmt.Printf("---\n%s", string(defDocBytes))
 			} else {
 				outputPath := filepath.Join(
@@ -129,7 +127,6 @@ func (e *exportController) Execute() error {
 	return nil
 }
 
-// Execute a resource's exporter
 func (e *exportController) exportResources() (res.ExportResults, error) {
 	var exporter exporter
 	switch e.kind {
@@ -161,17 +158,16 @@ func (e *exportController) exportResources() (res.ExportResults, error) {
 	return results, nil
 }
 
-// Get the byte slice of a definition document
 func getDefDocBytes(def interface{}, format opt.DefinitionFormat) ([]byte, error) {
-	var defDocBytes []byte
+	var b []byte
 	var err error
 
 	switch format {
 	case opt.YAMLFormat:
-		defDocBytes, err = yaml.Marshal(def)
+		b, err = yaml.Marshal(def)
 	case opt.JSONFormat:
-		defDocBytes, err = json.MarshalIndent(def, "", "  ")
-		defDocBytes = append(defDocBytes, "\n"...)
+		b, err = json.MarshalIndent(def, "", "  ")
+		b = append(b, "\n"...)
 	default:
 		return nil, fmt.Errorf("unsupported format")
 	}
@@ -180,5 +176,5 @@ func getDefDocBytes(def interface{}, format opt.DefinitionFormat) ([]byte, error
 		return nil, err
 	}
 
-	return defDocBytes, nil
+	return b, nil
 }

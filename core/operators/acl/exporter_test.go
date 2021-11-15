@@ -1,6 +1,7 @@
 //go:build integration
 // +build integration
 
+// Package acl implements operators for acl definition operations.
 package acl
 
 import (

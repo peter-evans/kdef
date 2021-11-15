@@ -1,3 +1,4 @@
+// Package topic implements the export topic command and executes the controller.
 package topic
 
 import (
@@ -11,10 +12,9 @@ import (
 	"github.com/peter-evans/kdef/core/model/opt"
 )
 
-// Creates the export topic command
 func Command(cOpts *config.Options) *cobra.Command {
 	opts := export.ControllerOptions{}
-	var definitionFormat string
+	var defFormat string
 	var assignments string
 
 	cmd := &cobra.Command{
@@ -33,7 +33,7 @@ kdef export topic --match "myapp.*"`,
 		SilenceErrors:         true,
 		DisableFlagsInUseLine: true,
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			opts.DefinitionFormat = opt.ParseDefinitionFormat(definitionFormat)
+			opts.DefinitionFormat = opt.ParseDefinitionFormat(defFormat)
 			if opts.DefinitionFormat == opt.UnsupportedFormat {
 				return fmt.Errorf("\"format\" must be one of %q", strings.Join(opt.DefinitionFormatValidValues, "|"))
 			}
@@ -49,8 +49,8 @@ kdef export topic --match "myapp.*"`,
 				return err
 			}
 
-			controller := export.NewExportController(cl, args, opts, "topic")
-			if err := controller.Execute(); err != nil {
+			ctl := export.NewExportController(cl, args, opts, "topic")
+			if err := ctl.Execute(); err != nil {
 				return err
 			}
 			return nil
@@ -58,7 +58,7 @@ kdef export topic --match "myapp.*"`,
 	}
 
 	cmd.Flags().StringVarP(
-		&definitionFormat,
+		&defFormat,
 		"format",
 		"f",
 		"yaml",

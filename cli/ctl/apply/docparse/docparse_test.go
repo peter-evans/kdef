@@ -1,3 +1,4 @@
+// Package docparse implements parsers to transform input into separated documents.
 package docparse
 
 import (

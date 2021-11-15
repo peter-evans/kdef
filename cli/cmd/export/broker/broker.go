@@ -1,3 +1,4 @@
+// Package broker implements the export broker command and executes the controller.
 package broker
 
 import (
@@ -11,10 +12,9 @@ import (
 	"github.com/peter-evans/kdef/core/model/opt"
 )
 
-// Creates the export broker command
 func Command(cOpts *config.Options) *cobra.Command {
 	opts := export.ControllerOptions{}
-	var definitionFormat string
+	var defFormat string
 
 	cmd := &cobra.Command{
 		Use:   "broker",
@@ -29,7 +29,7 @@ kdef export broker --quiet`,
 		SilenceErrors:         true,
 		DisableFlagsInUseLine: true,
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			opts.DefinitionFormat = opt.ParseDefinitionFormat(definitionFormat)
+			opts.DefinitionFormat = opt.ParseDefinitionFormat(defFormat)
 			if opts.DefinitionFormat == opt.UnsupportedFormat {
 				return fmt.Errorf("\"format\" must be one of %q", strings.Join(opt.DefinitionFormatValidValues, "|"))
 			}
@@ -41,8 +41,8 @@ kdef export broker --quiet`,
 				return err
 			}
 
-			controller := export.NewExportController(cl, args, opts, "broker")
-			if err := controller.Execute(); err != nil {
+			ctl := export.NewExportController(cl, args, opts, "broker")
+			if err := ctl.Execute(); err != nil {
 				return err
 			}
 			return nil
@@ -50,7 +50,7 @@ kdef export broker --quiet`,
 	}
 
 	cmd.Flags().StringVarP(
-		&definitionFormat,
+		&defFormat,
 		"format",
 		"f",
 		"yaml",

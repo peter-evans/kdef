@@ -1,3 +1,4 @@
+// Package i32 implements functions for various int32 operations.
 package i32
 
 import (

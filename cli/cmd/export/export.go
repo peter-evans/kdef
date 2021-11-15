@@ -1,3 +1,4 @@
+// Package export implements the export command.
 package export
 
 import (
@@ -10,7 +11,6 @@ import (
 	"github.com/peter-evans/kdef/cli/config"
 )
 
-// Creates the export command
 func Command(cOpts *config.Options) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",

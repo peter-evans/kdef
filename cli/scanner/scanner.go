@@ -1,3 +1,4 @@
+// Package scanner implements a scanner with methods to prompt for user input.
 package scanner
 
 import (
@@ -9,6 +10,7 @@ import (
 	"time"
 )
 
+// New creates a new scanner.
 func New() *Scanner {
 	s := &Scanner{
 		s: bufio.NewScanner(os.Stdin),
@@ -18,14 +20,15 @@ func New() *Scanner {
 	return s
 }
 
+// Scanner represents an active scanner.
 type Scanner struct {
-	s *bufio.Scanner
-
+	s     *bufio.Scanner
 	mu    sync.Mutex
 	cond  *sync.Cond
 	lines []string
 }
 
+// PromptLine prompts the user for a single line of input.
 func (s *Scanner) PromptLine(prompt string, defaultValue string) string {
 	l := s.line(prompt)
 	if len(l) > 0 {
@@ -34,6 +37,7 @@ func (s *Scanner) PromptLine(prompt string, defaultValue string) string {
 	return defaultValue
 }
 
+// PromptMultiline prompts the user for multiline input.
 func (s *Scanner) PromptMultiline(prompt string, defaultValue []string) []string {
 	var lines []string
 	for {
@@ -57,6 +61,7 @@ func (s *Scanner) PromptMultiline(prompt string, defaultValue []string) []string
 	return defaultValue
 }
 
+// PromptYesNo prompts the user for yes/no input.
 func (s *Scanner) PromptYesNo(prompt string, defaultValue bool) bool {
 	l := s.line(prompt)
 	if len(l) > 0 {

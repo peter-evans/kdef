@@ -1,3 +1,4 @@
+// Package acls implements helper functions for handling ACLEntryGroups.
 package acls
 
 import (

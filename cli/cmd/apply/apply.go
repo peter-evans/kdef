@@ -1,3 +1,4 @@
+// Package apply implements the apply command and executes the controller.
 package apply
 
 import (
@@ -12,10 +13,9 @@ import (
 	"github.com/peter-evans/kdef/core/model/opt"
 )
 
-// Creates the apply command
 func Command(cOpts *config.Options) *cobra.Command {
 	opts := apply.ControllerOptions{}
-	var definitionFormat string
+	var defFormat string
 
 	cmd := &cobra.Command{
 		Use:   "apply [definitions]",
@@ -42,7 +42,7 @@ cat topics/my_topic.yml | kdef apply - --dry-run`,
 		DisableFlagsInUseLine: true,
 		Args:                  cobra.MinimumNArgs(1),
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			opts.DefinitionFormat = opt.ParseDefinitionFormat(definitionFormat)
+			opts.DefinitionFormat = opt.ParseDefinitionFormat(defFormat)
 			if opts.DefinitionFormat == opt.UnsupportedFormat {
 				return fmt.Errorf("\"format\" must be one of %q", strings.Join(opt.DefinitionFormatValidValues, "|"))
 			}
@@ -67,8 +67,8 @@ cat topics/my_topic.yml | kdef apply - --dry-run`,
 				return err
 			}
 
-			controller := apply.NewApplyController(cl, args, opts)
-			if err := controller.Execute(); err != nil {
+			ctl := apply.NewApplyController(cl, args, opts)
+			if err := ctl.Execute(); err != nil {
 				return err
 			}
 
@@ -77,7 +77,7 @@ cat topics/my_topic.yml | kdef apply - --dry-run`,
 	}
 
 	cmd.Flags().StringVarP(
-		&definitionFormat,
+		&defFormat,
 		"format",
 		"f",
 		"yaml",

@@ -1,3 +1,4 @@
+// Package apply implements the apply controller.
 package apply
 
 import (
@@ -27,20 +28,20 @@ type applier interface {
 	Execute() *res.ApplyResult
 }
 
-// Options to configure an apply controller
+// ControllerOptions represents options to configure an apply controller.
 type ControllerOptions struct {
-	// ApplierOptions
+	// Applier options.
 	ReassAwaitTimeout int
 	DefinitionFormat  opt.DefinitionFormat
 	DryRun            bool
 
-	// Apply controller specific
+	// Apply controller specific options.
 	ContinueOnError bool
 	ExitCode        bool
 	JSONOutput      bool
 }
 
-// Create a new apply controller
+// NewApplyController creates a new apply controller.
 func NewApplyController(
 	cl *client.Client,
 	args []string,
@@ -53,21 +54,19 @@ func NewApplyController(
 	}
 }
 
-// An apply controller
 type applyController struct {
-	// constructor params
 	cl   *client.Client
 	args []string
 	opts ControllerOptions
 }
 
-// Execute the apply controller
+// Execute implements the execution of the apply controller.
 func (a *applyController) Execute() error {
 	results := res.ApplyResults{}
 	var ctlErrors bool
 
 	if a.args[0] == "-" {
-		// Apply defs from stdin
+		// Apply definitions from stdin.
 		res, err := a.applyDefsFromStdin()
 		results = append(results, res...)
 		if err != nil {
@@ -75,7 +74,7 @@ func (a *applyController) Execute() error {
 			ctlErrors = true
 		}
 	} else {
-		// Apply defs from file
+		// Apply definitions from file.
 		for _, arg := range a.args {
 			basepath, pattern := doublestar.SplitPattern(arg)
 			fsys := os.DirFS(basepath)
@@ -109,7 +108,6 @@ func (a *applyController) Execute() error {
 		}
 	}
 
-	// Output JSON
 	if a.opts.JSONOutput {
 		out, err := results.JSON()
 		if err != nil {
@@ -118,18 +116,15 @@ func (a *applyController) Execute() error {
 		fmt.Printf("%s\n", out)
 	}
 
-	// Log an error if no valid resource definitions were found
 	if len(results) == 0 {
 		log.Error(fmt.Errorf("no valid resource definitions found"))
 		ctlErrors = true
 	}
 
-	// Check if the apply controller had errors or the apply results contains any errors
 	if ctlErrors || results.ContainsErr() {
 		return fmt.Errorf("apply completed with errors")
 	}
 
-	// Cause the program to exit with 1 if there are unapplied changes
 	if a.opts.ExitCode && results.ContainsUnappliedChanges() {
 		return fmt.Errorf("unapplied changes exist")
 	}
@@ -137,7 +132,6 @@ func (a *applyController) Execute() error {
 	return nil
 }
 
-// Apply resource definitions from stdin
 func (a *applyController) applyDefsFromStdin() (res.ApplyResults, error) {
 	log.Infof("Reading definition(s) from stdin")
 	defDocs, err := docparse.FromStdin(docparse.Format(a.opts.DefinitionFormat))
@@ -147,7 +141,6 @@ func (a *applyController) applyDefsFromStdin() (res.ApplyResults, error) {
 	return a.applyDefinitions(defDocs)
 }
 
-// Apply resource definitions from file
 func (a *applyController) applyDefsFromFile(filepath string) (res.ApplyResults, error) {
 	log.Infof("Reading definition(s) from file %q", filepath)
 	defDocs, err := docparse.FromFile(filepath, docparse.Format(a.opts.DefinitionFormat))
@@ -157,7 +150,6 @@ func (a *applyController) applyDefsFromFile(filepath string) (res.ApplyResults, 
 	return a.applyDefinitions(defDocs)
 }
 
-// Apply resource definitions using the associated applier
 func (a *applyController) applyDefinitions(defDocs []string) (res.ApplyResults, error) {
 	resourceDefs, err := getResourceDefinitions(defDocs, a.opts.DefinitionFormat)
 	if err != nil {
@@ -202,7 +194,6 @@ func (a *applyController) applyDefinitions(defDocs []string) (res.ApplyResults, 
 	return results, nil
 }
 
-// Get resource definitions for the definition documents
 func getResourceDefinitions(defDocs []string, format opt.DefinitionFormat) ([]def.ResourceDefinition, error) {
 	kinds := make([]def.ResourceDefinition, len(defDocs))
 

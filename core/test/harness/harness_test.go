@@ -1,3 +1,4 @@
+// Package harness implements test harnesses for integration tests.
 package harness
 
 import (

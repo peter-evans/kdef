@@ -1,3 +1,4 @@
+// Package apply implements the apply controller.
 package apply
 
 import (

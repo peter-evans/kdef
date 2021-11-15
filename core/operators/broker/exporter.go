@@ -1,3 +1,4 @@
+// Package broker implements operators for broker definition operations.
 package broker
 
 import (
@@ -10,7 +11,7 @@ import (
 	"github.com/peter-evans/kdef/core/model/res"
 )
 
-// Create a new exporter
+// NewExporter creates a new exporter.
 func NewExporter(
 	cl *client.Client,
 ) *exporter { //revive:disable-line:unexported-return
@@ -19,13 +20,12 @@ func NewExporter(
 	}
 }
 
-// An exporter handling the export operation
 type exporter struct {
 	// constructor params
 	srv *kafka.Service
 }
 
-// Execute the export operation
+// Execute executes the export operation.
 func (e *exporter) Execute() (res.ExportResults, error) {
 	log.Infof("Fetching per-broker configuration...")
 	brokerDefs, err := e.getBrokerDefinitions()
@@ -51,7 +51,6 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 	return results, nil
 }
 
-// Return the broker definitions
 func (e *exporter) getBrokerDefinitions() ([]def.BrokerDefinition, error) {
 	metadata, err := e.srv.DescribeMetadata([]string{}, true)
 	if err != nil {

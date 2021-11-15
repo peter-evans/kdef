@@ -1,3 +1,4 @@
+// Package log implements a logging interface.
 package log
 
 import (
@@ -12,14 +13,14 @@ var (
 	Verbose = false
 )
 
-// Print an info level message
+// Infof prints an info level message.
 func Infof(format string, args ...interface{}) {
 	if !Quiet {
 		fmt.Printf(format+"\n", args...)
 	}
 }
 
-// Print an info level message with prefixed key
+// InfoWithKeyf prints an info level message with prefixed key.
 func InfoWithKeyf(key string, format string, args ...interface{}) {
 	if !Quiet {
 		k := color.MagentaString("[%s] ", key)
@@ -27,7 +28,7 @@ func InfoWithKeyf(key string, format string, args ...interface{}) {
 	}
 }
 
-// Print an info level message optionally with prefixed key
+// InfoMaybeWithKeyf prints an info level message optionally with prefixed key.
 func InfoMaybeWithKeyf(key string, showKey bool, format string, args ...interface{}) {
 	if showKey {
 		InfoWithKeyf(key, format, args...)
@@ -36,14 +37,14 @@ func InfoMaybeWithKeyf(key string, showKey bool, format string, args ...interfac
 	}
 }
 
-// Print a debug level message
+// Debugf prints a debug level message.
 func Debugf(format string, args ...interface{}) {
 	if !Quiet && Verbose {
 		color.HiBlack(format, args...)
 	}
 }
 
-// Print a warn level message
+// Warnf prints a warn level message.
 func Warnf(format string, args ...interface{}) {
 	if !Quiet {
 		k := color.YellowString("[warn] ")
@@ -51,7 +52,7 @@ func Warnf(format string, args ...interface{}) {
 	}
 }
 
-// Print an error level message
+// Error prints an error level message.
 func Error(err error) {
 	k := color.RedString("[error] ")
 	fmt.Fprintf(os.Stderr, k+"%v\n", err)

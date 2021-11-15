@@ -1,3 +1,4 @@
+// Package acl implements operators for acl definition operations.
 package acl
 
 import (
@@ -11,7 +12,7 @@ import (
 	"github.com/peter-evans/kdef/core/model/res"
 )
 
-// Options to configure an exporter
+// ExporterOptions represents options to configure an exporter.
 type ExporterOptions struct {
 	Match        string
 	Exclude      string
@@ -19,7 +20,7 @@ type ExporterOptions struct {
 	AutoGroup    bool
 }
 
-// Create a new exporter
+// NewExporter creates a new exporter.
 func NewExporter(
 	cl *client.Client,
 	opts ExporterOptions,
@@ -30,16 +31,14 @@ func NewExporter(
 	}
 }
 
-// An exporter handling the export operation
 type exporter struct {
-	// constructor params
 	srv  *kafka.Service
 	opts ExporterOptions
 }
 
-// Execute the export operation
+// Execute executes the export operation.
 func (e *exporter) Execute() (res.ExportResults, error) {
-	log.Infof("Fetching acls...")
+	log.Infof("Fetching ACLs...")
 	aclDefs, err := e.getACLDefinitions()
 	if err != nil {
 		return nil, err
@@ -63,9 +62,8 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 	return results, nil
 }
 
-// Return acl definitions for existing resources in a cluster
 func (e *exporter) getACLDefinitions() ([]def.ACLDefinition, error) {
-	resourceAcls, err := e.srv.DescribeAllResourceAcls(
+	resourceACLs, err := e.srv.DescribeAllResourceACLs(
 		e.opts.ResourceType,
 	)
 	if err != nil {
@@ -82,7 +80,7 @@ func (e *exporter) getACLDefinitions() ([]def.ACLDefinition, error) {
 	}
 
 	aclDefs := []def.ACLDefinition{}
-	for _, resource := range resourceAcls {
+	for _, resource := range resourceACLs {
 		if !matchRegExp.MatchString(resource.ResourceName) {
 			continue
 		}
@@ -90,18 +88,18 @@ func (e *exporter) getACLDefinitions() ([]def.ACLDefinition, error) {
 			continue
 		}
 
-		resAcls := resource.Acls
+		resACLs := resource.ACLs
 		if e.opts.AutoGroup {
-			resAcls = acls.MergeGroups(resAcls)
+			resACLs = acls.MergeGroups(resACLs)
 		}
 
 		aclDef := def.NewACLDefinition(
 			resource.ResourceName,
 			resource.ResourceType,
-			resAcls,
+			resACLs,
 		)
-		// Default to delete undefined acls
-		aclDef.Spec.DeleteUndefinedAcls = true
+		// Default to delete undefined ACLs.
+		aclDef.Spec.DeleteUndefinedACLs = true
 
 		aclDefs = append(aclDefs, aclDef)
 	}

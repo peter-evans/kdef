@@ -1,3 +1,4 @@
+// Package meta implements metadata structures and related operations.
 package meta
 
 import (
@@ -5,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestBrokers_Ids(t *testing.T) {
+func TestBrokers_IDs(t *testing.T) {
 	tests := []struct {
 		name string
 		b    Brokers
@@ -23,8 +24,8 @@ func TestBrokers_Ids(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.b.Ids(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Brokers.Ids() = %v, want %v", got, tt.want)
+			if got := tt.b.IDs(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Brokers.IDs() = %v, want %v", got, tt.want)
 			}
 		})
 	}

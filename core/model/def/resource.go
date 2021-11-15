@@ -1,3 +1,4 @@
+// Package def implements definitions for Kafka resources.
 package def
 
 import (
@@ -6,7 +7,6 @@ import (
 	"github.com/peter-evans/kdef/core/util/str"
 )
 
-// Definition kinds and associated versions
 var definitionKindVersions = map[string][]string{
 	"acl":     {"v1"},
 	"broker":  {"v1"},
@@ -14,24 +14,24 @@ var definitionKindVersions = map[string][]string{
 	"topic":   {"v1"},
 }
 
-// Resource metadata labels
+// ResourceMetadataLabels represents resource metadata labels.
 type ResourceMetadataLabels map[string]string
 
-// Resource metadata definition
+// ResourceMetadataDefinition represents a resource metadata definition.
 type ResourceMetadataDefinition struct {
 	Labels ResourceMetadataLabels `json:"labels,omitempty"`
 	Name   string                 `json:"name"`
 	Type   string                 `json:"type,omitempty"`
 }
 
-// Top-level definition of a resource
+// ResourceDefinition represents a resource definition.
 type ResourceDefinition struct {
 	APIVersion string                     `json:"apiVersion"`
 	Kind       string                     `json:"kind"`
 	Metadata   ResourceMetadataDefinition `json:"metadata"`
 }
 
-// Validate resource definition
+// ValidateResource validates the resource definition.
 func (r ResourceDefinition) ValidateResource() error {
 	if versions, ok := definitionKindVersions[r.Kind]; ok {
 		if !str.Contains(r.APIVersion, versions) {

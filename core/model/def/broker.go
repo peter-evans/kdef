@@ -1,3 +1,4 @@
+// Package def implements definitions for Kafka resources.
 package def
 
 import (
@@ -8,28 +9,28 @@ import (
 	"github.com/peter-evans/kdef/core/util/i32"
 )
 
-// Broker spec definition
+// BrokerSpecDefinition represents a broker spec definition.
 type BrokerSpecDefinition struct {
 	Configs                ConfigsMap `json:"configs,omitempty"`
 	DeleteUndefinedConfigs bool       `json:"deleteUndefinedConfigs"`
 }
 
-// Top-level broker definition
+// BrokerDefinition represents a broker resource definition.
 type BrokerDefinition struct {
 	ResourceDefinition
 	Spec BrokerSpecDefinition `json:"spec"`
 }
 
-// Create a copy of this BrokerDefinition
+// Copy creates a copy of this BrokerDefinition.
 func (b BrokerDefinition) Copy() BrokerDefinition {
 	copiers := copy.New()
 	copier := copiers.Get(&BrokerDefinition{}, &BrokerDefinition{})
-	brokerDefCopy := BrokerDefinition{}
+	var brokerDefCopy BrokerDefinition
 	copier.Copy(&brokerDefCopy, &b)
 	return brokerDefCopy
 }
 
-// Validate definition
+// Validate validates the definition.
 func (b BrokerDefinition) Validate() error {
 	if err := b.ValidateResource(); err != nil {
 		return err
@@ -42,21 +43,21 @@ func (b BrokerDefinition) Validate() error {
 	return nil
 }
 
-// Further validate definition using metadata
+// ValidateWithMetadata further validates the definition using metadata.
 func (b BrokerDefinition) ValidateWithMetadata(brokers meta.Brokers) error {
 	// Check the value of metadata name is a valid broker ID
 	brokerID, err := i32.ParseStr(b.Metadata.Name)
 	if err != nil {
 		return err
 	}
-	if !i32.Contains(brokerID, brokers.Ids()) {
+	if !i32.Contains(brokerID, brokers.IDs()) {
 		return fmt.Errorf("metadata name must be the id of an available broker")
 	}
 
 	return nil
 }
 
-// Create a broker definition from metadata and config
+// NewBrokerDefinition creates a broker definition from metadata and config.
 func NewBrokerDefinition(
 	name string,
 	configsMap ConfigsMap,

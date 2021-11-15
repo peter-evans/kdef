@@ -1,3 +1,4 @@
+// Package harness implements test harnesses for integration tests.
 package harness
 
 import "fmt"
@@ -7,6 +8,7 @@ const (
 	zookeeperPort = 2181
 )
 
+// ComposeHarness represents a Docker compose based test harness.
 type ComposeHarness struct {
 	ComposeFilePaths []string
 	ZookeeperPort    int
@@ -14,6 +16,7 @@ type ComposeHarness struct {
 	Brokers          int
 }
 
+// Env returns an environment variable map.
 func (t ComposeHarness) Env() map[string]string {
 	env := map[string]string{
 		"ZOOKEEPER_PORT": fmt.Sprintf("%d", t.ZookeeperPort),

@@ -1,3 +1,4 @@
+// Package client implements the creation of a Kafka client.
 package client
 
 import (
@@ -23,7 +24,7 @@ import (
 	"github.com/twmb/franz-go/pkg/sasl/scram"
 )
 
-// Create a new client
+// New creates a new client.
 func New(cc *Config) (*Client, error) {
 	cl := &Client{
 		cc: cc,
@@ -31,11 +32,11 @@ func New(cc *Config) (*Client, error) {
 			kgo.MetadataMinAge(time.Second),
 		},
 	}
-	// Validate configuration not used for client options
+
 	if err := cl.validateNonClientOptConfig(); err != nil {
 		return nil, err
 	}
-	// Build the internal client
+
 	if err := cl.buildClient(); err != nil {
 		return nil, err
 	}
@@ -43,24 +44,23 @@ func New(cc *Config) (*Client, error) {
 	return cl, nil
 }
 
-// A client providing broker APIs
+// Client represents a Kafka client.
 type Client struct {
 	Client  *kgo.Client
 	cc      *Config
 	kgoOpts []kgo.Opt
 }
 
-// Timeout in milliseconds to be used by requests with timeouts
+// TimeoutMs is the timeout in milliseconds to be used by requests with timeouts.
 func (cl *Client) TimeoutMs() int32 {
 	return cl.cc.TimeoutMs
 }
 
-// The alter configs method that should be used (auto, incremental, non-incremental)
+// AlterConfigsMethod is the alter configs method that should be used (auto, incremental, non-incremental).
 func (cl *Client) AlterConfigsMethod() string {
 	return cl.cc.AlterConfigsMethod
 }
 
-// Validate configuration not used for client options
 func (cl *Client) validateNonClientOptConfig() error {
 	if cl.cc.TimeoutMs < 0 {
 		return fmt.Errorf("timeoutMs must be greater or equal to 0")
@@ -73,16 +73,13 @@ func (cl *Client) validateNonClientOptConfig() error {
 	return nil
 }
 
-// Build the internal client
 func (cl *Client) buildClient() error {
 	log.Debugf("Building Kafka client")
 
-	// Build options to configure a kgo.Client instance
 	if err := cl.buildOptions(); err != nil {
 		return err
 	}
 
-	// Create the client
 	var err error
 	cl.Client, err = kgo.NewClient(cl.kgoOpts...)
 	if err != nil {
@@ -92,32 +89,25 @@ func (cl *Client) buildClient() error {
 	return nil
 }
 
-// Adds an option to configure kgo.Client
 func (cl *Client) addOpt(opt kgo.Opt) {
 	cl.kgoOpts = append(cl.kgoOpts, opt)
 }
 
-// Build options to configure a kgo.Client instance
 func (cl *Client) buildOptions() error {
-	// Set the seed brokers
 	cl.addOpt(kgo.SeedBrokers(cl.cc.SeedBrokers...))
 
-	// Build and set the SASL option
 	if err := cl.buildSASLOpt(); err != nil {
 		return err
 	}
 
-	// Build and set the TLS option
 	if err := cl.buildTLSOpt(); err != nil {
 		return err
 	}
 
-	// Build and set the max versions option
 	if err := cl.buildMaxVersionsOpt(); err != nil {
 		return err
 	}
 
-	// Build and set the client log level option
 	if err := cl.buildLogLevelOpt(); err != nil {
 		return err
 	}
@@ -125,7 +115,6 @@ func (cl *Client) buildOptions() error {
 	return nil
 }
 
-// Build and set the SASL option
 func (cl *Client) buildSASLOpt() error {
 	if cl.cc.SASL == nil {
 		return nil
@@ -177,7 +166,6 @@ func (cl *Client) buildSASLOpt() error {
 	return nil
 }
 
-// Build and set the TLS option
 func (cl *Client) buildTLSOpt() error {
 	if !cl.cc.TLS.Enabled {
 		return nil
@@ -185,7 +173,7 @@ func (cl *Client) buildTLSOpt() error {
 
 	tc := new(tls.Config)
 
-	// Set min version
+	// Set min version.
 	switch strings.ToLower(cl.cc.TLS.MinVersion) {
 	case "", "v1.2", "1.2":
 		tc.MinVersion = tls.VersionTLS12 // Default
@@ -199,7 +187,7 @@ func (cl *Client) buildTLSOpt() error {
 		return fmt.Errorf("invalid tls min version %q", cl.cc.TLS.MinVersion)
 	}
 
-	// Set cipher suites
+	// Set cipher suites.
 	if suites := cl.cc.TLS.CipherSuites; len(suites) > 0 {
 		candidates := make(map[string]uint16)
 		for _, suite := range append(tls.CipherSuites(), tls.InsecureCipherSuites()...) {
@@ -216,7 +204,7 @@ func (cl *Client) buildTLSOpt() error {
 		}
 	}
 
-	// Set curve preferences
+	// Set curve preferences.
 	if curves := cl.cc.TLS.CurvePreferences; len(curves) > 0 {
 		candidates := map[string]tls.CurveID{
 			"curvep256": tls.CurveP256,
@@ -234,7 +222,7 @@ func (cl *Client) buildTLSOpt() error {
 		}
 	}
 
-	// Set CA cert
+	// Set CA cert.
 	if len(cl.cc.TLS.CACertPath) > 0 {
 		ca, err := ioutil.ReadFile(cl.cc.TLS.CACertPath)
 		if err != nil {
@@ -245,7 +233,7 @@ func (cl *Client) buildTLSOpt() error {
 		tc.RootCAs.AppendCertsFromPEM(ca)
 	}
 
-	// Set client cert
+	// Set client cert.
 	if len(cl.cc.TLS.ClientCertPath) > 0 || len(cl.cc.TLS.ClientKeyPath) > 0 {
 		if len(cl.cc.TLS.ClientCertPath) == 0 || len(cl.cc.TLS.ClientKeyPath) == 0 {
 			return fmt.Errorf("both client and key cert paths must be provided, but only one found")
@@ -268,7 +256,7 @@ func (cl *Client) buildTLSOpt() error {
 		tc.Certificates = append(tc.Certificates, pair)
 	}
 
-	// Add TLS opt
+	// Add TLS opt.
 	dialer := &net.Dialer{Timeout: 10 * time.Second}
 	cl.addOpt(kgo.Dialer(func(_ context.Context, _, host string) (net.Conn, error) {
 		tcClone := tc.Clone()
@@ -283,7 +271,6 @@ func (cl *Client) buildTLSOpt() error {
 	return nil
 }
 
-// Build and set the max versions option
 func (cl *Client) buildMaxVersionsOpt() error {
 	if len(cl.cc.AsVersion) > 0 {
 		var versions *kversion.Versions
@@ -335,7 +322,6 @@ func (cl *Client) buildMaxVersionsOpt() error {
 	return nil
 }
 
-// Build and set the client log level option
 func (cl *Client) buildLogLevelOpt() error {
 	var level kgo.LogLevel
 	switch ll := strings.ToLower(cl.cc.LogLevel); ll {

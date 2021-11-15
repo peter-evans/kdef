@@ -1,3 +1,4 @@
+// Package diff implements functions to compute a line-oriented diff.
 package diff
 
 import (

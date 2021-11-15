@@ -1,3 +1,4 @@
+// Package jsondiff implements a line-oriented JSON differ.
 package jsondiff
 
 import (
@@ -6,9 +7,9 @@ import (
 	"github.com/peter-evans/kdef/core/util/diff"
 )
 
-// Compute the line-oriented diff between the JSON representation of two structs
+// Diff computes the line-oriented diff between the JSON representation of two structs.
 func Diff(a interface{}, b interface{}) (string, error) {
-	// Convert interface to JSON handling null pointers
+	// Convert interface to JSON handling null pointers.
 	toJSON := func(d interface{}) (string, error) {
 		j := "null"
 		if d != nil {

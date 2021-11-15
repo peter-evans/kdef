@@ -1,3 +1,4 @@
+// Package acls implements helper functions for handling ACLEntryGroups.
 package acls
 
 import (
@@ -5,7 +6,7 @@ import (
 	"github.com/peter-evans/kdef/core/util/str"
 )
 
-// Find the acl entry groups in A that are not in B (patch), and the common acl entry groups (intersection)
+// DiffPatchIntersection finds the acl entry groups in A that are not in B (patch), and the common acl entry groups (intersection).
 func DiffPatchIntersection(a def.ACLEntryGroups, b def.ACLEntryGroups) (def.ACLEntryGroups, def.ACLEntryGroups) {
 	var patch def.ACLEntryGroups
 	var intersection def.ACLEntryGroups
@@ -36,14 +37,14 @@ func DiffPatchIntersection(a def.ACLEntryGroups, b def.ACLEntryGroups) (def.ACLE
 	return patch, intersection
 }
 
-// Merge acl entry groups
+// MergeGroups merges acl entry groups.
 func MergeGroups(groups def.ACLEntryGroups) def.ACLEntryGroups {
 	count := len(groups)
 	if count == 1 {
 		return groups
 	}
 
-	// Call recursively until the groups cannot be merged further
+	// Call recursively until the groups cannot be merged further.
 	mergedGroups := mergeGroups(groups[0:1], groups[1:])
 	if len(mergedGroups) < count {
 		return MergeGroups(mergedGroups)
@@ -52,9 +53,8 @@ func MergeGroups(groups def.ACLEntryGroups) def.ACLEntryGroups {
 	return mergedGroups
 }
 
-// Try to merge group A with group B
 func mergeGroups(a def.ACLEntryGroups, b def.ACLEntryGroups) def.ACLEntryGroups {
-	// Loop through the elements of A trying to merge them with the first element of B
+	// Loop through the elements of A trying to merge them with the first element of B.
 	var groups def.ACLEntryGroups
 	var merged bool
 	for _, ag := range a {
@@ -67,12 +67,12 @@ func mergeGroups(a def.ACLEntryGroups, b def.ACLEntryGroups) def.ACLEntryGroups 
 		}
 		groups = append(groups, ag)
 	}
-	// If the first element of B couldn't merge with any element of A then just append
+	// If the first element of B couldn't merge with any element of A then just append.
 	if !merged {
 		groups = append(groups, b[0])
 	}
 
-	// Call this function recursively if B contains further elements
+	// Call this function recursively if B contains further elements.
 	if len(b) > 1 {
 		return mergeGroups(groups, b[1:])
 	}
@@ -80,10 +80,9 @@ func mergeGroups(a def.ACLEntryGroups, b def.ACLEntryGroups) def.ACLEntryGroups 
 	return groups
 }
 
-// Try to merge acl entry groups, returning the merged group or unmerged input groups
 func tryMergeGroups(a def.ACLEntryGroup, b def.ACLEntryGroup) def.ACLEntryGroups {
 	if a.PermissionType == b.PermissionType {
-		// Two out of the following three properties must match to be merged
+		// Two out of the following three properties must match to be merged.
 		equalPrincipals := str.UnorderedEqual(a.Principals, b.Principals)
 		equalHosts := str.UnorderedEqual(a.Hosts, b.Hosts)
 		equalOperations := str.UnorderedEqual(a.Operations, b.Operations)

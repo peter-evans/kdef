@@ -1,3 +1,4 @@
+// Package brokers implements operators for brokers definition operations.
 package brokers
 
 import (
@@ -15,13 +16,13 @@ import (
 	"github.com/peter-evans/kdef/core/model/res"
 )
 
-// Options to configure an applier
+// ApplierOptions represents options to configure an applier.
 type ApplierOptions struct {
 	DefinitionFormat opt.DefinitionFormat
 	DryRun           bool
 }
 
-// Create a new applier
+// NewApplier creates a new applier.
 func NewApplier(
 	cl *client.Client,
 	defDoc string,
@@ -34,49 +35,44 @@ func NewApplier(
 	}
 }
 
-// Applier operations
 type applierOps struct {
 	config kafka.ConfigOperations
 }
 
-// Determine if there are any pending operations
 func (a applierOps) pending() bool {
 	return len(a.config) > 0
 }
 
-// An applier handling the apply operation
 type applier struct {
-	// constructor params
+	// Constructor fields.
 	srv    *kafka.Service
 	defDoc string
 	opts   ApplierOptions
 
-	// internal
+	// Internal fields.
 	localDef      def.BrokersDefinition
 	remoteDef     def.BrokersDefinition
 	remoteConfigs def.Configs
 	ops           applierOps
 
-	// result
+	// Result fields.
 	res res.ApplyResult
 }
 
-// Execute the applier
+// Execute executes the applier.
 func (a *applier) Execute() *res.ApplyResult {
 	if err := a.apply(); err != nil {
 		a.res.Err = err.Error()
 		log.Error(err)
 	} else if a.ops.pending() && !a.opts.DryRun {
-		// Consider the definition applied if there were ops and this is not a dry run
 		a.res.Applied = true
 	}
 
 	return &a.res
 }
 
-// Perform the apply operation sequence
+// apply performs the apply operation sequence.
 func (a *applier) apply() error {
-	// Create the local definition
 	if err := a.createLocal(); err != nil {
 		return err
 	}
@@ -86,41 +82,36 @@ func (a *applier) apply() error {
 		return err
 	}
 
-	// Fetch the remote definition and necessary metadata
 	if err := a.fetchRemote(); err != nil {
 		return err
 	}
 
-	// Build brokers operations
 	if err := a.buildOps(); err != nil {
 		return err
 	}
 
-	// Update the apply result with the remote definition and human readable diff
 	if err := a.updateApplyResult(); err != nil {
 		return err
 	}
 
 	if a.ops.pending() {
-		// Display diff and pending operations
 		if !log.Quiet {
 			a.displayPendingOps()
 		}
 
-		// Execute operations
 		if err := a.executeOps(); err != nil {
 			return err
 		}
 
-		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Completed apply for brokers %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Completed apply for brokers definition %q", a.localDef.Metadata.Name)
 	} else {
-		log.Infof("No changes to apply for brokers %q", a.localDef.Metadata.Name)
+		log.Infof("No changes to apply for brokers definition %q", a.localDef.Metadata.Name)
 	}
 
 	return nil
 }
 
-// Create the local definition
+// createLocal creates the local definition.
 func (a *applier) createLocal() error {
 	switch a.opts.DefinitionFormat {
 	case opt.YAMLFormat:
@@ -135,13 +126,12 @@ func (a *applier) createLocal() error {
 		return fmt.Errorf("unsupported format")
 	}
 
-	// Set the local definition on the apply result
 	a.res.LocalDef = &a.localDef
 
 	return nil
 }
 
-// Fetch the remote definition and necessary metadata
+// fetchRemote fetches the remote definition and necessary metadata.
 func (a *applier) fetchRemote() error {
 	log.Infof("Fetching brokers configuration...")
 	var err error
@@ -155,7 +145,7 @@ func (a *applier) fetchRemote() error {
 	return nil
 }
 
-// Build brokers operations
+// buildOps builds topic operations.
 func (a *applier) buildOps() error {
 	if err := a.buildConfigOps(); err != nil {
 		return err
@@ -163,16 +153,15 @@ func (a *applier) buildOps() error {
 	return nil
 }
 
-// Update the apply result with the remote definition and human readable diff
+// updateApplyResult updates the apply result with the remote definition and human readable diff.
 func (a *applier) updateApplyResult() error {
-	// Copy the remote definition
 	remoteCopy := a.remoteDef.Copy()
 
-	// Modify the remote definition to remove optional properties not specified in local
-	// Further, set properties that are local only and have no remote state
+	// Modify the remote definition to remove optional properties not specified in local.
+	// Further, set properties that are local only and have no remote state.
 
-	// The only configs we want to see are those specified in local and those in configOps
-	// configOps could contain key deletions that should be shown in the diff
+	// The only configs we want to see are those specified in local and those in configOps.
+	// configOps could contain key deletions that should be shown in the diff.
 	for k := range remoteCopy.Spec.Configs {
 		_, existsInLocal := a.localDef.Spec.Configs[k]
 		existsInOps := a.ops.config.Contains(k)
@@ -182,35 +171,31 @@ func (a *applier) updateApplyResult() error {
 		}
 	}
 
-	// Set properties that are local only and have no remote state
 	remoteCopy.Metadata.Name = a.localDef.Metadata.Name
 	remoteCopy.Spec.DeleteUndefinedConfigs = a.localDef.Spec.DeleteUndefinedConfigs
 
-	// Compute diff
 	diff, err := jsondiff.Diff(&remoteCopy, &a.localDef)
 	if err != nil {
 		return fmt.Errorf("failed to compute diff: %v", err)
 	}
 
-	// Check the diff against the pending operations
 	if diffExists := (len(diff) > 0); diffExists != a.ops.pending() {
 		return fmt.Errorf("existence of diff was %v, but expected %v", diffExists, a.ops.pending())
 	}
 
-	// Update the apply result
 	a.res.RemoteDef = remoteCopy
 	a.res.Diff = diff
 
 	return nil
 }
 
-// Display pending operations
+// displayPendingOps displays pending operations.
 func (a *applier) displayPendingOps() {
-	log.Infof("Brokers %q diff (local -> remote):", a.localDef.Metadata.Name)
+	log.Infof("brokers definition %q diff (local -> remote):", a.localDef.Metadata.Name)
 	fmt.Print(a.res.Diff)
 }
 
-// Execute brokers update operations
+// executeOps executes update operations.
 func (a *applier) executeOps() error {
 	if len(a.ops.config) > 0 {
 		if err := a.updateConfigs(); err != nil {
@@ -221,9 +206,9 @@ func (a *applier) executeOps() error {
 	return nil
 }
 
-// Build alter configs operations
+// buildConfigOps builds alter configs operations.
 func (a *applier) buildConfigOps() error {
-	log.Debugf("Comparing local and remote definition configs for brokers %q", a.localDef.Metadata.Name)
+	log.Debugf("Comparing local and remote configs for brokers definition %q", a.localDef.Metadata.Name)
 
 	var err error
 	a.ops.config, err = a.srv.NewConfigOps(
@@ -239,7 +224,7 @@ func (a *applier) buildConfigOps() error {
 	return nil
 }
 
-// Update brokers configs
+// updateConfigs updates brokers configs.
 func (a *applier) updateConfigs() error {
 	if a.ops.config.ContainsOp(kafka.DeleteConfigOperation) && !a.localDef.Spec.DeleteUndefinedConfigs {
 		// This case should only occur when using non-incremental alter configs
@@ -253,7 +238,7 @@ func (a *applier) updateConfigs() error {
 	); err != nil {
 		return err
 	}
-	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Altered configs for brokers %q", a.localDef.Metadata.Name)
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Altered configs for brokers definition %q", a.localDef.Metadata.Name)
 
 	return nil
 }

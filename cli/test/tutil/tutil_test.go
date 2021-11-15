@@ -1,3 +1,4 @@
+// Package tutil implements testing utility functions.
 package tutil
 
 import (
