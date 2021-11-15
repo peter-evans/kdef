@@ -1,3 +1,4 @@
+// Package topic implements operators for topic definition operations.
 package topic
 
 import (
@@ -12,7 +13,7 @@ import (
 	"github.com/peter-evans/kdef/core/model/res"
 )
 
-// Options to configure an exporter
+// ExporterOptions represents options to configure an exporter.
 type ExporterOptions struct {
 	Match           string
 	Exclude         string
@@ -20,7 +21,7 @@ type ExporterOptions struct {
 	Assignments     opt.Assignments
 }
 
-// Create a new exporter
+// NewExporter creates a new exporter.
 func NewExporter(
 	cl *client.Client,
 	opts ExporterOptions,
@@ -31,14 +32,12 @@ func NewExporter(
 	}
 }
 
-// An exporter handling the export operation
 type exporter struct {
-	// constructor params
 	srv  *kafka.Service
 	opts ExporterOptions
 }
 
-// Execute the export operation
+// Execute executes the export operation.
 func (e *exporter) Execute() (res.ExportResults, error) {
 	log.Infof("Fetching topics...")
 	topicDefs, err := e.getTopicDefinitions()
@@ -63,17 +62,16 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 	return results, nil
 }
 
-// Return topic definitions for existing topics in a cluster
 func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 	metadata, err := e.srv.DescribeMetadata(nil, true)
 	if err != nil {
 		return nil, err
 	}
 
-	topicNames := []string{}
+	topicNames := make([]string, len(metadata.Topics))
 	topicMetadataMap := map[string]kafka.TopicMetadata{}
-	for _, t := range metadata.Topics {
-		topicNames = append(topicNames, t.Topic)
+	for i, t := range metadata.Topics {
+		topicNames[i] = t.Topic
 		topicMetadataMap[t.Topic] = t
 	}
 
@@ -98,8 +96,8 @@ func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 
 	topicDefs := []def.TopicDefinition{}
 	for _, topic := range topicNames {
-		// Kafka internal topics are prefixed by double underscores
-		// Confluent Schema Registry uses a single underscore
+		// Kafka internal topics are prefixed by double underscores.
+		// Confluent Schema Registry uses a single underscore.
 		if strings.HasPrefix(topic, "_") && !e.opts.IncludeInternal {
 			continue
 		}
@@ -119,7 +117,7 @@ func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 			e.opts.Assignments == opt.BrokerAssignments,
 			e.opts.Assignments == opt.RackAssignments,
 		)
-		// Default to delete undefined configs
+		// Default to delete undefined configs.
 		topicDef.Spec.DeleteUndefinedConfigs = true
 
 		topicDefs = append(topicDefs, topicDef)

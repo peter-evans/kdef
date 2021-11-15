@@ -1,3 +1,4 @@
+// Package acl implements operators for acl definition operations.
 package acl
 
 import (
@@ -15,13 +16,13 @@ import (
 	"github.com/peter-evans/kdef/core/model/res"
 )
 
-// Options to configure an applier
+// ApplierOptions represents options to configure an applier.
 type ApplierOptions struct {
 	DefinitionFormat opt.DefinitionFormat
 	DryRun           bool
 }
 
-// Create a new applier
+// NewApplier creates a new applier.
 func NewApplier(
 	cl *client.Client,
 	defDoc string,
@@ -34,51 +35,46 @@ func NewApplier(
 	}
 }
 
-// Applier operations
 type applierOps struct {
-	addAcls    def.ACLEntryGroups
-	deleteAcls def.ACLEntryGroups
+	addACLs    def.ACLEntryGroups
+	deleteACLs def.ACLEntryGroups
 }
 
-// Determine if there are any pending operations
 func (a applierOps) pending() bool {
-	return len(a.addAcls) > 0 ||
-		len(a.deleteAcls) > 0
+	return len(a.addACLs) > 0 ||
+		len(a.deleteACLs) > 0
 }
 
-// An applier handling the apply operation
 type applier struct {
-	// constructor params
+	// Constructor fields.
 	srv    *kafka.Service
 	defDoc string
 	opts   ApplierOptions
 
-	// internal
+	// Internal fields.
 	localDef   def.ACLDefinition
 	remoteDef  def.ACLDefinition
-	remoteAcls def.ACLEntryGroups
+	remoteACLs def.ACLEntryGroups
 	ops        applierOps
 
-	// result
+	// Result fields.
 	res res.ApplyResult
 }
 
-// Execute the applier
+// Execute executes the applier.
 func (a *applier) Execute() *res.ApplyResult {
 	if err := a.apply(); err != nil {
 		a.res.Err = err.Error()
 		log.Error(err)
 	} else if a.ops.pending() && !a.opts.DryRun {
-		// Consider the definition applied if there were ops and this is not a dry run
 		a.res.Applied = true
 	}
 
 	return &a.res
 }
 
-// Perform the apply operation sequence
+// apply performs the apply operation sequence.
 func (a *applier) apply() error {
-	// Create the local definition
 	if err := a.createLocal(); err != nil {
 		return err
 	}
@@ -88,41 +84,36 @@ func (a *applier) apply() error {
 		return err
 	}
 
-	// Fetch the remote definition and necessary metadata
 	if err := a.fetchRemote(); err != nil {
 		return err
 	}
 
-	// Build acl operations
 	if err := a.buildOps(); err != nil {
 		return err
 	}
 
-	// Update the apply result with the remote definition and human readable diff
 	if err := a.updateApplyResult(); err != nil {
 		return err
 	}
 
 	if a.ops.pending() {
-		// Display diff and pending operations
 		if !log.Quiet {
 			a.displayPendingOps()
 		}
 
-		// Execute operations
 		if err := a.executeOps(); err != nil {
 			return err
 		}
 
-		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Completed apply for acl %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Completed apply for acl definition %q", a.localDef.Metadata.Name)
 	} else {
-		log.Infof("No changes to apply for acl %q", a.localDef.Metadata.Name)
+		log.Infof("No changes to apply for acl definition %q", a.localDef.Metadata.Name)
 	}
 
 	return nil
 }
 
-// Create the local definition
+// createLocal creates the local definition.
 func (a *applier) createLocal() error {
 	switch a.opts.DefinitionFormat {
 	case opt.YAMLFormat:
@@ -137,13 +128,13 @@ func (a *applier) createLocal() error {
 		return fmt.Errorf("unsupported format")
 	}
 
-	// Explode the local acl entry groups to one entry per group
-	var explodedAcls def.ACLEntryGroups
-	for _, group := range a.localDef.Spec.Acls {
+	// Explode the local acl entry groups to one entry per group.
+	var explodedACLs def.ACLEntryGroups
+	for _, group := range a.localDef.Spec.ACLs {
 		for _, principal := range group.Principals {
 			for _, host := range group.Hosts {
 				for _, operation := range group.Operations {
-					explodedAcls = append(explodedAcls, def.ACLEntryGroup{
+					explodedACLs = append(explodedACLs, def.ACLEntryGroup{
 						Principals:     []string{principal},
 						Hosts:          []string{host},
 						Operations:     []string{operation},
@@ -153,20 +144,19 @@ func (a *applier) createLocal() error {
 			}
 		}
 	}
-	explodedAcls.Sort()
-	a.localDef.Spec.Acls = explodedAcls
+	explodedACLs.Sort()
+	a.localDef.Spec.ACLs = explodedACLs
 
-	// Set the local definition on the apply result
 	a.res.LocalDef = &a.localDef
 
 	return nil
 }
 
-// Fetch the remote definition and necessary metadata
+// fetchRemote fetches the remote definition and necessary metadata.
 func (a *applier) fetchRemote() error {
-	log.Infof("Fetching acls...")
+	log.Infof("Fetching ACLs...")
 	var err error
-	a.remoteAcls, err = a.srv.DescribeResourceAcls(
+	a.remoteACLs, err = a.srv.DescribeResourceACLs(
 		a.localDef.Metadata.Name,
 		a.localDef.Metadata.Type,
 	)
@@ -177,13 +167,13 @@ func (a *applier) fetchRemote() error {
 	a.remoteDef = def.NewACLDefinition(
 		a.localDef.Metadata.Name,
 		a.localDef.Metadata.Type,
-		a.remoteAcls,
+		a.remoteACLs,
 	)
 
 	return nil
 }
 
-// Build acl operations
+// buildOps builds acl operations.
 func (a *applier) buildOps() error {
 	if err := a.buildACLOps(); err != nil {
 		return err
@@ -191,56 +181,52 @@ func (a *applier) buildOps() error {
 	return nil
 }
 
-// Update the apply result with the remote definition and human readable diff
+// updateApplyResult updates the apply result with the remote definition and human readable diff.
 func (a *applier) updateApplyResult() error {
-	// Copy the remote definition
 	remoteCopy := a.remoteDef.Copy()
 
-	// Modify the remote definition to remove optional properties not specified in local
-	// Further, set properties that are local only and have no remote state
-	remoteCopy.Spec.DeleteUndefinedAcls = a.localDef.Spec.DeleteUndefinedAcls
+	// Modify the remote definition to remove optional properties not specified in local.
+	// Further, set properties that are local only and have no remote state.
+	remoteCopy.Spec.DeleteUndefinedACLs = a.localDef.Spec.DeleteUndefinedACLs
 
-	if !a.localDef.Spec.DeleteUndefinedAcls {
-		// Remove acls from the remote def that are not in local to prevent them showing in the diff
-		_, intersection := acls.DiffPatchIntersection(remoteCopy.Spec.Acls, a.localDef.Spec.Acls)
+	if !a.localDef.Spec.DeleteUndefinedACLs {
+		// Remove ACLs from the remote def that are not in local to prevent them showing in the diff.
+		_, intersection := acls.DiffPatchIntersection(remoteCopy.Spec.ACLs, a.localDef.Spec.ACLs)
 		intersection.Sort()
-		remoteCopy.Spec.Acls = intersection
+		remoteCopy.Spec.ACLs = intersection
 	}
 
-	// Compute diff
 	diff, err := jsondiff.Diff(&remoteCopy, &a.localDef)
 	if err != nil {
 		return fmt.Errorf("failed to compute diff: %v", err)
 	}
 
-	// Check the diff against the pending operations
 	if diffExists := (len(diff) > 0); diffExists != a.ops.pending() {
 		return fmt.Errorf("existence of diff was %v, but expected %v", diffExists, a.ops.pending())
 	}
 
-	// Update the apply result
 	a.res.RemoteDef = remoteCopy
 	a.res.Diff = diff
 
 	return nil
 }
 
-// Display pending operations
+// displayPendingOps displays pending operations.
 func (a *applier) displayPendingOps() {
-	log.Infof("Acl %q diff (local -> remote):", a.localDef.Metadata.Name)
+	log.Infof("acl definition %q diff (local -> remote):", a.localDef.Metadata.Name)
 	fmt.Print(a.res.Diff)
 }
 
-// Execute topic update operations
+// executeOps executes update operations.
 func (a *applier) executeOps() error {
-	if len(a.ops.addAcls) > 0 {
-		if err := a.addAcls(); err != nil {
+	if len(a.ops.addACLs) > 0 {
+		if err := a.addACLs(); err != nil {
 			return err
 		}
 	}
 
-	if len(a.ops.deleteAcls) > 0 {
-		if err := a.deleteAcls(); err != nil {
+	if len(a.ops.deleteACLs) > 0 {
+		if err := a.deleteACLs(); err != nil {
 			return err
 		}
 	}
@@ -248,51 +234,51 @@ func (a *applier) executeOps() error {
 	return nil
 }
 
-// Build acl operations
+// buildACLOps builds acl operations.
 func (a *applier) buildACLOps() error {
-	log.Debugf("Comparing local and remote definition acls for %q", a.localDef.Metadata.Name)
+	log.Debugf("Comparing local and remote ACLs for definition %q", a.localDef.Metadata.Name)
 
-	a.ops.addAcls, _ = acls.DiffPatchIntersection(a.localDef.Spec.Acls, a.remoteAcls)
-	if a.localDef.Spec.DeleteUndefinedAcls {
-		a.ops.deleteAcls, _ = acls.DiffPatchIntersection(a.remoteAcls, a.localDef.Spec.Acls)
+	a.ops.addACLs, _ = acls.DiffPatchIntersection(a.localDef.Spec.ACLs, a.remoteACLs)
+	if a.localDef.Spec.DeleteUndefinedACLs {
+		a.ops.deleteACLs, _ = acls.DiffPatchIntersection(a.remoteACLs, a.localDef.Spec.ACLs)
 	}
 
 	return nil
 }
 
-// Add acls
-func (a *applier) addAcls() error {
+// addACLs adds ACLs.
+func (a *applier) addACLs() error {
 	if a.opts.DryRun {
-		log.Infof("Skipped adding acls (dry-run not available)")
+		log.Infof("Skipped adding ACLs (dry-run not available)")
 	} else {
-		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Adding acls...")
-		if err := a.srv.CreateAcls(
+		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Adding ACLs...")
+		if err := a.srv.CreateACLs(
 			a.localDef.Metadata.Name,
 			a.localDef.Metadata.Type,
-			a.ops.addAcls,
+			a.ops.addACLs,
 		); err != nil {
 			return err
 		}
-		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Added acls for %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Added ACLs for definition %q", a.localDef.Metadata.Name)
 	}
 
 	return nil
 }
 
-// Delete acls
-func (a *applier) deleteAcls() error {
+// deleteACLs deletes ACLs.
+func (a *applier) deleteACLs() error {
 	if a.opts.DryRun {
-		log.Infof("Skipped deleting acls (dry-run not available)")
+		log.Infof("Skipped deleting ACLs (dry-run not available)")
 	} else {
-		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Deleting acls...")
-		if err := a.srv.DeleteAcls(
+		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Deleting ACLs...")
+		if err := a.srv.DeleteACLs(
 			a.localDef.Metadata.Name,
 			a.localDef.Metadata.Type,
-			a.ops.deleteAcls,
+			a.ops.deleteACLs,
 		); err != nil {
 			return err
 		}
-		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Deleted acls for %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Deleted ACLs for definition %q", a.localDef.Metadata.Name)
 	}
 
 	return nil

@@ -1,3 +1,4 @@
+// Package kafka implements the Kafka service handling requests and responses.
 package kafka
 
 import (
@@ -11,15 +12,15 @@ import (
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
-// Acls for a named resource
-type ResourceAcls struct {
+// ResourceACLs represents ACLs for a named resource.
+type ResourceACLs struct {
 	ResourceName string
 	ResourceType string
-	Acls         def.ACLEntryGroups
+	ACLs         def.ACLEntryGroups
 }
 
-// Execute a request to describe acls of a specific resource (Kafka 0.11.0+)
-func describeResourceAcls(
+// describeResourceACLs executes a request to describe ACLs of a specific resource (Kafka 0.11.0+).
+func describeResourceACLs(
 	cl *client.Client,
 	name string,
 	resourceType string,
@@ -36,23 +37,23 @@ func describeResourceAcls(
 	req.PermissionType = kmsg.ACLPermissionTypeAny
 	req.ResourcePatternType = kmsg.ACLResourcePatternTypeLiteral
 
-	resourceAcls, err := describeAcls(cl, req)
+	resourceACLs, err := describeACLs(cl, req)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(resourceAcls) > 0 {
-		return resourceAcls[0].Acls, nil
+	if len(resourceACLs) > 0 {
+		return resourceACLs[0].ACLs, nil
 	}
 
 	return nil, nil
 }
 
-// Execute a request to describe acls for all resources (Kafka 0.11.0+)
-func describeAllResourceAcls(
+// describeAllResourceACLs executes a request to describe ACLs for all resources (Kafka 0.11.0+).
+func describeAllResourceACLs(
 	cl *client.Client,
 	resourceType string,
-) ([]ResourceAcls, error) {
+) ([]ResourceACLs, error) {
 	resType, err := kmsg.ParseACLResourceType(resourceType)
 	if err != nil {
 		return nil, err
@@ -64,14 +65,14 @@ func describeAllResourceAcls(
 	req.PermissionType = kmsg.ACLPermissionTypeAny
 	req.ResourcePatternType = kmsg.ACLResourcePatternTypeAny
 
-	return describeAcls(cl, req)
+	return describeACLs(cl, req)
 }
 
-// Execute a request to describe resource acls (Kafka 0.11.0+)
-func describeAcls(
+// describeACLs executes a request to describe resource ACLs (Kafka 0.11.0+).
+func describeACLs(
 	cl *client.Client,
 	req kmsg.DescribeACLsRequest,
-) ([]ResourceAcls, error) {
+) ([]ResourceACLs, error) {
 	kresp, err := cl.Client.Request(context.Background(), &req)
 	if err != nil {
 		return nil, err
@@ -86,7 +87,7 @@ func describeAcls(
 		return nil, fmt.Errorf(errMsg)
 	}
 
-	resourceAcls := make([]ResourceAcls, len(resp.Resources))
+	resourceACLs := make([]ResourceACLs, len(resp.Resources))
 	for i, resource := range resp.Resources {
 		var acls def.ACLEntryGroups
 		for _, acl := range resource.ACLs {
@@ -104,18 +105,18 @@ func describeAcls(
 
 		acls.Sort()
 
-		resourceAcls[i] = ResourceAcls{
+		resourceACLs[i] = ResourceACLs{
 			ResourceName: resource.ResourceName,
 			ResourceType: strings.ToLower(resource.ResourceType.String()),
-			Acls:         acls,
+			ACLs:         acls,
 		}
 	}
 
-	return resourceAcls, nil
+	return resourceACLs, nil
 }
 
-// Execute a request to create acls (Kafka 0.11.0+)
-func createAcls(
+// createACLs executes a request to create ACLs (Kafka 0.11.0+).
+func createACLs(
 	cl *client.Client,
 	name string,
 	resourceType string,
@@ -180,8 +181,8 @@ func createAcls(
 	return nil
 }
 
-// Execute a request to create acls (Kafka 0.11.0+)
-func deleteAcls(
+// deleteACLs executes a request to delete ACLs (Kafka 0.11.0+).
+func deleteACLs(
 	cl *client.Client,
 	name string,
 	resourceType string,

@@ -1,3 +1,4 @@
+// Package def implements definitions for Kafka resources.
 package def
 
 import (
@@ -33,7 +34,7 @@ var aclOperations = []string{
 
 var aclPermissionTypes = []string{"ALLOW", "DENY"}
 
-// Acl entry group
+// ACLEntryGroup represents an ACL entry group.
 type ACLEntryGroup struct {
 	Principals     []string `json:"principals"`
 	Hosts          []string `json:"hosts"`
@@ -41,10 +42,10 @@ type ACLEntryGroup struct {
 	PermissionType string   `json:"permissionType"`
 }
 
-// A slice of acl entry groups
+// ACLEntryGroups represents a slice of ACL entry groups.
 type ACLEntryGroups []ACLEntryGroup
 
-// Validate acl entry groups
+// Validate validates ACL entry groups.
 func (a ACLEntryGroups) Validate() error {
 	for _, group := range a {
 		for _, operation := range group.Operations {
@@ -60,7 +61,7 @@ func (a ACLEntryGroups) Validate() error {
 	return nil
 }
 
-// Determine if an acl entry is contained in any group
+// Contains determines if an ACL entry is contained in any group.
 func (a ACLEntryGroups) Contains(
 	principal string,
 	host string,
@@ -78,9 +79,9 @@ func (a ACLEntryGroups) Contains(
 	return false
 }
 
-// Sort acl entry groups
+// Sort sorts ACL entry groups.
 func (a ACLEntryGroups) Sort() {
-	// TODO: Use sort.Slice in the standard library after upgrading to Go 1.8
+	// TODO: Use sort.Slice in the standard library after upgrading to Go 1.8.
 	//nolint
 	slice.Sort(a[:], func(i, j int) bool {
 		return a[i].Principals[0] < a[j].Principals[0] ||
@@ -96,28 +97,28 @@ func (a ACLEntryGroups) Sort() {
 	})
 }
 
-// Acl spec definition
+// ACLSpecDefinition represents an ACL spec definition.
 type ACLSpecDefinition struct {
-	Acls                ACLEntryGroups `json:"acls,omitempty"`
-	DeleteUndefinedAcls bool           `json:"deleteUndefinedAcls"`
+	ACLs                ACLEntryGroups `json:"acls,omitempty"`
+	DeleteUndefinedACLs bool           `json:"deleteUndefinedAcls"`
 }
 
-// Top-level acl definition
+// ACLDefinition represents an ACL resource definition.
 type ACLDefinition struct {
 	ResourceDefinition
 	Spec ACLSpecDefinition `json:"spec"`
 }
 
-// Create a copy of this AclDefinition
+// Copy creates a copy of this ACLDefinition.
 func (a ACLDefinition) Copy() ACLDefinition {
 	copiers := copy.New()
 	copier := copiers.Get(&ACLDefinition{}, &ACLDefinition{})
-	aclDefCopy := ACLDefinition{}
+	var aclDefCopy ACLDefinition
 	copier.Copy(&aclDefCopy, &a)
 	return aclDefCopy
 }
 
-// Validate definition
+// Validate validates the definition.
 func (a ACLDefinition) Validate() error {
 	if err := a.ValidateResource(); err != nil {
 		return err
@@ -135,14 +136,14 @@ func (a ACLDefinition) Validate() error {
 		return fmt.Errorf("metadata name must be \"kafka-cluster\" when type is \"cluster\"")
 	}
 
-	if err := a.Spec.Acls.Validate(); err != nil {
+	if err := a.Spec.ACLs.Validate(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// Create a acl definition from metadata and config
+// NewACLDefinition creates an ACL definition from metadata and config.
 func NewACLDefinition(
 	name string,
 	resourceType string,
@@ -158,7 +159,7 @@ func NewACLDefinition(
 			},
 		},
 		Spec: ACLSpecDefinition{
-			Acls: acls,
+			ACLs: acls,
 		},
 	}
 

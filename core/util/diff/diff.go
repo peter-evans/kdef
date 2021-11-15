@@ -1,3 +1,4 @@
+// Package diff implements functions to compute a line-oriented diff.
 package diff
 
 import (
@@ -9,10 +10,10 @@ import (
 	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
-// Computes the line oriented diff from the source to destination.
+// LineOriented computes the line-oriented diff from source to destination strings.
 func LineOriented(src string, dst string) string {
 	dmp := diffmatchpatch.New()
-	// Default timeout is one second
+	// Default timeout is one second.
 	dmp.DiffTimeout = time.Second * 2
 
 	srcRunes, dstRunes, lineArray := dmp.DiffLinesToRunes(src, dst)
@@ -22,7 +23,6 @@ func LineOriented(src string, dst string) string {
 	return formatDiff(diffs)
 }
 
-// Produces human readable output from the computed diffs
 func formatDiff(diffs []diffmatchpatch.Diff) string {
 	var buf bytes.Buffer
 	for _, d := range diffs {

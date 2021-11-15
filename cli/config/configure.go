@@ -1,3 +1,4 @@
+// Package config implements loading config from several sources and client creation.
 package config
 
 import (
@@ -35,6 +36,7 @@ When connecting via TLS, by default the client will use the hostname or IP
 address of the connected broker as the TLS server name.
 `
 
+// Configure implements an interactive prompt to create a configuration file.
 func Configure() error {
 	s := scanner.New()
 
@@ -49,7 +51,6 @@ func Configure() error {
 	tlsConfig := configureTLS(s)
 	saslConfig := configureSASL(s)
 
-	// Load config
 	k := koanf.New(".")
 	if err := k.Load(confmap.Provider(rootConfig, "."), nil); err != nil {
 		return err
@@ -61,24 +62,20 @@ func Configure() error {
 		return err
 	}
 
-	// Unmarshal to config struct
 	cc := &client.Config{}
 	if err := k.UnmarshalWithConf("", cc, koanf.UnmarshalConf{Tag: "json"}); err != nil {
 		return fmt.Errorf("failed to unmarshal config: %v", err)
 	}
 
-	// Marshal to yaml
 	y, err := yaml.Marshal(cc)
 	if err != nil {
 		return fmt.Errorf("failed to marshal config to yaml: %v", err)
 	}
 
-	// Prompt for config output path
 	fmt.Printf("\nEnter the path where the configuration file should be written.\n\n")
 	defaultConfigPath := DefaultConfigPath()
 	configPath := s.PromptLine(fmt.Sprintf("(%s) >", defaultConfigPath), defaultConfigPath)
 
-	// Check for existing file
 	if _, err := os.Stat(configPath); !errors.Is(err, os.ErrNotExist) {
 		fmt.Printf("\nOverwrite the existing file? (Yes/No)\n\n")
 		if !s.PromptYesNo("(No) >", false) {
@@ -88,7 +85,6 @@ func Configure() error {
 		}
 	}
 
-	// Write the config file
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
 		return fmt.Errorf("failed to create configuration directory: %v", err)
 	}

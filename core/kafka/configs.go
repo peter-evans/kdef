@@ -1,3 +1,4 @@
+// Package kafka implements the Kafka service handling requests and responses.
 package kafka
 
 import (
@@ -16,17 +17,17 @@ const (
 	DeleteConfigOperation int8 = 1
 )
 
-// An alter config operation
+// ConfigOperation represents an alter config operation.
 type ConfigOperation struct {
 	Name  string
 	Value *string
-	Op    int8 // 0: SET, 1: DELETE, 2: APPEND, 3: SUBTRACT
+	Op    int8 // 0: SET, 1: DELETE, 2: APPEND, 3: SUBTRACT.
 }
 
-// A slice of ConfigOperation
+// ConfigOperations represents a slice of ConfigOperation.
 type ConfigOperations []ConfigOperation
 
-// Determine if the specified config key name exists
+// Contains determines if the specified config key name exists.
 func (c ConfigOperations) Contains(name string) bool {
 	for _, op := range c {
 		if op.Name == name {
@@ -36,7 +37,7 @@ func (c ConfigOperations) Contains(name string) bool {
 	return false
 }
 
-// Determine if the specified operation type exists
+// ContainsOp determines if the specified operation type exists.
 func (c ConfigOperations) ContainsOp(operation int8) bool {
 	for _, op := range c {
 		if op.Op == operation {
@@ -46,7 +47,6 @@ func (c ConfigOperations) ContainsOp(operation int8) bool {
 	return false
 }
 
-// Create alter configs operations
 func newConfigOps(
 	localConfigs def.ConfigsMap,
 	remoteConfigsMap def.ConfigsMap,
@@ -58,7 +58,7 @@ func newConfigOps(
 
 	for k, v := range localConfigs {
 		if cv, ok := remoteConfigsMap[k]; ok {
-			// Config exists
+			// Config exists.
 			vv := "null"
 			if v != nil {
 				vv = *v
@@ -68,7 +68,7 @@ func newConfigOps(
 				cvv = *cv
 			}
 			if vv != cvv {
-				// Config value has changed
+				// Config value has changed.
 				log.Debugf("Value of config key %q has changed from %q to %q and will be updated", k, cvv, vv)
 				configOps = append(configOps, ConfigOperation{
 					Name:  k,
@@ -77,7 +77,7 @@ func newConfigOps(
 				})
 			}
 		} else {
-			// Config does not exist
+			// Config does not exist.
 			log.Debugf("Config key %q is missing from remote config and will be added", k)
 			configOps = append(configOps, ConfigOperation{
 				Name:  k,
@@ -87,10 +87,10 @@ func newConfigOps(
 		}
 	}
 
-	// Mark undefined configs for deletion
+	// Mark undefined configs for deletion.
 	if deleteUndefinedConfigs || nonIncremental {
 		for _, config := range remoteConfigs {
-			// Ignore static and default config keys that cannot be deleted
+			// Ignore static and default config keys that cannot be deleted.
 			if config.Source == def.ConfigSourceStaticBrokerConfig || config.Source == def.ConfigSourceDefaultConfig {
 				continue
 			}
@@ -101,7 +101,7 @@ func newConfigOps(
 					Op:   DeleteConfigOperation,
 				})
 			} else if nonIncremental && !configOps.Contains(config.Name) {
-				// For non-incremental, make sure all dynamic keys that exist in local are added
+				// For non-incremental, make sure all dynamic keys that exist in local are added.
 				log.Debugf("Config key %q is unchanged and will be preserved", config.Name)
 				configOps = append(configOps, ConfigOperation{
 					Name:  config.Name,
@@ -115,7 +115,7 @@ func newConfigOps(
 	return configOps
 }
 
-// Execute a request to describe broker configs (Kafka 0.11.0+)
+// describeBrokerConfigs executes a request to describe broker configs (Kafka 0.11.0+).
 func describeBrokerConfigs(cl *client.Client, brokerID string) (def.Configs, error) {
 	req := kmsg.NewDescribeConfigsRequest()
 
@@ -132,13 +132,13 @@ func describeBrokerConfigs(cl *client.Client, brokerID string) (def.Configs, err
 	return newConfigs(resp[0].Configs), nil
 }
 
-// Configs for a named resource
+// ResourceConfigs represents configs for a named resource.
 type ResourceConfigs struct {
 	ResourceName string
 	Configs      def.Configs
 }
 
-// Execute a request to describe topic configs (Kafka 0.11.0+)
+// describeTopicConfigs executes a request to describe topic configs (Kafka 0.11.0+).
 func describeTopicConfigs(cl *client.Client, topics []string) ([]ResourceConfigs, error) {
 	req := kmsg.NewDescribeConfigsRequest()
 
@@ -165,7 +165,6 @@ func describeTopicConfigs(cl *client.Client, topics []string) ([]ResourceConfigs
 	return resourceConfigs, nil
 }
 
-// Create new configs from API response
 func newConfigs(configsResp []kmsg.DescribeConfigsResponseResourceConfig) def.Configs {
 	var configs def.Configs
 	for _, c := range configsResp {
@@ -183,7 +182,7 @@ func newConfigs(configsResp []kmsg.DescribeConfigsResponseResourceConfig) def.Co
 		// it's necessary to additionally check the config key is not dynamic.
 		// See https://github.com/twmb/franz-go/issues/91#issuecomment-929872304
 		if configKey.ReadOnly && !configKey.IsDynamic() {
-			// Ignore all keys that are read-only and not dynamic
+			// Ignore all keys that are read-only and not dynamic.
 			continue
 		}
 
@@ -192,7 +191,7 @@ func newConfigs(configsResp []kmsg.DescribeConfigsResponseResourceConfig) def.Co
 	return configs
 }
 
-// Execute a request to describe configs (Kafka 0.11.0+)
+// describeConfigs executes a request to describe configs (Kafka 0.11.0+).
 func describeConfigs(cl *client.Client, req kmsg.DescribeConfigsRequest) ([]kmsg.DescribeConfigsResponseResource, error) {
 	kresp, err := cl.Client.Request(context.Background(), &req)
 	if err != nil {
@@ -217,7 +216,7 @@ func describeConfigs(cl *client.Client, req kmsg.DescribeConfigsRequest) ([]kmsg
 	return resp.Resources, nil
 }
 
-// Execute a request to perform a non-incremental alter broker configs (Kafka 0.11.0+)
+// alterBrokerConfigs executes a request to perform a non-incremental alter broker configs (Kafka 0.11.0+).
 func alterBrokerConfigs(
 	cl *client.Client,
 	brokerID string,
@@ -240,7 +239,7 @@ func alterBrokerConfigs(
 	return nil
 }
 
-// Execute a request to perform a non-incremental alter topic configs (Kafka 0.11.0+)
+// alterTopicConfigs executes a request to perform a non-incremental alter topic configs (Kafka 0.11.0+).
 func alterTopicConfigs(
 	cl *client.Client,
 	topic string,
@@ -263,7 +262,6 @@ func alterTopicConfigs(
 	return nil
 }
 
-// Build configs for an alter configs request
 func buildAlterConfigsResourceConfig(
 	configOps ConfigOperations,
 ) []kmsg.AlterConfigsRequestResourceConfig {
@@ -279,7 +277,7 @@ func buildAlterConfigsResourceConfig(
 	return configs
 }
 
-// Execute a request to perform a non-incremental alter configs (Kafka 0.11.0+)
+// alterConfigs executes a request to perform a non-incremental alter configs (Kafka 0.11.0+).
 func alterConfigs(
 	cl *client.Client,
 	resources []kmsg.AlterConfigsRequestResource,
@@ -312,7 +310,7 @@ func alterConfigs(
 	return nil
 }
 
-// Execute a request to perform an incremental alter broker configs (Kafka 2.3.0+)
+// incrementalAlterBrokerConfigs executes a request to perform an incremental alter broker configs (Kafka 2.3.0+).
 func incrementalAlterBrokerConfigs(
 	cl *client.Client,
 	brokerID string,
@@ -335,7 +333,7 @@ func incrementalAlterBrokerConfigs(
 	return nil
 }
 
-// Execute a request to perform an incremental alter topic configs (Kafka 2.3.0+)
+// incrementalAlterTopicConfigs executes a request to perform an incremental alter topic configs (Kafka 2.3.0+).
 func incrementalAlterTopicConfigs(
 	cl *client.Client,
 	topic string,
@@ -358,7 +356,6 @@ func incrementalAlterTopicConfigs(
 	return nil
 }
 
-// Build configs for an incremental alter configs request
 func buildIncrementalAlterConfigsResourceConfig(
 	configOps ConfigOperations,
 ) []kmsg.IncrementalAlterConfigsRequestResourceConfig {
@@ -373,7 +370,7 @@ func buildIncrementalAlterConfigsResourceConfig(
 	return configs
 }
 
-// Execute a request to perform an incremental alter configs (Kafka 2.3.0+)
+// incrementalAlterConfigs executes a request to perform an incremental alter configs (Kafka 2.3.0+).
 func incrementalAlterConfigs(
 	cl *client.Client,
 	resources []kmsg.IncrementalAlterConfigsRequestResource,

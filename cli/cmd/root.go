@@ -1,3 +1,4 @@
+// Package cmd implements the root command.
 package cmd
 
 import (
@@ -13,7 +14,6 @@ import (
 	"github.com/peter-evans/kdef/cli/log"
 )
 
-// Execute the root command
 func Execute(version string) {
 	if err := rootCmd(version).Execute(); err != nil {
 		log.Error(err)
@@ -21,7 +21,6 @@ func Execute(version string) {
 	}
 }
 
-// Creates the root command
 func rootCmd(version string) *cobra.Command {
 	var noColor bool
 	var quiet bool

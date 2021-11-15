@@ -1,5 +1,7 @@
+// Package opt implements configuration options.
 package opt
 
+// Assignments represents the format in which assignments are exported.
 type Assignments int8
 
 const (
@@ -9,10 +11,10 @@ const (
 	RackAssignments        Assignments = 3
 )
 
-// Valid values for assignments
+// AssignmentsValidValues represents valid values for assignments.
 var AssignmentsValidValues = []string{"none", "broker", "rack"}
 
-// Parse an assignments option from a string
+// ParseAssignments parses an assignments option from a string.
 func ParseAssignments(assignments string) Assignments {
 	switch assignments {
 	case "none":

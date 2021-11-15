@@ -1,3 +1,4 @@
+// Package config implements loading config from several sources and client creation.
 package config
 
 import (
@@ -21,7 +22,6 @@ const (
 	envVarPrefix          = "KDEF__"
 )
 
-// Default client configuration
 var defaultClientConfig = map[string]interface{}{
 	"seedBrokers":        []string{"localhost:9092"},
 	"timeoutMs":          5000,
@@ -31,17 +31,17 @@ var defaultClientConfig = map[string]interface{}{
 	"alterConfigsMethod": "auto",
 }
 
-// The default config file path
+// DefaultConfigPath determines the default configuration file path.
 func DefaultConfigPath() string {
-	directory, _ := os.Getwd()
+	dir, _ := os.Getwd()
 	if d, ok := os.LookupEnv("KDEF_CONFIG_DIR"); ok {
-		directory = d
+		dir = d
 	}
 	filename := defaultConfigFilename
 	if f, ok := os.LookupEnv("KDEF_CONFIG_FILENAME"); ok {
 		filename = f
 	}
-	path := filepath.Join(directory, filename)
+	path := filepath.Join(dir, filename)
 	if p, ok := os.LookupEnv("KDEF_CONFIG_PATH"); ok {
 		path = p
 	}
@@ -49,13 +49,12 @@ func DefaultConfigPath() string {
 	return path
 }
 
-// Loads and merges the client configuration from multiple sources
 func loadConfig(configPath string, configOpts []string) (*client.Config, error) {
 	log.Debugf("Loading client config")
 
 	k := koanf.New(".")
 
-	// Load default values
+	// Load defaults
 	if err := k.Load(confmap.Provider(defaultClientConfig, "."), nil); err != nil {
 		return nil, err
 	}
@@ -69,7 +68,7 @@ func loadConfig(configPath string, configOpts []string) (*client.Config, error) 
 		}
 	}
 
-	// Convert a key's value to its correct type
+	// typedVal converts a key's value to its correct type
 	typedVal := func(k string, v string) interface{} {
 		switch k {
 		case "seedBrokers":
@@ -85,26 +84,24 @@ func loadConfig(configPath string, configOpts []string) (*client.Config, error) 
 		key := strings.ReplaceAll(strings.ToLower(strings.TrimPrefix(s, envVarPrefix)), "__", ".")
 		// Convert to camelcase, e.g. "seed_brokers" -> "seedBrokers"
 		key = strcase.ToLowerCamel(key)
-
 		return key, typedVal(key, v)
 	}), nil); err != nil {
 		return nil, err
 	}
 
 	// Load commandline flag overrides
-	flagConfigOptsMap := map[string]interface{}{}
+	optsMap := map[string]interface{}{}
 	for _, opt := range configOpts {
 		kv := strings.SplitN(opt, "=", 2)
 		if len(kv) != 2 {
 			return nil, fmt.Errorf("config option %q not a 'key=value' pair", opt)
 		}
-		flagConfigOptsMap[kv[0]] = typedVal(kv[0], kv[1])
+		optsMap[kv[0]] = typedVal(kv[0], kv[1])
 	}
-	if err := k.Load(confmap.Provider(flagConfigOptsMap, "."), nil); err != nil {
+	if err := k.Load(confmap.Provider(optsMap, "."), nil); err != nil {
 		return nil, err
 	}
 
-	// Unmarshal to config struct
 	cc := &client.Config{}
 	if err := k.UnmarshalWithConf("", cc, koanf.UnmarshalConf{Tag: "json"}); err != nil {
 		return nil, err

@@ -1,3 +1,4 @@
+// Package configure implements the configure command.
 package configure
 
 import (
@@ -5,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Creates the configure command
 func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                   "configure",

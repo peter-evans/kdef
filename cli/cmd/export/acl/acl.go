@@ -1,3 +1,4 @@
+// Package acl implements the export acl command and executes the controller.
 package acl
 
 import (
@@ -12,10 +13,9 @@ import (
 	"github.com/peter-evans/kdef/core/util/str"
 )
 
-// Creates the export acl command
 func Command(cOpts *config.Options) *cobra.Command {
 	opts := export.ControllerOptions{}
-	var definitionFormat string
+	var defFormat string
 
 	cmd := &cobra.Command{
 		Use:   "acl",
@@ -33,7 +33,7 @@ kdef export acl --match "myapp.*"`,
 		SilenceErrors:         true,
 		DisableFlagsInUseLine: true,
 		PreRunE: func(_ *cobra.Command, args []string) error {
-			opts.DefinitionFormat = opt.ParseDefinitionFormat(definitionFormat)
+			opts.DefinitionFormat = opt.ParseDefinitionFormat(defFormat)
 			if opts.DefinitionFormat == opt.UnsupportedFormat {
 				return fmt.Errorf("\"format\" must be one of %q", strings.Join(opt.DefinitionFormatValidValues, "|"))
 			}
@@ -49,8 +49,8 @@ kdef export acl --match "myapp.*"`,
 			}
 
 			// TODO: Make constants for the kinds
-			controller := export.NewExportController(cl, args, opts, "acl")
-			if err := controller.Execute(); err != nil {
+			ctl := export.NewExportController(cl, args, opts, "acl")
+			if err := ctl.Execute(); err != nil {
 				return err
 			}
 			return nil
@@ -58,7 +58,7 @@ kdef export acl --match "myapp.*"`,
 	}
 
 	cmd.Flags().StringVarP(
-		&definitionFormat,
+		&defFormat,
 		"format",
 		"f",
 		"yaml",

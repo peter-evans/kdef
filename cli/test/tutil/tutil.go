@@ -1,3 +1,4 @@
+// Package tutil implements testing utility functions.
 package tutil
 
 import (
@@ -6,7 +7,7 @@ import (
 	"testing"
 )
 
-// Check if an error message contains a string
+// ErrorContains checks if an error message contains a string.
 func ErrorContains(out error, want string) bool {
 	if out == nil {
 		return want == ""
@@ -17,7 +18,7 @@ func ErrorContains(out error, want string) bool {
 	return strings.Contains(out.Error(), want)
 }
 
-// Return the byte slice of a test fixture
+// Fixture returns the byte slice of a test fixture.
 func Fixture(t *testing.T, path string) []byte {
 	t.Helper()
 	fileBytes, err := ioutil.ReadFile(path)

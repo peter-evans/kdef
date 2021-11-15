@@ -1,6 +1,7 @@
 //go:build integration
 // +build integration
 
+// Package broker implements operators for broker definition operations.
 package broker
 
 import (

@@ -1,12 +1,12 @@
+// Package def implements definitions for Kafka resources.
 package def
 
-// Map of resource configs
+// ConfigsMap represents a map of resource configs.
 type ConfigsMap map[string]*string
 
-// The source of a config key
+// ConfigSource represents the source of a config key.
 type ConfigSource int8
 
-// Config sources
 const (
 	ConfigSourceUnknown                    ConfigSource = 0
 	ConfigSourceDynamicTopicConfig         ConfigSource = 1
@@ -17,7 +17,7 @@ const (
 	ConfigSourceDynamicBrokerLoggerConfig  ConfigSource = 6
 )
 
-// A config key
+// ConfigKey represents a config key.
 type ConfigKey struct {
 	Name        string
 	Value       *string
@@ -26,7 +26,7 @@ type ConfigKey struct {
 	Source      ConfigSource
 }
 
-// Determines if the config key is dynamic
+// IsDynamic determines if the config key is dynamic.
 func (c ConfigKey) IsDynamic() bool {
 	return c.Source == ConfigSourceDynamicTopicConfig ||
 		c.Source == ConfigSourceDynamicBrokerConfig ||
@@ -34,10 +34,10 @@ func (c ConfigKey) IsDynamic() bool {
 		c.Source == ConfigSourceDynamicBrokerLoggerConfig
 }
 
-// A slice of ConfigKey
+// Configs represents a slice of ConfigKey.
 type Configs []ConfigKey
 
-// A map of the configs
+// ToMap returns a map of the configs.
 func (c Configs) ToMap() ConfigsMap {
 	configsMap := ConfigsMap{}
 	for _, config := range c {
@@ -46,7 +46,7 @@ func (c Configs) ToMap() ConfigsMap {
 	return configsMap
 }
 
-// An exportable map of the configs (sensitive keys filtered out)
+// ToExportableMap returns an exportable map of the configs (sensitive keys filtered out).
 func (c Configs) ToExportableMap() ConfigsMap {
 	configsMap := ConfigsMap{}
 	for _, config := range c {

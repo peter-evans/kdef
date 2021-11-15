@@ -1,3 +1,4 @@
+// Package str implements functions for various string operations.
 package str
 
 import (

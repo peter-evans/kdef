@@ -1,6 +1,7 @@
 //go:build integration
 // +build integration
 
+// Package acl implements operators for acl definition operations.
 package acl
 
 import (
@@ -121,7 +122,7 @@ func Test_applier_Execute(t *testing.T) {
 	runTests(t, []testCase{
 		// NOTE: Execution of tests is ordered
 		{
-			// Add acls
+			// Add ACLs
 			name: "1: Dry-run acl foo version 0",
 			fields: fields{
 				cl:      cl,
@@ -136,7 +137,7 @@ func Test_applier_Execute(t *testing.T) {
 			wantApplied: false,
 		},
 		{
-			// Add acls
+			// Add ACLs
 			name: "2: Apply acl foo version 0",
 			fields: fields{
 				cl:      cl,
@@ -165,7 +166,7 @@ func Test_applier_Execute(t *testing.T) {
 			wantApplied: false,
 		},
 		{
-			// Update acls (addition)
+			// Update ACLs (addition)
 			name: "4: Dry-run acl foo version 2",
 			fields: fields{
 				cl:      cl,
@@ -180,7 +181,7 @@ func Test_applier_Execute(t *testing.T) {
 			wantApplied: false,
 		},
 		{
-			// Update acls (addition)
+			// Update ACLs (addition)
 			name: "5: Apply acl foo version 2",
 			fields: fields{
 				cl:      cl,
@@ -194,7 +195,7 @@ func Test_applier_Execute(t *testing.T) {
 			wantApplied: true,
 		},
 		{
-			// Update acls (addition/deletion)
+			// Update ACLs (addition/deletion)
 			name: "6: Dry-run acl foo version 3",
 			fields: fields{
 				cl:      cl,
@@ -209,7 +210,7 @@ func Test_applier_Execute(t *testing.T) {
 			wantApplied: false,
 		},
 		{
-			// Update acls (addition/deletion)
+			// Update ACLs (addition/deletion)
 			name: "7: Apply acl foo version 3",
 			fields: fields{
 				cl:      cl,

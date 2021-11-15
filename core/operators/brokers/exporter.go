@@ -1,3 +1,4 @@
+// Package brokers implements operators for brokers definition operations.
 package brokers
 
 import (
@@ -8,7 +9,7 @@ import (
 	"github.com/peter-evans/kdef/core/model/res"
 )
 
-// Create a new exporter
+// NewExporter creates a new exporter.
 func NewExporter(
 	cl *client.Client,
 ) *exporter { //revive:disable-line:unexported-return
@@ -17,13 +18,11 @@ func NewExporter(
 	}
 }
 
-// An exporter handling the export operation
 type exporter struct {
-	// constructor params
 	srv *kafka.Service
 }
 
-// Execute the export operation
+// Execute executes the export operation.
 func (e *exporter) Execute() (res.ExportResults, error) {
 	log.Infof("Fetching cluster-wide broker configuration...")
 	brokersDef, err := e.getBrokersDefinition()
@@ -40,7 +39,6 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 	return results, nil
 }
 
-// Return the brokers definition
 func (e *exporter) getBrokersDefinition() (*def.BrokersDefinition, error) {
 	brokerConfigs, err := e.srv.DescribeAllBrokerConfigs()
 	if err != nil {

@@ -1,3 +1,4 @@
+// Package compose implements Docker compose setup and teardown for integration tests.
 package compose
 
 import (
@@ -8,6 +9,7 @@ import (
 	tc "github.com/testcontainers/testcontainers-go"
 )
 
+// Up executes compose up.
 func Up(t *testing.T, paths []string, env map[string]string) *tc.LocalDockerCompose {
 	t.Helper()
 	identifier := strings.ToLower(uuid.New().String())
@@ -16,8 +18,7 @@ func Up(t *testing.T, paths []string, env map[string]string) *tc.LocalDockerComp
 		WithCommand([]string{"up", "-d"}).
 		WithEnv(env).
 		Invoke()
-	err := execError.Error
-	if err != nil {
+	if err := execError.Error; err != nil {
 		t.Errorf("compose up failed: %v", err)
 		t.FailNow()
 	}
@@ -25,11 +26,11 @@ func Up(t *testing.T, paths []string, env map[string]string) *tc.LocalDockerComp
 	return compose
 }
 
+// Down executes compose down.
 func Down(t *testing.T, compose *tc.LocalDockerCompose) {
 	t.Helper()
 	execError := compose.Down()
-	err := execError.Error
-	if err != nil {
+	if err := execError.Error; err != nil {
 		t.Errorf("compose down failed: %v", err)
 		t.FailNow()
 	}

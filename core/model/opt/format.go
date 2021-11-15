@@ -1,5 +1,7 @@
+// Package opt implements configuration options.
 package opt
 
+// DefinitionFormat represents the format of resource definitions.
 type DefinitionFormat int8
 
 const (
@@ -8,10 +10,10 @@ const (
 	JSONFormat        DefinitionFormat = 2
 )
 
-// Valid values for definition format
+// DefinitionFormatValidValues represents valid values for definition format.
 var DefinitionFormatValidValues = []string{"yaml", "json"}
 
-// Parse a definition format from a string
+// ParseDefinitionFormat parses a definition format from a string.
 func ParseDefinitionFormat(format string) DefinitionFormat {
 	switch format {
 	case "yaml":
@@ -23,7 +25,7 @@ func ParseDefinitionFormat(format string) DefinitionFormat {
 	}
 }
 
-// File extension for the format
+// Ext returns the file extension for the format.
 func (d DefinitionFormat) Ext() string {
 	switch d {
 	case YAMLFormat:

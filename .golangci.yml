@@ -1,6 +1,8 @@
 linters:
   enable:
+    - ifshort
     - gocritic
+    - godot
     - gofumpt
     - prealloc
     - predeclared

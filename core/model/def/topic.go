@@ -1,3 +1,4 @@
+// Package def implements definitions for Kafka resources.
 package def
 
 import (
@@ -10,13 +11,13 @@ import (
 	"github.com/peter-evans/kdef/core/util/str"
 )
 
-// Topic assignments
+// PartitionAssignments represents partition assignments by broker ID.
 type PartitionAssignments [][]int32
 
-// Topic rack assignments
+// PartitionRackAssignments represents partition assignments by rack.
 type PartitionRackAssignments [][]string
 
-// Topic spec definition
+// TopicSpecDefinition represents a topic spec definition.
 type TopicSpecDefinition struct {
 	Configs                ConfigsMap               `json:"configs,omitempty"`
 	DeleteUndefinedConfigs bool                     `json:"deleteUndefinedConfigs"`
@@ -26,32 +27,32 @@ type TopicSpecDefinition struct {
 	RackAssignments        PartitionRackAssignments `json:"rackAssignments,omitempty"`
 }
 
-// Determine if a spec has assignments
+// HasAssignments determines if a spec has assignments.
 func (s TopicSpecDefinition) HasAssignments() bool {
 	return len(s.Assignments) > 0
 }
 
-// Determine if a spec has rack assignments
+// HasRackAssignments determines if a spec has rack assignments.
 func (s TopicSpecDefinition) HasRackAssignments() bool {
 	return len(s.RackAssignments) > 0
 }
 
-// Top-level topic definition
+// TopicDefinition represents a topic resource definition.
 type TopicDefinition struct {
 	ResourceDefinition
 	Spec TopicSpecDefinition `json:"spec"`
 }
 
-// Create a copy of this TopicDefinition
+// Copy creates a copy of this TopicDefinition.
 func (t TopicDefinition) Copy() TopicDefinition {
 	copiers := copy.New()
 	copier := copiers.Get(&TopicDefinition{}, &TopicDefinition{})
-	topicDefCopy := TopicDefinition{}
+	var topicDefCopy TopicDefinition
 	copier.Copy(&topicDefCopy, &t)
 	return topicDefCopy
 }
 
-// Validate definition
+// Validate validates the definition.
 func (t TopicDefinition) Validate() error {
 	if err := t.ValidateResource(); err != nil {
 		return err
@@ -106,21 +107,20 @@ func (t TopicDefinition) Validate() error {
 	return nil
 }
 
-// Further validate definition using metadata
+// ValidateWithMetadata further validates the definition using metadata.
 func (t TopicDefinition) ValidateWithMetadata(brokers meta.Brokers) error {
-	// Note:
-	// These are validations that are applicable regardless of whether it's a create or update operation
-	// Validation specific to either create or update can remain in the applier
+	// These are validations that are applicable regardless of whether it's a create or update operation.
+	// Validation specific to either create or update can remain in the applier.
 
 	if t.Spec.ReplicationFactor > len(brokers) {
 		return fmt.Errorf("replication factor cannot exceed the number of available brokers")
 	}
 
 	if t.Spec.HasAssignments() {
-		// Check the broker IDs in the assignments are valid
+		// Check the broker IDs in the assignments are valid.
 		for _, replicas := range t.Spec.Assignments {
 			for _, id := range replicas {
-				if !i32.Contains(id, brokers.Ids()) {
+				if !i32.Contains(id, brokers.IDs()) {
 					return fmt.Errorf("invalid broker id %q in assignments", fmt.Sprint(id))
 				}
 			}
@@ -128,17 +128,16 @@ func (t TopicDefinition) ValidateWithMetadata(brokers meta.Brokers) error {
 	}
 
 	if t.Spec.HasRackAssignments() {
-		// Warn if the cluster has no rack ID set on brokers
+		// Warn if the cluster has no rack ID set on brokers.
 		for _, broker := range brokers {
 			if len(broker.Rack) == 0 {
 				log.Warnf("unable to use broker id %q in rack assignments because it has no rack id", fmt.Sprint(broker.ID))
 			}
 		}
 
-		// Build a map of brokers by rack ID
 		brokersByRack := brokers.BrokersByRack()
 
-		// Check the rack IDs in the rack assignments are valid
+		// Check the rack IDs in the rack assignments are valid.
 		for partition, replicas := range t.Spec.RackAssignments {
 			rackIDCounts := make(map[string]int)
 			for _, rackID := range replicas {
@@ -148,7 +147,7 @@ func (t TopicDefinition) ValidateWithMetadata(brokers meta.Brokers) error {
 				rackIDCounts[rackID]++
 			}
 
-			// Check there are enough available brokers for the number of times a rack ID has been used in this partition
+			// Check there are enough available brokers for the number of times a rack ID has been used in this partition.
 			// e.g. if rack id "zone-a" is specified for three replicas in the same partition, but "zone-a" only contains
 			// two brokers, then the assignment is not possible.
 			for rackID, count := range rackIDCounts {
@@ -169,7 +168,7 @@ func (t TopicDefinition) ValidateWithMetadata(brokers meta.Brokers) error {
 	return nil
 }
 
-// Create a topic definition from metadata and config
+// NewTopicDefinition creates a topic definition from metadata and config.
 func NewTopicDefinition(
 	name string,
 	partitionAssignments PartitionAssignments,

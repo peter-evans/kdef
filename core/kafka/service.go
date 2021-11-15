@@ -1,3 +1,4 @@
+// Package kafka implements the Kafka service handling requests and responses.
 package kafka
 
 import (
@@ -10,7 +11,7 @@ import (
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
-// Create a new service
+// NewService creates a new Kafka service.
 func NewService(
 	cl *client.Client,
 ) *Service {
@@ -19,16 +20,12 @@ func NewService(
 	}
 }
 
-// A Kafka service
+// Service represents a Kafka service.
 type Service struct {
-	// constructor params
-	cl *client.Client
-
-	// internal
+	cl               *client.Client
 	incrementalAlter *bool
 }
 
-// Determine if incremental alter configs should/can be used
 func (s *Service) getIncrementalAlter() (bool, error) {
 	if s.incrementalAlter == nil {
 		var ia bool
@@ -46,7 +43,7 @@ func (s *Service) getIncrementalAlter() (bool, error) {
 				return false, err
 			}
 		default:
-			// Should never reach here due to client config validation
+			// Should never reach here due to client config validation.
 			return false, fmt.Errorf("invalid alter configs method")
 		}
 		s.incrementalAlter = &ia
@@ -58,19 +55,19 @@ func (s *Service) getIncrementalAlter() (bool, error) {
 
 // ========================= Metadata =========================
 
-// Execute a request for metadata (Kafka 0.8.0+)
+// DescribeMetadata executes a request for metadata (Kafka 0.8.0+).
 func (s *Service) DescribeMetadata(topics []string, errorOnNonExistence bool) (*Metadata, error) {
 	return describeMetadata(s.cl, topics, errorOnNonExistence)
 }
 
-// Execute describe cluster requests until a minimum number of brokers are alive (Kafka 2.8.0+)
+// IsKafkaReady executes describe cluster requests until a minimum number of brokers are alive (Kafka 2.8.0+).
 func (s *Service) IsKafkaReady(minBrokers int, timeoutSec int) bool {
 	return isKafkaReady(s.cl, minBrokers, timeoutSec)
 }
 
 // ========================= Configs ==========================
 
-// Create alter configs operations
+// NewConfigOps creates alter configs operations.
 func (s *Service) NewConfigOps(
 	localConfigs def.ConfigsMap,
 	remoteConfigsMap def.ConfigsMap,
@@ -90,18 +87,18 @@ func (s *Service) NewConfigOps(
 	), nil
 }
 
-// Execute a request to describe broker configs (Kafka 0.11.0+)
+// DescribeBrokerConfigs executes a request to describe broker configs (Kafka 0.11.0+).
 func (s *Service) DescribeBrokerConfigs(brokerID string) (def.Configs, error) {
 	return describeBrokerConfigs(s.cl, brokerID)
 }
 
-// Execute a request to describe all broker configs (Kafka 0.11.0+)
+// DescribeAllBrokerConfigs executes a request to describe all broker configs (Kafka 0.11.0+).
 func (s *Service) DescribeAllBrokerConfigs() (def.Configs, error) {
-	// Empty brokerId returns dynamic config for all brokers (cluster-wide)
+	// Empty brokerID returns dynamic config for all brokers (cluster-wide).
 	return describeBrokerConfigs(s.cl, "")
 }
 
-// Execute a request to alter broker configs (Kafka 0.11.0+/2.3.0+)
+// AlterBrokerConfigs executes a request to alter broker configs (Kafka 0.11.0+/2.3.0+).
 func (s *Service) AlterBrokerConfigs(brokerID string, configOps ConfigOperations, validateOnly bool) error {
 	incrementalAlter, err := s.getIncrementalAlter()
 	if err != nil {
@@ -113,17 +110,17 @@ func (s *Service) AlterBrokerConfigs(brokerID string, configOps ConfigOperations
 	return alterBrokerConfigs(s.cl, brokerID, configOps, validateOnly)
 }
 
-// Execute a request to alter cluster-wide broker configs (Kafka 0.11.0+/2.3.0+)
+// AlterAllBrokerConfigs executes a request to alter cluster-wide broker configs (Kafka 0.11.0+/2.3.0+).
 func (s *Service) AlterAllBrokerConfigs(configOps ConfigOperations, validateOnly bool) error {
 	return s.AlterBrokerConfigs("", configOps, validateOnly)
 }
 
-// Execute a request to describe topic configs (Kafka 0.11.0+)
+// DescribeTopicConfigs executes a request to describe topic configs (Kafka 0.11.0+).
 func (s *Service) DescribeTopicConfigs(topics []string) ([]ResourceConfigs, error) {
 	return describeTopicConfigs(s.cl, topics)
 }
 
-// Execute a request to alter topic configs (Kafka 0.11.0+/2.3.0+)
+// AlterTopicConfigs executes a request to alter topic configs (Kafka 0.11.0+/2.3.0+).
 func (s *Service) AlterTopicConfigs(topic string, configOps ConfigOperations, validateOnly bool) error {
 	incrementalAlter, err := s.getIncrementalAlter()
 	if err != nil {
@@ -137,7 +134,7 @@ func (s *Service) AlterTopicConfigs(topic string, configOps ConfigOperations, va
 
 // ========================= Topic ============================
 
-// Execute a request for the metadata of a topic that may or may not exist (Kafka 0.11.0+)
+// TryRequestTopic executes a request for the metadata of a topic that may or may not exist (Kafka 0.11.0+).
 func (s *Service) TryRequestTopic(topic string) (
 	*def.TopicDefinition,
 	def.Configs,
@@ -147,7 +144,7 @@ func (s *Service) TryRequestTopic(topic string) (
 	return tryRequestTopic(s.cl, topic)
 }
 
-// Execute a request to create a topic (Kafka 0.10.1+)
+// CreateTopic executes a request to create a topic (Kafka 0.10.1+).
 func (s *Service) CreateTopic(
 	topicDef def.TopicDefinition,
 	assignments def.PartitionAssignments,
@@ -156,7 +153,7 @@ func (s *Service) CreateTopic(
 	return createTopic(s.cl, topicDef, assignments, validateOnly)
 }
 
-// Execute a request to create partitions (Kafka 0.10.0+)
+// CreatePartitions executes a request to create partitions (Kafka 0.10.0+).
 func (s *Service) CreatePartitions(
 	topic string,
 	partitions int,
@@ -166,7 +163,7 @@ func (s *Service) CreatePartitions(
 	return createPartitions(s.cl, topic, partitions, assignments, validateOnly)
 }
 
-// Execute a request to list partition reassignments (Kafka 2.4.0+)
+// ListPartitionReassignments executes a request to list partition reassignments (Kafka 2.4.0+).
 func (s *Service) ListPartitionReassignments(
 	topic string,
 	partitions []int32,
@@ -174,7 +171,7 @@ func (s *Service) ListPartitionReassignments(
 	return listPartitionReassignments(s.cl, topic, partitions)
 }
 
-// Execute a request to alter partition assignments (Kafka 2.4.0+)
+// AlterPartitionAssignments executes a request to alter partition assignments (Kafka 2.4.0+).
 func (s *Service) AlterPartitionAssignments(
 	topic string,
 	assignments def.PartitionAssignments,
@@ -182,37 +179,37 @@ func (s *Service) AlterPartitionAssignments(
 	return alterPartitionAssignments(s.cl, topic, assignments)
 }
 
-// ========================= Acl =============================
+// ========================= ACL =============================
 
-// Execute a request to describe acls of a specific resource (Kafka 0.11.0+)
-func (s *Service) DescribeResourceAcls(
+// DescribeResourceACLs executes a request to describe ACLs of a specific resource (Kafka 0.11.0+).
+func (s *Service) DescribeResourceACLs(
 	name string,
 	resourceType string,
 ) (def.ACLEntryGroups, error) {
-	return describeResourceAcls(s.cl, name, resourceType)
+	return describeResourceACLs(s.cl, name, resourceType)
 }
 
-// Execute a request to describe acls for all resources (Kafka 0.11.0+)
-func (s *Service) DescribeAllResourceAcls(
+// DescribeAllResourceACLs executes a request to describe ACLs for all resources (Kafka 0.11.0+).
+func (s *Service) DescribeAllResourceACLs(
 	resourceType string,
-) ([]ResourceAcls, error) {
-	return describeAllResourceAcls(s.cl, resourceType)
+) ([]ResourceACLs, error) {
+	return describeAllResourceACLs(s.cl, resourceType)
 }
 
-// Execute a request to create acls (Kafka 0.11.0+)
-func (s *Service) CreateAcls(
+// CreateACLs executes a request to create ACLs (Kafka 0.11.0+).
+func (s *Service) CreateACLs(
 	name string,
 	resourceType string,
 	acls def.ACLEntryGroups,
 ) error {
-	return createAcls(s.cl, name, resourceType, acls)
+	return createACLs(s.cl, name, resourceType, acls)
 }
 
-// Execute a request to delete acls (Kafka 0.11.0+)
-func (s *Service) DeleteAcls(
+// DeleteACLs executes a request to delete acls (Kafka 0.11.0+).
+func (s *Service) DeleteACLs(
 	name string,
 	resourceType string,
 	acls def.ACLEntryGroups,
 ) error {
-	return deleteAcls(s.cl, name, resourceType, acls)
+	return deleteACLs(s.cl, name, resourceType, acls)
 }

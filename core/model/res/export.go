@@ -1,3 +1,4 @@
+// Package res implements structures handling the result of operations.
 package res
 
 import (
@@ -6,7 +7,7 @@ import (
 	"github.com/bradfitz/slice" //nolint
 )
 
-// An export result
+// ExportResult represents an export result.
 type ExportResult struct {
 	// TODO: Change ID to name?
 	ID   string      `json:"id"`
@@ -14,12 +15,12 @@ type ExportResult struct {
 	Def  interface{} `json:"definition"`
 }
 
-// A slice of ExportResult
+// ExportResults represents a slice of ExportResult.
 type ExportResults []ExportResult
 
-// Sort by ID
+// Sort sorts by ID.
 func (e ExportResults) Sort() {
-	// TODO: Use sort.Slice in the standard library after upgrading to Go 1.8
+	// TODO: Use sort.Slice in the standard library after upgrading to Go 1.8.
 	//nolint
 	slice.Sort(e[:], func(i, j int) bool {
 		return e[i].Type < e[j].Type ||
@@ -27,8 +28,8 @@ func (e ExportResults) Sort() {
 	})
 }
 
-// A slice of the IDs
-func (e ExportResults) Ids() []string {
+// IDs returns a slice of the IDs.
+func (e ExportResults) IDs() []string {
 	ids := make([]string, len(e))
 	for i, r := range e {
 		ids[i] = r.ID
@@ -36,7 +37,7 @@ func (e ExportResults) Ids() []string {
 	return ids
 }
 
-// A slice of the definitions
+// Defs returns a slice of the definitions.
 func (e ExportResults) Defs() []interface{} {
 	defs := make([]interface{}, len(e))
 	for i, r := range e {
@@ -45,7 +46,7 @@ func (e ExportResults) Defs() []interface{} {
 	return defs
 }
 
-// Convert export results to JSON
+// JSON converts export results to JSON.
 func (e ExportResults) JSON() (string, error) {
 	j, err := json.Marshal(e)
 	if err != nil {

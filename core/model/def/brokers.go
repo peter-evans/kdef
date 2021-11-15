@@ -1,31 +1,32 @@
+// Package def implements definitions for Kafka resources.
 package def
 
 import (
 	"github.com/gotidy/copy"
 )
 
-// Brokers spec definition
+// BrokersSpecDefinition represents a brokers spec definition.
 type BrokersSpecDefinition struct {
 	Configs                ConfigsMap `json:"configs,omitempty"`
 	DeleteUndefinedConfigs bool       `json:"deleteUndefinedConfigs"`
 }
 
-// Top-level brokers definition
+// BrokersDefinition represents a brokers resource definition.
 type BrokersDefinition struct {
 	ResourceDefinition
 	Spec BrokersSpecDefinition `json:"spec"`
 }
 
-// Create a copy of this BrokersDefinition
+// Copy creates a copy of this BrokersDefinition.
 func (b BrokersDefinition) Copy() BrokersDefinition {
 	copiers := copy.New()
 	copier := copiers.Get(&BrokersDefinition{}, &BrokersDefinition{})
-	brokersDefCopy := BrokersDefinition{}
+	var brokersDefCopy BrokersDefinition
 	copier.Copy(&brokersDefCopy, &b)
 	return brokersDefCopy
 }
 
-// Validate definition
+// Validate validates the definition.
 func (b BrokersDefinition) Validate() error {
 	if err := b.ValidateResource(); err != nil {
 		return err
@@ -34,7 +35,7 @@ func (b BrokersDefinition) Validate() error {
 	return nil
 }
 
-// Create a brokers definition from metadata and config
+// NewBrokersDefinition creates a brokers definition from metadata and config.
 func NewBrokersDefinition(configsMap ConfigsMap) BrokersDefinition {
 	brokersDef := BrokersDefinition{
 		ResourceDefinition: ResourceDefinition{

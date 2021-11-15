@@ -1,3 +1,4 @@
+// Package def implements definitions for Kafka resources.
 package def
 
 import (
@@ -6,7 +7,7 @@ import (
 	"github.com/peter-evans/kdef/core/test/tutil"
 )
 
-func TestAclDefinition_Validate(t *testing.T) {
+func TestACLDefinition_Validate(t *testing.T) {
 	tests := []struct {
 		name    string
 		aclDef  ACLDefinition
@@ -65,7 +66,7 @@ func TestAclDefinition_Validate(t *testing.T) {
 					},
 				},
 				Spec: ACLSpecDefinition{
-					Acls: ACLEntryGroups{
+					ACLs: ACLEntryGroups{
 						ACLEntryGroup{
 							Principals:     []string{"User:foo"},
 							Hosts:          []string{"*"},
@@ -89,7 +90,7 @@ func TestAclDefinition_Validate(t *testing.T) {
 					},
 				},
 				Spec: ACLSpecDefinition{
-					Acls: ACLEntryGroups{
+					ACLs: ACLEntryGroups{
 						ACLEntryGroup{
 							Principals:     []string{"User:foo"},
 							Hosts:          []string{"*"},
@@ -102,7 +103,7 @@ func TestAclDefinition_Validate(t *testing.T) {
 			wantErr: "acl permission type must be one of \"ALLOW|DENY\"",
 		},
 		{
-			name: "Tests a valid AclDefinition",
+			name: "Tests a valid ACLDefinition",
 			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
 					APIVersion: "v1",
@@ -113,7 +114,7 @@ func TestAclDefinition_Validate(t *testing.T) {
 					},
 				},
 				Spec: ACLSpecDefinition{
-					Acls: ACLEntryGroups{
+					ACLs: ACLEntryGroups{
 						ACLEntryGroup{
 							Principals:     []string{"User:foo"},
 							Hosts:          []string{"*"},
@@ -129,7 +130,7 @@ func TestAclDefinition_Validate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.aclDef.Validate(); !tutil.ErrorContains(err, tt.wantErr) {
-				t.Errorf("AclDefinition.Validate() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ACLDefinition.Validate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

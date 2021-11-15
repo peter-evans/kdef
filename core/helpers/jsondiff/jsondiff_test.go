@@ -1,3 +1,4 @@
+// Package jsondiff implements a line-oriented JSON differ.
 package jsondiff
 
 import (

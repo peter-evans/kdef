@@ -1,3 +1,4 @@
+// Package kafka implements the Kafka service handling requests and responses.
 package kafka
 
 import (
@@ -11,7 +12,7 @@ import (
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
-// Execute a request for the metadata of a topic that may or may not exist (Kafka 0.11.0+)
+// tryRequestTopic executes a request for the metadata of a topic that may or may not exist (Kafka 0.11.0+).
 func tryRequestTopic(cl *client.Client, topic string) (
 	*def.TopicDefinition,
 	def.Configs,
@@ -50,7 +51,7 @@ func tryRequestTopic(cl *client.Client, topic string) (
 	return &topicDef, topicConfigs, metadata.Brokers, nil
 }
 
-// Execute a request to create a topic (Kafka 0.10.1+)
+// createTopic executes a request to create a topic (Kafka 0.10.1+).
 func createTopic(
 	cl *client.Client,
 	topicDef def.TopicDefinition,
@@ -115,7 +116,7 @@ func createTopic(
 	return nil
 }
 
-// Execute a request to create partitions (Kafka 0.10.0+)
+// createPartitions executes a request to create partitions (Kafka 0.10.0+).
 func createPartitions(
 	cl *client.Client,
 	topic string,
@@ -163,7 +164,7 @@ func createPartitions(
 	return nil
 }
 
-// Execute a request to alter partition assignments (Kafka 2.4.0+)
+// alterPartitionAssignments executes a request to alter partition assignments (Kafka 2.4.0+).
 func alterPartitionAssignments(
 	cl *client.Client,
 	topic string,
@@ -218,7 +219,7 @@ func alterPartitionAssignments(
 	return nil
 }
 
-// Execute a request to list partition reassignments (Kafka 2.4.0+)
+// listPartitionReassignments executes a request to list partition reassignments (Kafka 2.4.0+).
 func listPartitionReassignments(
 	cl *client.Client,
 	topic string,
@@ -246,7 +247,7 @@ func listPartitionReassignments(
 		return nil, fmt.Errorf(errMsg)
 	}
 
-	reassignments := meta.PartitionReassignments{}
+	var reassignments meta.PartitionReassignments
 	if len(resp.Topics) > 0 {
 		for _, p := range resp.Topics[0].Partitions {
 			reassignments = append(reassignments, meta.PartitionReassignment{

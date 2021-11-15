@@ -1,3 +1,4 @@
+// Package assignments implements helper functions for partition assignment operations.
 package assignments
 
 import (

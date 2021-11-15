@@ -1,3 +1,4 @@
+// Package docparse implements parsers to transform input into separated documents.
 package docparse
 
 import (
@@ -10,6 +11,7 @@ import (
 	"strings"
 )
 
+// Format represents the format of the documents to be parsed.
 type Format int8
 
 const (
@@ -22,34 +24,34 @@ var (
 	yamlCommentRegExp      = regexp.MustCompile(`(?m)^([^#]*)#?.*$`)
 )
 
-// Parses a file to a slice of separated documents
+// FromFile parses a file to a slice of separated documents.
 func FromFile(filepath string, format Format) ([]string, error) {
-	fileBytes, err := ioutil.ReadFile(filepath)
+	b, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return nil, err
 	}
 
 	switch format {
 	case YAML:
-		return bytesToYAMLDocs(fileBytes), nil
+		return bytesToYAMLDocs(b), nil
 	case JSON:
-		jsonDocs, err := bytesToJSONDocs(fileBytes)
+		docs, err := bytesToJSONDocs(b)
 		if err != nil {
 			return nil, err
 		}
-		return jsonDocs, nil
+		return docs, nil
 	default:
 		return nil, fmt.Errorf("unsupported format")
 	}
 }
 
-// Parses stdin to a slice of separated documents
+// FromStdin parses stdin to a slice of separated documents.
 func FromStdin(format Format) ([]string, error) {
-	var stdinBytes []byte
+	var b []byte
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		stdinBytes = append(stdinBytes, scanner.Bytes()...)
-		stdinBytes = append(stdinBytes, "\n"...)
+		b = append(b, scanner.Bytes()...)
+		b = append(b, "\n"...)
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err
@@ -57,60 +59,55 @@ func FromStdin(format Format) ([]string, error) {
 
 	switch format {
 	case YAML:
-		return bytesToYAMLDocs(stdinBytes), nil
+		return bytesToYAMLDocs(b), nil
 	case JSON:
-		jsonDocs, err := bytesToJSONDocs(stdinBytes)
+		docs, err := bytesToJSONDocs(b)
 		if err != nil {
 			return nil, err
 		}
-		return jsonDocs, nil
+		return docs, nil
 	default:
 		return nil, fmt.Errorf("unsupported format")
 	}
 }
 
-// Converts bytes to a slice of yaml documents
-func bytesToYAMLDocs(bytes []byte) []string {
-	// Remove yaml comments
-	cleanFileBytes := yamlCommentRegExp.ReplaceAll(bytes, []byte("$1"))
+func bytesToYAMLDocs(b []byte) []string {
+	cleanBytes := yamlCommentRegExp.ReplaceAll(b, []byte("$1"))
+	docs := yamlDocSeparatorRegExp.Split(string(cleanBytes), -1)
 
-	// Separate into yaml documents
-	separatedDocs := yamlDocSeparatorRegExp.Split(string(cleanFileBytes), -1)
-
-	var yamlDocs []string
-	for _, doc := range separatedDocs {
+	var yDocs []string
+	for _, doc := range docs {
 		doc = strings.TrimSpace(doc)
 		if len(doc) > 0 {
-			yamlDocs = append(yamlDocs, doc)
+			yDocs = append(yDocs, doc)
 		}
 	}
-	return yamlDocs
+	return yDocs
 }
 
-// Converts bytes to a slice of json documents
-func bytesToJSONDocs(bytes []byte) ([]string, error) {
-	var iBytes interface{}
-	if err := json.Unmarshal(bytes, &iBytes); err != nil {
+func bytesToJSONDocs(b []byte) ([]string, error) {
+	var bi interface{}
+	if err := json.Unmarshal(b, &bi); err != nil {
 		return nil, err
 	}
 
-	var iDocs []interface{}
-	switch v := iBytes.(type) {
+	var docs []interface{}
+	switch v := bi.(type) {
 	case []interface{}:
-		iDocs = v
+		docs = v
 	case interface{}:
-		iDocs = []interface{}{v}
+		docs = []interface{}{v}
 	default:
 		return nil, fmt.Errorf("json document is invalid")
 	}
 
-	jDocs := make([]string, len(iDocs))
-	for i, iDoc := range iDocs {
-		jBytes, err := json.Marshal(iDoc)
+	jDocs := make([]string, len(docs))
+	for i, doc := range docs {
+		jb, err := json.Marshal(doc)
 		if err != nil {
 			return nil, err
 		}
-		jDocs[i] = string(jBytes)
+		jDocs[i] = string(jb)
 	}
 
 	return jDocs, nil

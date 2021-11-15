@@ -1,3 +1,4 @@
+// Package tutil implements testing utility functions.
 package tutil
 
 import (
@@ -14,7 +15,7 @@ import (
 	"github.com/peter-evans/kdef/core/model/opt"
 )
 
-// Check if an error message contains a string
+// ErrorContains checks if an error message contains a string.
 func ErrorContains(out error, want string) bool {
 	if out == nil {
 		return want == ""
@@ -25,7 +26,7 @@ func ErrorContains(out error, want string) bool {
 	return strings.Contains(out.Error(), want)
 }
 
-// Return the byte slice of a test fixture
+// Fixture returns the byte slice of a test fixture.
 func Fixture(t *testing.T, path string) []byte {
 	t.Helper()
 	fileBytes, err := ioutil.ReadFile(path)
@@ -36,7 +37,7 @@ func Fixture(t *testing.T, path string) []byte {
 	return fileBytes
 }
 
-// A wrapper around docparse.FromFile to simplify test usage
+// FileToYAMLDocs wraps docparse.FromFile to simplify test usage.
 func FileToYAMLDocs(t *testing.T, path string) []string {
 	t.Helper()
 	yamlDocs, err := docparse.FromFile(path, docparse.Format(opt.YAMLFormat))
@@ -47,7 +48,7 @@ func FileToYAMLDocs(t *testing.T, path string) []string {
 	return yamlDocs
 }
 
-// Determine if two strings are equal JSON
+// EqualJSON determines if two strings are equal JSON.
 func EqualJSON(t *testing.T, s1 string, s2 string) bool {
 	t.Helper()
 	toInterface := func(s string) interface{} {
@@ -64,17 +65,16 @@ func EqualJSON(t *testing.T, s1 string, s2 string) bool {
 	)
 }
 
-// Produces random bytes of length n
+// RandomBytes produces random bytes of length n.
 func RandomBytes(n int) ([]byte, error) {
 	bytes := make([]byte, n)
-	_, err := rand.Read(bytes)
-	if err != nil {
+	if _, err := rand.Read(bytes); err != nil {
 		return nil, err
 	}
 	return bytes, nil
 }
 
-// A wrapper around NewClient to simplify test usage
+// CreateClient wraps config.NewClient to simplify test usage.
 func CreateClient(t *testing.T, configOpts []string) *client.Client {
 	t.Helper()
 	cl, err := config.NewClient(&config.Options{

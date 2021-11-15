@@ -1,3 +1,4 @@
+// Package res implements structures handling the result of operations.
 package res
 
 import (
@@ -7,7 +8,7 @@ import (
 	"github.com/peter-evans/kdef/core/model/meta"
 )
 
-// An apply result
+// ApplyResult represents an apply result.
 type ApplyResult struct {
 	LocalDef  interface{} `json:"local"`
 	RemoteDef interface{} `json:"remote"`
@@ -17,7 +18,7 @@ type ApplyResult struct {
 	Applied   bool        `json:"applied"`
 }
 
-// Return the error of an apply
+// GetErr returns the error of an apply.
 func (a ApplyResult) GetErr() error {
 	if len(a.Err) > 0 {
 		return fmt.Errorf(a.Err)
@@ -25,15 +26,15 @@ func (a ApplyResult) GetErr() error {
 	return nil
 }
 
-// Determine if the apply has unapplied changes
+// HasUnappliedChanges determines if the apply has unapplied changes.
 func (a ApplyResult) HasUnappliedChanges() bool {
 	return len(a.Diff) > 0 && !a.Applied
 }
 
-// A slice of ApplyResult pointers
+// ApplyResults represents a slice of ApplyResult pointers.
 type ApplyResults []*ApplyResult
 
-// Determine if any apply result has an error
+// ContainsErr determines if any apply result has an error.
 func (a ApplyResults) ContainsErr() bool {
 	for _, res := range a {
 		err := res.GetErr()
@@ -44,7 +45,7 @@ func (a ApplyResults) ContainsErr() bool {
 	return false
 }
 
-// Determine if any apply result has unapplied changes
+// ContainsUnappliedChanges determines if any apply result has unapplied changes.
 func (a ApplyResults) ContainsUnappliedChanges() bool {
 	for _, res := range a {
 		if res.HasUnappliedChanges() {
@@ -54,7 +55,7 @@ func (a ApplyResults) ContainsUnappliedChanges() bool {
 	return false
 }
 
-// Convert apply results to JSON
+// JSON converts apply results to JSON.
 func (a ApplyResults) JSON() (string, error) {
 	j, err := json.Marshal(a)
 	if err != nil {
@@ -65,7 +66,7 @@ func (a ApplyResults) JSON() (string, error) {
 
 // *** Topic apply specific ***
 
-// Misc data for a topic apply result
+// TopicApplyResultData represents misc data for a topic apply result.
 type TopicApplyResultData struct {
 	PartitionReassignments []meta.PartitionReassignment `json:"partitionReassignments"`
 }

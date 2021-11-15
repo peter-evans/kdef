@@ -1,6 +1,6 @@
 ---
 # Version 0
-# Add acls
+# Add ACLs
 apiVersion: v1
 kind: acl
 metadata:
@@ -110,7 +110,7 @@ spec:
   deleteUndefinedAcls: true
 ---
 # Version 2
-# Update acls (addition)
+# Update ACLs (addition)
 apiVersion: v1
 kind: acl
 metadata:
@@ -133,7 +133,7 @@ spec:
   deleteUndefinedAcls: true
 ---
 # Version 3
-# Update acls (addition/deletion)
+# Update ACLs (addition/deletion)
 apiVersion: v1
 kind: acl
 metadata:

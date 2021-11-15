@@ -1,3 +1,4 @@
+// Package topic implements operators for topic definition operations.
 package topic
 
 import (
@@ -21,14 +22,14 @@ import (
 	"github.com/peter-evans/kdef/core/model/res"
 )
 
-// Options to configure an applier
+// ApplierOptions represents options to configure an applier.
 type ApplierOptions struct {
 	DefinitionFormat  opt.DefinitionFormat
 	DryRun            bool
 	ReassAwaitTimeout int
 }
 
-// Create a new applier
+// NewApplier creates a new applier.
 func NewApplier(
 	cl *client.Client,
 	defDoc string,
@@ -41,7 +42,6 @@ func NewApplier(
 	}
 }
 
-// Applier operations
 type applierOps struct {
 	create            bool
 	createAssignments def.PartitionAssignments
@@ -50,7 +50,6 @@ type applierOps struct {
 	assignments       def.PartitionAssignments
 }
 
-// Determine if there are any pending operations
 func (a applierOps) pending() bool {
 	return a.create ||
 		len(a.config) > 0 ||
@@ -58,32 +57,30 @@ func (a applierOps) pending() bool {
 		len(a.assignments) > 0
 }
 
-// An applier handling the apply operation
 type applier struct {
-	// constructor params
+	// Constructor fields.
 	srv    *kafka.Service
 	defDoc string
 	opts   ApplierOptions
 
-	// internal
+	// Internal fields.
 	localDef      def.TopicDefinition
 	remoteDef     *def.TopicDefinition
 	remoteConfigs def.Configs
 	brokers       meta.Brokers
 	ops           applierOps
 
-	// result
+	// Result fields.
 	res           res.ApplyResult
 	reassignments meta.PartitionReassignments
 }
 
-// Execute the applier
+// Execute executes the applier.
 func (a *applier) Execute() *res.ApplyResult {
 	if err := a.apply(); err != nil {
 		a.res.Err = err.Error()
 		log.Error(err)
 	} else if a.ops.pending() && !a.opts.DryRun {
-		// Consider the definition applied if there were ops and this is not a dry run
 		a.res.Applied = true
 	}
 
@@ -94,9 +91,8 @@ func (a *applier) Execute() *res.ApplyResult {
 	return &a.res
 }
 
-// Perform the apply operation sequence
+// apply performs the apply operation sequence.
 func (a *applier) apply() error {
-	// Create the local definition
 	if err := a.createLocal(); err != nil {
 		return err
 	}
@@ -106,65 +102,57 @@ func (a *applier) apply() error {
 		return err
 	}
 
-	// Fetch the remote definition and necessary metadata
 	if err := a.tryFetchRemote(); err != nil {
 		return err
 	}
 
-	// Perform further validations with metadata
 	log.Debugf("Validating topic definition using cluster metadata")
 	if err := a.localDef.ValidateWithMetadata(a.brokers); err != nil {
 		return err
 	}
 
-	// Build topic operations
 	if err := a.buildOps(); err != nil {
 		return err
 	}
 
-	// Update the apply result with the remote definition and human readable diff
 	if err := a.updateApplyResult(); err != nil {
 		return err
 	}
 
 	if a.ops.pending() {
-		// Display diff and pending operations
 		if !log.Quiet {
 			a.displayPendingOps()
 		}
 
-		// Execute operations
 		if err := a.executeOps(); err != nil {
 			return err
 		}
 
-		// Check for in-progress partition reassignments as a result of operations
+		// Check for in-progress partition reassignments as a result of operations involving assignments.
 		if len(a.ops.assignments) > 0 {
 			if err := a.fetchPartitionReassignments(false); err != nil {
 				return err
 			}
 			if len(a.reassignments) > 0 {
 				if a.opts.ReassAwaitTimeout > 0 {
-					// Wait for reassignments to complete
 					if err := a.awaitReassignments(a.opts.ReassAwaitTimeout); err != nil {
 						return err
 					}
 				} else if !log.Quiet {
-					// Display in-progress partition reassignments
 					a.displayPartitionReassignments()
 				}
 			}
 		}
 
-		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Completed apply for topic %q", a.localDef.Metadata.Name)
+		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Completed apply for topic definition %q", a.localDef.Metadata.Name)
 	} else {
-		log.Infof("No changes to apply for topic %q", a.localDef.Metadata.Name)
+		log.Infof("No changes to apply for topic definition %q", a.localDef.Metadata.Name)
 	}
 
 	return nil
 }
 
-// Create the local definition
+// createLocal creates the local definition.
 func (a *applier) createLocal() error {
 	switch a.opts.DefinitionFormat {
 	case opt.YAMLFormat:
@@ -179,13 +167,12 @@ func (a *applier) createLocal() error {
 		return fmt.Errorf("unsupported format")
 	}
 
-	// Set the local definition on the apply result
 	a.res.LocalDef = &a.localDef
 
 	return nil
 }
 
-// Fetch the remote definition and necessary metadata
+// tryFetchRemote fetches the remote definition and necessary metadata.
 func (a *applier) tryFetchRemote() error {
 	log.Infof("Checking if topic %q exists...", a.localDef.Metadata.Name)
 	var err error
@@ -202,7 +189,7 @@ func (a *applier) tryFetchRemote() error {
 	return nil
 }
 
-// Build topic operations
+// buildOps builds topic operations.
 func (a *applier) buildOps() error {
 	if a.ops.create {
 		a.buildCreateOp()
@@ -218,19 +205,17 @@ func (a *applier) buildOps() error {
 	return nil
 }
 
-// Update the apply result with the remote definition and human readable diff
+// updateApplyResult updates the apply result with the remote definition and human readable diff.
 func (a *applier) updateApplyResult() error {
-	// Copy the remote definition
 	var remoteCopy *def.TopicDefinition
 	if !a.ops.create {
 		c := a.remoteDef.Copy()
 		remoteCopy = &c
 	}
 
-	// Modify the remote definition to remove optional properties not specified in local
-	// Further, set properties that are local only and have no remote state
+	// Modify the remote definition to remove optional properties not specified in local.
+	// Further, set properties that are local only and have no remote state.
 	if remoteCopy != nil {
-		// Remove assignments if not specified in local
 		if !a.localDef.Spec.HasAssignments() {
 			remoteCopy.Spec.Assignments = nil
 		}
@@ -238,8 +223,8 @@ func (a *applier) updateApplyResult() error {
 			remoteCopy.Spec.RackAssignments = nil
 		}
 
-		// The only configs we want to see are those specified in local and those in configOps
-		// configOps could contain key deletions that should be shown in the diff
+		// The only configs we want to see are those specified in local and those in configOps.
+		// configOps could contain key deletions that should be shown in the diff.
 		for k := range remoteCopy.Spec.Configs {
 			_, existsInLocal := a.localDef.Spec.Configs[k]
 			existsInOps := a.ops.config.Contains(k)
@@ -249,39 +234,35 @@ func (a *applier) updateApplyResult() error {
 			}
 		}
 
-		// Set properties that are local only and have no remote state
 		remoteCopy.Spec.DeleteUndefinedConfigs = a.localDef.Spec.DeleteUndefinedConfigs
 	}
 
-	// Compute diff
 	diff, err := jsondiff.Diff(remoteCopy, &a.localDef)
 	if err != nil {
 		return fmt.Errorf("failed to compute diff: %v", err)
 	}
 
-	// Check the diff against the pending operations
 	if diffExists := (len(diff) > 0); diffExists != a.ops.pending() {
 		return fmt.Errorf("existence of diff was %v, but expected %v", diffExists, a.ops.pending())
 	}
 
-	// Update the apply result
 	a.res.RemoteDef = remoteCopy
 	a.res.Diff = diff
 
 	return nil
 }
 
-// Display pending operations
+// displayPendingOps displays pending operations.
 func (a *applier) displayPendingOps() {
 	if a.ops.create {
 		log.Infof("Topic %q does not exist and will be created", a.localDef.Metadata.Name)
 	}
 
-	log.Infof("Topic %q diff (local -> remote):", a.localDef.Metadata.Name)
+	log.Infof("topic definition %q diff (local -> remote):", a.localDef.Metadata.Name)
 	fmt.Print(a.res.Diff)
 }
 
-// Execute topic update operations
+// executeOps executes update operations.
 func (a *applier) executeOps() error {
 	if a.ops.create {
 		if err := a.createTopic(); err != nil {
@@ -310,15 +291,15 @@ func (a *applier) executeOps() error {
 	return nil
 }
 
-// Build create operation
+// buildCreateOp builds a create operation.
 func (a *applier) buildCreateOp() {
 	if a.localDef.Spec.HasRackAssignments() {
-		// Make an empty set of assignments
+		// Make an empty set of assignments.
 		newAssignments := make(def.PartitionAssignments, len(a.localDef.Spec.RackAssignments))
 		for i := range newAssignments {
 			newAssignments[i] = make([]int32, len(a.localDef.Spec.RackAssignments[0]))
 		}
-		// Populate local assignments from defined rack assignments
+		// Populate local assignments from defined rack assignments.
 		a.ops.createAssignments = assignments.SyncRackAssignments(
 			newAssignments,
 			a.localDef.Spec.RackAssignments,
@@ -329,7 +310,7 @@ func (a *applier) buildCreateOp() {
 	}
 }
 
-// Execute a request to create a topic
+// createTopic executes a request to create a topic.
 func (a *applier) createTopic() error {
 	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Creating topic %q...", a.localDef.Metadata.Name)
 
@@ -345,9 +326,9 @@ func (a *applier) createTopic() error {
 	return nil
 }
 
-// Build alter configs operations
+// buildConfigOps builds alter configs operations.
 func (a *applier) buildConfigOps() error {
-	log.Debugf("Comparing local and remote definition configs for topic %q", a.localDef.Metadata.Name)
+	log.Debugf("Comparing local and remote configs for topic %q", a.localDef.Metadata.Name)
 
 	var err error
 	a.ops.config, err = a.srv.NewConfigOps(
@@ -363,10 +344,10 @@ func (a *applier) buildConfigOps() error {
 	return nil
 }
 
-// Update topic configs
+// updateConfigs updates topic configs.
 func (a *applier) updateConfigs() error {
 	if a.ops.config.ContainsOp(kafka.DeleteConfigOperation) && !a.localDef.Spec.DeleteUndefinedConfigs {
-		// This case should only occur when using non-incremental alter configs
+		// This case should only occur when using non-incremental alter configs.
 		return errors.New("cannot apply configs because deletion of undefined configs is not enabled")
 	}
 
@@ -383,7 +364,7 @@ func (a *applier) updateConfigs() error {
 	return nil
 }
 
-// Build partitions operation
+// buildPartitionsOp builds a partitions operation.
 func (a *applier) buildPartitionsOp() error {
 	if a.localDef.Spec.Partitions < a.remoteDef.Spec.Partitions {
 		return fmt.Errorf("decreasing the number of partitions is not supported")
@@ -395,19 +376,19 @@ func (a *applier) buildPartitionsOp() error {
 			a.remoteDef.Spec.Partitions,
 			a.localDef.Spec.Partitions,
 		)
-		// Note: It's not necessary to cater specifically for rack assignments here because any miss-placements
+		// It's not necessary to cater specifically for rack assignments here because any miss-placements
 		// will be reassigned and migrate to the correct broker very quickly in the cluster.
 		a.ops.partitions = assignments.AddPartitions(
 			a.remoteDef.Spec.Assignments,
 			a.localDef.Spec.Partitions,
-			a.brokers.Ids(),
+			a.brokers.IDs(),
 		)
 	}
 
 	return nil
 }
 
-// Execute a request to create partitions
+// updatePartitions executes a request to create partitions.
 func (a *applier) updatePartitions() error {
 	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Creating partitions...")
 
@@ -424,7 +405,7 @@ func (a *applier) updatePartitions() error {
 	return nil
 }
 
-// Build assignments operation
+// buildAssignmentsOp builds an assignments operation.
 func (a *applier) buildAssignmentsOp() {
 	switch {
 	case a.localDef.Spec.HasAssignments():
@@ -436,10 +417,8 @@ func (a *applier) buildAssignmentsOp() {
 		var newAssignments def.PartitionAssignments
 		newAssignments = assignments.Copy(a.remoteDef.Spec.Assignments)
 		if len(a.ops.partitions) > 0 {
-			// Assignments will include new partitions that will be added
 			newAssignments = append(newAssignments, a.ops.partitions...)
 		}
-		// Sync remote assignments with local rack assignments
 		newAssignments = assignments.SyncRackAssignments(
 			newAssignments,
 			a.localDef.Spec.RackAssignments,
@@ -454,18 +433,17 @@ func (a *applier) buildAssignmentsOp() {
 		var newAssignments def.PartitionAssignments
 		newAssignments = assignments.Copy(a.remoteDef.Spec.Assignments)
 		if len(a.ops.partitions) > 0 {
-			// Assignments will include new partitions that will be added
 			newAssignments = append(newAssignments, a.ops.partitions...)
 		}
 		a.ops.assignments = assignments.AlterReplicationFactor(
 			newAssignments,
 			a.localDef.Spec.ReplicationFactor,
-			a.brokers.Ids(),
+			a.brokers.IDs(),
 		)
 	}
 }
 
-// Execute a request to list partition reassignments
+// fetchPartitionReassignments executes a request to list partition reassignments.
 func (a *applier) fetchPartitionReassignments(suppressLog bool) error {
 	if !(suppressLog) {
 		log.Debugf("Fetching in-progress partition reassignments for topic %q", a.localDef.Metadata.Name)
@@ -488,7 +466,7 @@ func (a *applier) fetchPartitionReassignments(suppressLog bool) error {
 	return nil
 }
 
-// Display in-progress partition reassignments
+// displayPartitionReassignments displays in-progress partition reassignments.
 func (a *applier) displayPartitionReassignments() {
 	log.Infof("In-progress partition reassignments for topic %q:", a.localDef.Metadata.Name)
 	t := table.NewWriter()
@@ -506,7 +484,7 @@ func (a *applier) displayPartitionReassignments() {
 	t.Render()
 }
 
-// Execute a request to alter assignments
+// updateAssignments executes a request to alter assignments.
 func (a *applier) updateAssignments() error {
 	if a.opts.DryRun {
 		// AlterPartitionAssignments has no 'ValidateOnly' for dry-run mode so we check
@@ -515,7 +493,7 @@ func (a *applier) updateAssignments() error {
 			return err
 		}
 		if len(a.reassignments) > 0 {
-			// Kafka would return a very similiar error if we attempted to execute the reassignment
+			// Kafka would return a very similiar error if we attempted to execute the reassignment.
 			return fmt.Errorf("a partition reassignment is in progress for the topic %q", a.localDef.Metadata.Name)
 		}
 
@@ -535,7 +513,7 @@ func (a *applier) updateAssignments() error {
 	return nil
 }
 
-// Await the completion of in-progress partition reassignments
+// awaitReassignments awaits the completion of in-progress partition reassignments.
 func (a *applier) awaitReassignments(timeoutSec int) error {
 	log.Infof("Awaiting completion of partition reassignments (timeout: %d seconds)...", timeoutSec)
 	timeout := time.After(time.Duration(timeoutSec) * time.Second)

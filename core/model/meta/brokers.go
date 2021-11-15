@@ -1,18 +1,19 @@
+// Package meta implements metadata structures and related operations.
 package meta
 
 import "sort"
 
-// A cluster broker
+// Broker represents a cluster broker.
 type Broker struct {
 	ID   int32
 	Rack string
 }
 
-// A slice of Broker
+// Brokers represents a slice of Broker.
 type Brokers []Broker
 
-// A slice of the broker IDs
-func (b Brokers) Ids() []int32 {
+// IDs returns a slice of the broker IDs.
+func (b Brokers) IDs() []int32 {
 	ids := make([]int32, len(b))
 	for i, broker := range b {
 		ids[i] = broker.ID
@@ -20,7 +21,7 @@ func (b Brokers) Ids() []int32 {
 	return ids
 }
 
-// A map of brokers by non-empty broker rack ID
+// BrokersByRack returns a map of brokers by non-empty broker rack ID.
 func (b Brokers) BrokersByRack() map[string][]int32 {
 	k := make(map[string][]int32)
 	for _, broker := range b {
@@ -31,7 +32,7 @@ func (b Brokers) BrokersByRack() map[string][]int32 {
 	return k
 }
 
-// A unique, sorted slice of non-empty broker rack IDs
+// Racks returns a unique, sorted slice of non-empty broker rack IDs.
 func (b Brokers) Racks() []string {
 	bbr := b.BrokersByRack()
 	ids := make([]string, len(bbr))
@@ -44,7 +45,7 @@ func (b Brokers) Racks() []string {
 	return ids
 }
 
-// A map of racks by broker ID
+// RacksByBroker returns a map of racks by broker ID.
 func (b Brokers) RacksByBroker() map[int32]string {
 	k := make(map[int32]string)
 	for _, broker := range b {
