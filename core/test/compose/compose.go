@@ -29,12 +29,11 @@ func Up(t *testing.T, paths []string, env map[string]string) *tc.LocalDockerComp
 // Down executes compose down.
 func Down(t *testing.T, compose *tc.LocalDockerCompose) {
 	t.Helper()
-	execError := compose.Down()
+	execError := compose.
+		WithCommand([]string{"down", "--volumes"}).
+		Invoke()
 	if err := execError.Error; err != nil {
 		t.Errorf("compose down failed: %v", err)
 		t.FailNow()
 	}
-
-	// TODO: Is it possible to delete the dangling volume?
-	// docker volume rm $(docker volume ls -qf dangling=true)
 }
