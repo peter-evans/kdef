@@ -13,20 +13,26 @@ theme:
   include_search_page: false
   search_index_only: true
   palette:
-    - media: "(prefers-color-scheme: light)"  # Light mode
+    - media: "(prefers-color-scheme: light)"  # light mode
       scheme: default
-      primary: teal
-      accent: teal
       toggle:
         icon: material/lightbulb-outline
         name: Switch to light mode
-    - media: "(prefers-color-scheme: dark)"  # Dark mode
+    - media: "(prefers-color-scheme: dark)"  # dark mode
       scheme: slate
-      primary: teal
-      accent: teal
+      primary: light-blue
       toggle:
         icon: material/lightbulb
         name: Switch to dark mode
+  features:
+    - search.suggest
+    - search.highlight
+    - search.share
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
 
 extra:
   social:
@@ -34,3 +40,30 @@ extra:
       link: https://github.com/peter-evans
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/peterevans0
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences 
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed
+  - toc:
+      title: On this page
+      permalink: true
+
+nav:
+  - Introduction: index.md
+  - Install: install.md
+  - Getting started: getting-started.md
+  - Command line reference:
+    - configure: cmd/configure.md
+    - apply: cmd/apply.md
+    - export: cmd/export.md
+  - Definitions:
+    - acl: def/acl.md
+    - broker: def/broker.md
+    - brokers: def/brokers.md
+    - topic: def/topic.md
+  - Continuous integration:
+    - ci/ci.md

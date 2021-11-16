@@ -1,7 +1,7 @@
 kdef
 config.yml
 
-!examples/**
+!docs/examples/**
 
 dist/
 docs/site/
