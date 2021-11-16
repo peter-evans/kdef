@@ -48,6 +48,15 @@ type ACLEntryGroups []ACLEntryGroup
 // Validate validates ACL entry groups.
 func (a ACLEntryGroups) Validate() error {
 	for _, group := range a {
+		if len(group.Principals) == 0 {
+			return fmt.Errorf("principals are missing from acl entry group")
+		}
+		if len(group.Hosts) == 0 {
+			return fmt.Errorf("hosts are missing from acl entry group")
+		}
+		if len(group.Operations) == 0 {
+			return fmt.Errorf("operations are missing from acl entry group")
+		}
 		for _, operation := range group.Operations {
 			if !str.Contains(operation, aclOperations) {
 				return fmt.Errorf("acl operation must be one of %q", strings.Join(aclOperations, "|"))

@@ -55,6 +55,75 @@ func TestACLDefinition_Validate(t *testing.T) {
 			wantErr: "metadata name must be \"kafka-cluster\" when type is \"cluster\"",
 		},
 		{
+			name: "Tests missing acl principals",
+			aclDef: ACLDefinition{
+				ResourceDefinition: ResourceDefinition{
+					APIVersion: "v1",
+					Kind:       "acl",
+					Metadata: ResourceMetadataDefinition{
+						Name: "foo",
+						Type: "topic",
+					},
+				},
+				Spec: ACLSpecDefinition{
+					ACLs: ACLEntryGroups{
+						ACLEntryGroup{
+							Hosts:          []string{"*"},
+							Operations:     []string{"READ"},
+							PermissionType: "ALLOW",
+						},
+					},
+				},
+			},
+			wantErr: "principals are missing from acl entry group",
+		},
+		{
+			name: "Tests missing acl hosts",
+			aclDef: ACLDefinition{
+				ResourceDefinition: ResourceDefinition{
+					APIVersion: "v1",
+					Kind:       "acl",
+					Metadata: ResourceMetadataDefinition{
+						Name: "foo",
+						Type: "topic",
+					},
+				},
+				Spec: ACLSpecDefinition{
+					ACLs: ACLEntryGroups{
+						ACLEntryGroup{
+							Principals:     []string{"User:foo"},
+							Operations:     []string{"READ"},
+							PermissionType: "ALLOW",
+						},
+					},
+				},
+			},
+			wantErr: "hosts are missing from acl entry group",
+		},
+		{
+			name: "Tests missing acl operations",
+			aclDef: ACLDefinition{
+				ResourceDefinition: ResourceDefinition{
+					APIVersion: "v1",
+					Kind:       "acl",
+					Metadata: ResourceMetadataDefinition{
+						Name: "foo",
+						Type: "topic",
+					},
+				},
+				Spec: ACLSpecDefinition{
+					ACLs: ACLEntryGroups{
+						ACLEntryGroup{
+							Principals:     []string{"User:foo"},
+							Hosts:          []string{"*"},
+							PermissionType: "ALLOW",
+						},
+					},
+				},
+			},
+			wantErr: "operations are missing from acl entry group",
+		},
+		{
 			name: "Tests invalid acl operation",
 			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
