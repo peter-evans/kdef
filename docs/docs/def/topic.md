@@ -1,0 +1,23 @@
+# topic
+
+## 
+
+## Examples
+
+```yml
+apiVersion: v1
+kind: acl
+metadata:
+  name: kafka-cluster
+  type: cluster
+spec:
+  acls:
+    - hosts: ["*"]
+      operations: ["DESCRIBE_CONFIGS"]
+      permissionType: ALLOW
+      principals:
+        - User:foo
+        - User:bar
+        - User:baz
+  deleteUndefinedAcls: true
+```
