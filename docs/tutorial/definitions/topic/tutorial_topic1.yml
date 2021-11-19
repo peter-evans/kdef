@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: topic
+metadata:
+  name: tutorial_topic1
+spec:
+  configs:
+    retention.ms: "86400000"
+  partitions: 3
+  replicationFactor: 2

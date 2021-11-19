@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: topic
 metadata:
-  name: store.events.order-created
+  name: store.events.order-dispatched
 spec:
   configs:
     cleanup.policy: delete
@@ -30,5 +30,6 @@ spec:
     segment.jitter.ms: "0"
     segment.ms: "604800000"
     unclean.leader.election.enable: "false"
+  deleteUndefinedConfigs: true
   partitions: 3
-  replicationFactor: 3
+  replicationFactor: 2

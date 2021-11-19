@@ -1,7 +1,7 @@
 seedBrokers:
-  - "b-1.xxx.amazonaws.com:9098"
-  - "b-2.xxx.amazonaws.com:9098"
-  - "b-3.xxx.amazonaws.com:9098"
+  - "b-1.example.amazonaws.com:9098"
+  - "b-2.example.amazonaws.com:9098"
+  - "b-3.example.amazonaws.com:9098"
 timeoutMs: 10000
 tls:
   enabled: true

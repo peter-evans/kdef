@@ -18,9 +18,13 @@ func Command(cOpts *config.Options) *cobra.Command {
 	var assignments string
 
 	cmd := &cobra.Command{
-		Use:   "topic",
+		Use:   "topic [options]",
 		Short: "Export topics to definitions",
-		Long:  "Export topics to definitions (Kafka 0.11.0+).",
+		Long: `Export topics to definitions (Kafka 0.11.0+).
+
+Exports to stdout by default. Supply the --output-dir option to create definition files.
+
+Documentation: https://peter-evans.github.io/kdef`,
 		Example: `# export all topics to the directory "topics"
 kdef export topic --output-dir "topics"
 
@@ -65,13 +69,14 @@ kdef export topic --match "myapp.*"`,
 		fmt.Sprintf("resource definition format [%s]", strings.Join(opt.DefinitionFormatValidValues, "|")),
 	)
 	cmd.Flags().StringVarP(&opts.OutputDir, "output-dir", "o", "", "output directory (must exist)")
-	cmd.Flags().BoolVar(&opts.Overwrite, "overwrite", false, "overwrite existing files in output directory")
+	cmd.Flags().BoolVarP(&opts.Overwrite, "overwrite", "w", false, "overwrite existing files in output directory")
 	cmd.Flags().StringVarP(&opts.Match, "match", "m", ".*", "regular expression matching topic names to include")
 	cmd.Flags().StringVarP(&opts.Exclude, "exclude", "e", ".^", "regular expression matching topic names to exclude")
 	cmd.Flags().BoolVarP(&opts.TopicIncludeInternal, "include-internal", "i", false, "include internal topics")
-	cmd.Flags().StringVar(
+	cmd.Flags().StringVarP(
 		&assignments,
 		"assignments",
+		"a",
 		"none",
 		fmt.Sprintf("partition assignments to include in topic definitions [%s]", strings.Join(opt.AssignmentsValidValues, "|")),
 	)

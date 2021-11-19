@@ -14,8 +14,8 @@ import (
 func Command(cOpts *config.Options) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
-		Short: "Export cluster resources to YAML definitions",
-		Long:  "Export cluster resources to YAML definitions",
+		Short: "Export cluster resources to definitions",
+		Long:  "Export cluster resources to definitions",
 		Args:  cobra.NoArgs,
 	}
 

@@ -1,17 +1,6 @@
 # Introduction
 
-kdef is blah blah
+kdef aims to provide an easy way to manage resources in a Kafka cluster by having them defined explicitly in a human-readable format.
+Changes to resource definitions can be reviewed like code and applied to a cluster.
 
-## Commands
-
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
-
-## Project layout
-
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+kdef was designed to support being run in a CI-CD environment, allowing teams to manage Kafka resource definitions in source control with pull requests (GitOps).

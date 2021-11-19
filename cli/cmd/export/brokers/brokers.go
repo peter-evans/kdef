@@ -17,9 +17,13 @@ func Command(cOpts *config.Options) *cobra.Command {
 	var defFormat string
 
 	cmd := &cobra.Command{
-		Use:   "brokers",
+		Use:   "brokers [options]",
 		Short: "Export cluster-wide broker configuration to a definition",
-		Long:  "Export cluster-wide broker configuration to a definition (Kafka 0.11.0+).",
+		Long: `Export cluster-wide broker configuration to a definition (Kafka 0.11.0+).
+
+Exports to stdout by default. Supply the --output-dir option to create definition files.
+
+Documentation: https://peter-evans.github.io/kdef`,
 		Example: `# export brokers definition to the directory "brokers"
 kdef export brokers --output-dir "brokers"
 
@@ -57,7 +61,7 @@ kdef export brokers --quiet`,
 		fmt.Sprintf("resource definition format [%s]", strings.Join(opt.DefinitionFormatValidValues, "|")),
 	)
 	cmd.Flags().StringVarP(&opts.OutputDir, "output-dir", "o", "", "output directory (must exist)")
-	cmd.Flags().BoolVar(&opts.Overwrite, "overwrite", false, "overwrite existing files in output directory")
+	cmd.Flags().BoolVarP(&opts.Overwrite, "overwrite", "w", false, "overwrite existing files in output directory")
 
 	return cmd
 }

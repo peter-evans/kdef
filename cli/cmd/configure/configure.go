@@ -10,7 +10,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                   "configure",
 		Short:                 "Interactive configuration setup",
-		Long:                  "A short interactive prompt to guide through creating a configuration file",
+		Long:                  "A short interactive prompt to guide through creating a configuration file.",
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		DisableFlagsInUseLine: true,

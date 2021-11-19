@@ -1,5 +1,7 @@
 # acl
 
+A definition representing ACLs for a specified Kafka resource.
+
 ## Definition
 
 - **apiVersion**: v1
@@ -22,32 +24,36 @@
 ## Spec
 
 - **acls** ([][ACLEntryGroup](#aclentrygroup))
-- **deleteUndefinedAcls** (boolean)
+- **deleteUndefinedAcls** (bool)
 
-    Allows kdef to delete any ACLs for the target resource that are not defined in `acls`. It is highly recommended to set this to `true`. If `false`, changes to ACL entry groups will only create new ACLs and previously defined ACLs will remain attached to the target resource.
+    Allows kdef to delete ACLs that are not defined in `acls`. It is highly recommended to set this to `true`. If `false`, changes to ACL entry groups will only create new ACLs and previously defined ACLs will remain attached to the target resource.
+
+    !!! caution
+        Enabling allows kdef to permanently delete ACLs. Always confirm operations with `--dry-run`.
 
 ## ACLEntryGroup
 
 A group of ACL entries, where specifying more than one value for its properties results in many ACLs being created in a combinatorial fashion.
 
-For example, the following ACL entry group will create six ACLs.
-```yml
-    - hosts: ["*"]
-      operations: ["READ", "WRITE"]
-      permissionType: ALLOW
-      principals:
-        - User:foo
-        - User:bar
-        - User:baz
-```
-```
-"*", "READ", "ALLOW", "User:foo"
-"*", "READ", "ALLOW", "User:bar"
-"*", "READ", "ALLOW", "User:baz"
-"*", "WRITE", "ALLOW", "User:foo"
-"*", "WRITE", "ALLOW", "User:bar"
-"*", "WRITE", "ALLOW", "User:baz"
-```
+!!! example
+    The following ACL entry group creates six ACLs.
+    ```yml
+        - hosts: ["*"]
+        operations: ["READ", "WRITE"]
+        permissionType: ALLOW
+        principals:
+            - User:foo
+            - User:bar
+            - User:baz
+    ```
+    ```
+    "*", "READ", "ALLOW", "User:foo"
+    "*", "READ", "ALLOW", "User:bar"
+    "*", "READ", "ALLOW", "User:baz"
+    "*", "WRITE", "ALLOW", "User:foo"
+    "*", "WRITE", "ALLOW", "User:bar"
+    "*", "WRITE", "ALLOW", "User:baz"
+    ```
 
 - **hosts** ([]string), required
 
@@ -68,9 +74,9 @@ For example, the following ACL entry group will create six ACLs.
 ## Examples
 
 ```yml
---8<-- "examples/resources/acl/cluster/kafka-cluster.yml"
+--8<-- "examples/definitions/acl/cluster/kafka-cluster.yml"
 ```
 
 ```yml
---8<-- "examples/resources/acl/topic/store.events.order-created.yml"
+--8<-- "examples/definitions/acl/topic/store.events.order-created.yml"
 ```

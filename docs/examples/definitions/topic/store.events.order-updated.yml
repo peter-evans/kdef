@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: topic
+metadata:
+  name: store.events.order-updated
+spec:
+  configs:
+    retention.ms: "86400000"
+  partitions: 6
+  replicationFactor: 2
+  assignments:
+    - [1, 2]
+    - [2, 3]
+    - [3, 1]
+    - [1, 2]
+    - [2, 3]
+    - [3, 1]
