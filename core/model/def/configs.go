@@ -7,6 +7,7 @@ type ConfigsMap map[string]*string
 // ConfigSource represents the source of a config key.
 type ConfigSource int8
 
+// ConfigSource types.
 const (
 	ConfigSourceUnknown                    ConfigSource = 0
 	ConfigSourceDynamicTopicConfig         ConfigSource = 1

@@ -12,6 +12,7 @@ import (
 	"github.com/peter-evans/kdef/core/model/opt"
 )
 
+// Command creates the export topic command.
 func Command(cOpts *config.Options) *cobra.Command {
 	opts := export.ControllerOptions{}
 	var defFormat string

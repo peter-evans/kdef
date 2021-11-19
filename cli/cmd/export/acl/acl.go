@@ -13,6 +13,7 @@ import (
 	"github.com/peter-evans/kdef/core/util/str"
 )
 
+// Command creates the export acl command.
 func Command(cOpts *config.Options) *cobra.Command {
 	opts := export.ControllerOptions{}
 	var defFormat string

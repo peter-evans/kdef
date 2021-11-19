@@ -13,6 +13,7 @@ import (
 	"github.com/peter-evans/kdef/core/model/opt"
 )
 
+// Command creates the apply command.
 func Command(cOpts *config.Options) *cobra.Command {
 	opts := apply.ControllerOptions{}
 	var defFormat string
