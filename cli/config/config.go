@@ -89,7 +89,7 @@ func loadConfig(configPath string, configOpts []string) (*client.Config, error) 
 		return nil, err
 	}
 
-	// Load commandline flag overrides
+	// Load commandline option overrides
 	optsMap := map[string]interface{}{}
 	for _, opt := range configOpts {
 		kv := strings.SplitN(opt, "=", 2)

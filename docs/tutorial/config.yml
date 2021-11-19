@@ -1,0 +1,6 @@
+seedBrokers:
+  - "localhost:19092"
+  - "localhost:19093"
+timeoutMs: 5000
+tls:
+  enabled: false

@@ -54,14 +54,17 @@ nav:
   - Introduction: index.md
   - Install: install.md
   - Getting started: getting-started.md
-  - Command line reference:
+  - Configuration: configuration.md
+  - Commands:
     - configure: cmd/configure.md
     - apply: cmd/apply.md
-    - export: cmd/export.md
+    - export:
+      - cmd/export/acl.md
+      - cmd/export/broker.md
+      - cmd/export/brokers.md
+      - cmd/export/topic.md
   - Definitions:
     - acl: def/acl.md
     - broker: def/broker.md
     - brokers: def/brokers.md
     - topic: def/topic.md
-  - Continuous integration:
-    - ci/ci.md

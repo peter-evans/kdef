@@ -18,17 +18,20 @@ func Command(cOpts *config.Options) *cobra.Command {
 	var defFormat string
 
 	cmd := &cobra.Command{
-		Use:   "apply [definitions]",
+		Use:   "apply <definitions>... [options]",
 		Short: "Apply definitions to cluster",
 		Long: `Apply definitions to cluster.
 
 Accepts one or more glob patterns matching the paths of definitions to apply.
-Matching directories are ignored.
+Directories matching patterns are ignored.
 
+The minimum Kafka version required to apply definitions:
 acl (Kafka 0.11.0+)
 broker (Kafka 0.11.0+)
 brokers (Kafka 0.11.0+)
-topic (Kafka 2.4.0+)`,
+topic (Kafka 2.4.0+)
+
+Documentation: https://peter-evans.github.io/kdef`,
 		Example: `# apply all definitions in directory "topics" (dry-run)
 kdef apply "topics/*.yml" --dry-run
 
@@ -84,10 +87,28 @@ cat topics/my_topic.yml | kdef apply - --dry-run`,
 		fmt.Sprintf("resource definition format [%s]", strings.Join(opt.DefinitionFormatValidValues, "|")),
 	)
 	cmd.Flags().BoolVarP(&opts.DryRun, "dry-run", "d", false, "validate and review the operation only")
-	cmd.Flags().BoolVarP(&opts.ExitCode, "exit-code", "e", false, "implies --dry-run and causes the program to exit with 1 if there are unapplied changes and 0 otherwise")
-	cmd.Flags().BoolVar(&opts.JSONOutput, "json-output", false, "implies --quiet and outputs JSON apply results")
-	cmd.Flags().BoolVarP(&opts.ContinueOnError, "continue-on-error", "c", false, "applying resource definitions is not interrupted if there are errors")
-	cmd.Flags().IntVarP(&opts.ReassAwaitTimeout, "reass-await-timeout", "r", 0, "time in seconds to wait for topic partition reassignments to complete before timing out")
+	cmd.Flags().BoolVarP(
+		&opts.ExitCode,
+		"exit-code",
+		"e",
+		false,
+		"implies --dry-run and causes the program to exit with 1 if there are unapplied changes and 0 otherwise",
+	)
+	cmd.Flags().BoolVarP(&opts.JSONOutput, "json-output", "j", false, "implies --quiet and outputs JSON apply results")
+	cmd.Flags().BoolVarP(
+		&opts.ContinueOnError,
+		"continue-on-error",
+		"c",
+		false,
+		"applying resource definitions is not interrupted if there are errors",
+	)
+	cmd.Flags().IntVarP(
+		&opts.ReassAwaitTimeout,
+		"reass-await-timeout",
+		"r",
+		0,
+		"time in seconds to wait for topic partition reassignments to complete before timing out",
+	)
 
 	return cmd
 }

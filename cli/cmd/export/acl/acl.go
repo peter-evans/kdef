@@ -18,9 +18,13 @@ func Command(cOpts *config.Options) *cobra.Command {
 	var defFormat string
 
 	cmd := &cobra.Command{
-		Use:   "acl",
+		Use:   "acl [options]",
 		Short: "Export resource acls to definitions",
-		Long:  "Export resource acls to definitions (Kafka 0.11.0+).",
+		Long: `Export resource acls to definitions (Kafka 0.11.0+).
+
+Exports to stdout by default. Supply the --output-dir option to create definition files.
+
+Documentation: https://peter-evans.github.io/kdef`,
 		Example: `# export all resource acls to the directory "acls"
 kdef export acl --output-dir "acls"
 
@@ -64,13 +68,20 @@ kdef export acl --match "myapp.*"`,
 		"yaml",
 		fmt.Sprintf("resource definition format [%s]", strings.Join(opt.DefinitionFormatValidValues, "|")),
 	)
-	cmd.Flags().StringVarP(&opts.OutputDir, "output-dir", "o", "", "output directory (must exist)")
-	cmd.Flags().BoolVar(&opts.Overwrite, "overwrite", false, "overwrite existing files in output directory")
-	cmd.Flags().StringVarP(&opts.Match, "match", "m", ".*", "regular expression matching topic names to include")
-	cmd.Flags().StringVarP(&opts.Exclude, "exclude", "e", ".^", "regular expression matching topic names to exclude")
-	cmd.Flags().StringVar(
+	cmd.Flags().StringVarP(
+		&opts.OutputDir,
+		"output-dir",
+		"o",
+		"",
+		"output directory path for definition files; non-existent directories will be created",
+	)
+	cmd.Flags().BoolVarP(&opts.Overwrite, "overwrite", "w", false, "overwrite existing files in output directory")
+	cmd.Flags().StringVarP(&opts.Match, "match", "m", ".*", "regular expression matching resource names to include")
+	cmd.Flags().StringVarP(&opts.Exclude, "exclude", "e", ".^", "regular expression matching resource names to exclude")
+	cmd.Flags().StringVarP(
 		&opts.ACLResourceType,
 		"type",
+		"t",
 		"any",
 		fmt.Sprintf("acl resource type [%s]", strings.Join(opt.ACLResourceTypeValidValues, "|")),
 	)
