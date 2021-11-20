@@ -14,6 +14,7 @@ import (
 // Format represents the format of the documents to be parsed.
 type Format int8
 
+// Supported formats.
 const (
 	YAML Format = 1
 	JSON Format = 2

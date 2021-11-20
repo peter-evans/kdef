@@ -8,6 +8,7 @@ import (
 	"github.com/fatih/color"
 )
 
+// Logging options.
 var (
 	Quiet   = false
 	Verbose = false

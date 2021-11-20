@@ -4,6 +4,7 @@ package opt
 // Assignments represents the format in which assignments are exported.
 type Assignments int8
 
+// Assignments types.
 const (
 	UnsupportedAssignments Assignments = 0
 	NoAssignments          Assignments = 1

@@ -12,6 +12,7 @@ import (
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
+// Config operation types.
 const (
 	SetConfigOperation    int8 = 0
 	DeleteConfigOperation int8 = 1

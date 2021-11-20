@@ -83,13 +83,13 @@ func Test_applier_Execute(t *testing.T) {
 
 	// Create client
 	cl := tutil.CreateClient(t,
-		[]string{fmt.Sprintf("seedBrokers=localhost:%d", harness.TopicsApplier.BrokerPort)},
+		[]string{fmt.Sprintf("seedBrokers=localhost:%d", harness.TopicApplier.BrokerPort)},
 	)
 
 	// Create client set to use non-incremental alter configs
 	clNonInc := tutil.CreateClient(t,
 		[]string{
-			fmt.Sprintf("seedBrokers=localhost:%d", harness.TopicsApplier.BrokerPort),
+			fmt.Sprintf("seedBrokers=localhost:%d", harness.TopicApplier.BrokerPort),
 			"alterConfigsMethod=non-incremental",
 		},
 	)
@@ -102,10 +102,10 @@ func Test_applier_Execute(t *testing.T) {
 		start := time.Now()
 		c := compose.Up(
 			t,
-			harness.TopicsApplier.ComposeFilePaths,
-			harness.TopicsApplier.Env(),
+			harness.TopicApplier.ComposeFilePaths,
+			harness.TopicApplier.Env(),
 		)
-		if srv.IsKafkaReady(harness.TopicsApplier.Brokers, 90) {
+		if srv.IsKafkaReady(harness.TopicApplier.Brokers, 90) {
 			duration := time.Since(start)
 			log.Infof("kafka cluster ready in %v", duration)
 			defer compose.Down(t, c)

@@ -4,6 +4,7 @@ package opt
 // DefinitionFormat represents the format of resource definitions.
 type DefinitionFormat int8
 
+// DefinitionFormat types.
 const (
 	UnsupportedFormat DefinitionFormat = 0
 	YAMLFormat        DefinitionFormat = 1

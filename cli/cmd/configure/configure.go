@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Command creates the configure command.
 func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                   "configure",

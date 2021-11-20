@@ -14,6 +14,7 @@ import (
 	"github.com/peter-evans/kdef/cli/log"
 )
 
+// Execute executes the root command.
 func Execute(version string) {
 	if err := rootCmd(version).Execute(); err != nil {
 		log.Error(err)

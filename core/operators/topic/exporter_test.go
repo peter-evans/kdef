@@ -25,7 +25,7 @@ func Test_exporter_Execute(t *testing.T) {
 
 	// Create client
 	cl := tutil.CreateClient(t,
-		[]string{fmt.Sprintf("seedBrokers=localhost:%d", harness.TopicsExporter.BrokerPort)},
+		[]string{fmt.Sprintf("seedBrokers=localhost:%d", harness.TopicExporter.BrokerPort)},
 	)
 
 	// Create the test cluster
@@ -36,10 +36,10 @@ func Test_exporter_Execute(t *testing.T) {
 		start := time.Now()
 		c := compose.Up(
 			t,
-			harness.TopicsExporter.ComposeFilePaths,
-			harness.TopicsExporter.Env(),
+			harness.TopicExporter.ComposeFilePaths,
+			harness.TopicExporter.Env(),
 		)
-		if srv.IsKafkaReady(harness.TopicsExporter.Brokers, 90) {
+		if srv.IsKafkaReady(harness.TopicExporter.Brokers, 90) {
 			duration := time.Since(start)
 			log.Infof("kafka cluster ready in %v", duration)
 			defer compose.Down(t, c)

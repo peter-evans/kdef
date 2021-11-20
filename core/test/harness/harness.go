@@ -32,6 +32,7 @@ func (t ComposeHarness) Env() map[string]string {
 
 // *** Offset ports in use by tests to allow parallel execution ***
 
+// BrokerApplier represents the compose harness for the broker applier tests.
 var BrokerApplier = ComposeHarness{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/1-broker-plaintext-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10000,
@@ -39,6 +40,7 @@ var BrokerApplier = ComposeHarness{
 	Brokers:          1,
 }
 
+// BrokerExporter represents the compose harness for the broker exporter tests.
 var BrokerExporter = ComposeHarness{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/2-broker-plaintext-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10100,
@@ -46,6 +48,7 @@ var BrokerExporter = ComposeHarness{
 	Brokers:          2,
 }
 
+// BrokersApplier represents the compose harness for the brokers applier tests.
 var BrokersApplier = ComposeHarness{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/1-broker-plaintext-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10200,
@@ -53,6 +56,7 @@ var BrokersApplier = ComposeHarness{
 	Brokers:          1,
 }
 
+// BrokersExporter represents the compose harness for the brokers exporter tests.
 var BrokersExporter = ComposeHarness{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/1-broker-plaintext-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10300,
@@ -60,20 +64,23 @@ var BrokersExporter = ComposeHarness{
 	Brokers:          1,
 }
 
-var TopicsApplier = ComposeHarness{
+// TopicApplier represents the compose harness for the topic applier tests.
+var TopicApplier = ComposeHarness{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/6-broker-plaintext-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10400,
 	BrokerPort:       brokerPort + 10400,
 	Brokers:          6,
 }
 
-var TopicsExporter = ComposeHarness{
+// TopicExporter represents the compose harness for the topic exporter tests.
+var TopicExporter = ComposeHarness{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/1-broker-plaintext-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10500,
 	BrokerPort:       brokerPort + 10500,
 	Brokers:          1,
 }
 
+// ACLApplier represents the compose harness for the acl applier tests.
 var ACLApplier = ComposeHarness{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/1-broker-sasl-plain-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10200,
@@ -81,6 +88,7 @@ var ACLApplier = ComposeHarness{
 	Brokers:          1,
 }
 
+// ACLExporter represents the compose harness for the acl exporter tests.
 var ACLExporter = ComposeHarness{
 	ComposeFilePaths: []string{"../../test/fixtures/compose/1-broker-sasl-plain-compose.yml"},
 	ZookeeperPort:    zookeeperPort + 10300,

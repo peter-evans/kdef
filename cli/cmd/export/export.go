@@ -11,6 +11,7 @@ import (
 	"github.com/peter-evans/kdef/cli/config"
 )
 
+// Command creates the export command.
 func Command(cOpts *config.Options) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
