@@ -65,6 +65,8 @@ kdef export acl --match "myapp.*"
     Combine acls into groups for easier management.
     The default value is `true`.
 
+    See [ACLEntryGroup](../../../def/acl/#aclentrygroup) for further details.
+
 ## Global options
 
 --8<-- "docs/cmd/global-options.md"

@@ -32,9 +32,16 @@ A definition representing a Kafka topic.
 
     Number of partitions for the topic.
 
+    Note that decreasing the number of partitions is not supported.
+
+    If static `assignments` or `rackAssignments` are not specified, kdef will balance new partition replicas across available brokers.
+
 - **replicationFactor** (int), required
 
     Replication factor for the topic. Cannot exceed the number of available brokers.
+
+    If static `assignments` or `rackAssignments` are not specified, kdef will balance additional replicas across available brokers.
+    When decreasing the replication factor, replicas are removed from the "back" of partitions. i.e. `[1, 2, 3] -> [1, 2]`.
 
 - **assignments** ([][]int)
 
@@ -57,6 +64,8 @@ A definition representing a Kafka topic.
 
     Partition replica assignments by rack ID.
     The number of rack assignments must match `partitions`, and the number of replicas in each rack assignment must match `replicationFactor`.
+
+    kdef will balance replicas across available brokers within the same zone.
 
     Cannot be specified at the same time as `assignments`.
 
