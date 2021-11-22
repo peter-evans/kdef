@@ -75,3 +75,8 @@ go build -o kdef .
 ```sh
 ./kdef --version
 ```
+
+## Updating
+
+!!! important
+    Until kdef reaches `v1.0.0` and is considered stable there could be breaking changes in minor releases. Make sure to check the [release](https://github.com/peter-evans/kdef/releases) notes before updating.
