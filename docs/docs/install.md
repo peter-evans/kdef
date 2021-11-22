@@ -1,4 +1,4 @@
-# Install
+# Installation
 
 Install the pre-compiled binary, use Docker, or compile from source.
 

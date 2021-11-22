@@ -16,7 +16,8 @@ Directories matching patterns are ignored.
 
 ## Compatibility
 
-The minimum Kafka version required to apply definition kinds.
+kdef uses Kafka broker APIs.
+These are the minimum Kafka versions required to apply each definition kind.
 
 - `acl` (Kafka 0.11.0+)
 - `broker` (Kafka 0.11.0+)
@@ -77,7 +78,7 @@ cat topics/my_topic.yml | kdef apply - --dry-run
     While reassignment operations are in progress for a topic, Kafka rejects further partition changes.
 
     By default kdef does not wait for reassignment operations to complete and exits immediately.
-    Optionally, kdef can be instructed to await the completion of partition reassignments with this option.
+    Optionally, kdef can be instructed with this option to await the completion of partition reassignments.
 
 ## Global options
 

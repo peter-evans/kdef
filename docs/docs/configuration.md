@@ -64,9 +64,9 @@ kdef export topic \
     The default value is `auto`.
 
     Kafka 2.3.0+ supports "incremental alter configs." This is an improved API for altering configs.
-    When set to `auto`, kdef will detect if the cluster supports this method and use it if available.
-    Optionally, the method can be set manually to save an API call to determine what the cluster supports.
-    
+    When set to `auto`, kdef will detect what the cluster supports and use `incremental` if available.
+    Setting `incremental` or `non-incremental` will save an API call to determine what the cluster supports.
+
     Note that if the cluster contains brokers with a mix of Kafka versions, some Kafka 2.3.0+ and some Kafka <2.3.0, then `non-incremental` should be used.
 
 ## TLSConfig

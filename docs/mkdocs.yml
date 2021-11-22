@@ -52,7 +52,7 @@ markdown_extensions:
 
 nav:
   - Introduction: index.md
-  - Install: install.md
+  - Installation: install.md
   - Getting started: getting-started.md
   - Configuration: configuration.md
   - Commands:
