@@ -24,7 +24,7 @@ func Command(cOpts *config.Options) *cobra.Command {
 
 Exports to stdout by default. Supply the --output-dir option to create definition files.
 
-Documentation: https://peter-evans.github.io/kdef`,
+Manual: https://peter-evans.github.io/kdef`,
 		Example: `# export broker definitions to the directory "broker"
 kdef export broker --output-dir "broker"
 
