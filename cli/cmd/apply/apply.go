@@ -32,7 +32,7 @@ broker (Kafka 0.11.0+)
 brokers (Kafka 0.11.0+)
 topic (Kafka 2.4.0+)
 
-Documentation: https://peter-evans.github.io/kdef`,
+Manual: https://peter-evans.github.io/kdef`,
 		Example: `# apply all definitions in directory "topics" (dry-run)
 kdef apply "topics/*.yml" --dry-run
 

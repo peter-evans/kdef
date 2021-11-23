@@ -45,7 +45,7 @@ requests (GitOps).
 Create a configuration file for your cluster:
 kdef configure
 
-Documentation: https://peter-evans.github.io/kdef`,
+Manual: https://peter-evans.github.io/kdef`,
 		Args: cobra.NoArgs,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			color.NoColor = noColor
