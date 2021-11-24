@@ -37,5 +37,5 @@ jobs:
 
       - name: All tests (integration + cached unit)
         run: go test --tags=integration -v ./...
-        env:
-          VERBOSE_TESTS: 1
+        # env:
+        #   VERBOSE_TESTS: 1
