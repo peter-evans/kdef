@@ -12,7 +12,7 @@ import (
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
 
-// ResourceACLs represents ACLs for a named resource.
+// ResourceACLs represents ACLs for a named resource
 type ResourceACLs struct {
 	ResourceName string
 	ResourceType string
