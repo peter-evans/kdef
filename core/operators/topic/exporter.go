@@ -39,7 +39,7 @@ type exporter struct {
 
 // Execute executes the export operation.
 func (e *exporter) Execute() (res.ExportResults, error) {
-	log.Infof("Fetching topics...")
+	log.Infof("Fetching remote topics...")
 	topicDefs, err := e.getTopicDefinitions()
 	if err != nil {
 		return nil, err

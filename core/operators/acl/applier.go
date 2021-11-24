@@ -154,7 +154,7 @@ func (a *applier) createLocal() error {
 
 // fetchRemote fetches the remote definition and necessary metadata.
 func (a *applier) fetchRemote() error {
-	log.Infof("Fetching ACLs...")
+	log.Infof("Fetching remote ACLs...")
 	var err error
 	a.remoteACLs, err = a.srv.DescribeResourceACLs(
 		a.localDef.Metadata.Name,
@@ -236,7 +236,7 @@ func (a *applier) executeOps() error {
 
 // buildACLOps builds acl operations.
 func (a *applier) buildACLOps() error {
-	log.Debugf("Comparing local and remote ACLs for definition %q", a.localDef.Metadata.Name)
+	log.Debugf("Comparing local and remote ACLs for acl definition %q", a.localDef.Metadata.Name)
 
 	a.ops.addACLs, _ = acls.DiffPatchIntersection(a.localDef.Spec.ACLs, a.remoteACLs)
 	if a.localDef.Spec.DeleteUndefinedACLs {
@@ -248,10 +248,9 @@ func (a *applier) buildACLOps() error {
 
 // addACLs adds ACLs.
 func (a *applier) addACLs() error {
-	if a.opts.DryRun {
-		log.Infof("Skipped adding ACLs (dry-run not available)")
-	} else {
-		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Adding ACLs...")
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Adding ACLs...")
+
+	if !a.opts.DryRun {
 		if err := a.srv.CreateACLs(
 			a.localDef.Metadata.Name,
 			a.localDef.Metadata.Type,
@@ -259,18 +258,17 @@ func (a *applier) addACLs() error {
 		); err != nil {
 			return err
 		}
-		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Added ACLs for definition %q", a.localDef.Metadata.Name)
 	}
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Added ACLs for acl definition %q", a.localDef.Metadata.Name)
 
 	return nil
 }
 
 // deleteACLs deletes ACLs.
 func (a *applier) deleteACLs() error {
-	if a.opts.DryRun {
-		log.Infof("Skipped deleting ACLs (dry-run not available)")
-	} else {
-		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Deleting ACLs...")
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Deleting ACLs...")
+
+	if !a.opts.DryRun {
 		if err := a.srv.DeleteACLs(
 			a.localDef.Metadata.Name,
 			a.localDef.Metadata.Type,
@@ -278,8 +276,8 @@ func (a *applier) deleteACLs() error {
 		); err != nil {
 			return err
 		}
-		log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Deleted ACLs for definition %q", a.localDef.Metadata.Name)
 	}
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Deleted ACLs for acl definition %q", a.localDef.Metadata.Name)
 
 	return nil
 }

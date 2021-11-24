@@ -24,7 +24,7 @@ type exporter struct {
 
 // Execute executes the export operation.
 func (e *exporter) Execute() (res.ExportResults, error) {
-	log.Infof("Fetching cluster-wide broker configuration...")
+	log.Infof("Fetching remote cluster-wide broker configuration...")
 	brokersDef, err := e.getBrokersDefinition()
 	if err != nil {
 		return nil, err

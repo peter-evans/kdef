@@ -133,7 +133,7 @@ func (a *applier) createLocal() error {
 
 // fetchRemote fetches the remote definition and necessary metadata.
 func (a *applier) fetchRemote() error {
-	log.Infof("Fetching brokers configuration...")
+	log.Infof("Fetching remote cluster-wide broker configuration...")
 	var err error
 	a.remoteConfigs, err = a.srv.DescribeAllBrokerConfigs()
 	if err != nil {
