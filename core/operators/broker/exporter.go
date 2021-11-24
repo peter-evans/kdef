@@ -27,7 +27,7 @@ type exporter struct {
 
 // Execute executes the export operation.
 func (e *exporter) Execute() (res.ExportResults, error) {
-	log.Infof("Fetching per-broker configuration...")
+	log.Infof("Fetching remote per-broker configuration...")
 	brokerDefs, err := e.getBrokerDefinitions()
 	if err != nil {
 		return nil, err

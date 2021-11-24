@@ -38,7 +38,7 @@ type exporter struct {
 
 // Execute executes the export operation.
 func (e *exporter) Execute() (res.ExportResults, error) {
-	log.Infof("Fetching ACLs...")
+	log.Infof("Fetching remote ACLs...")
 	aclDefs, err := e.getACLDefinitions()
 	if err != nil {
 		return nil, err

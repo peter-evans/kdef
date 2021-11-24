@@ -174,7 +174,7 @@ func (a *applier) createLocal() error {
 
 // tryFetchRemote fetches the remote definition and necessary metadata.
 func (a *applier) tryFetchRemote() error {
-	log.Infof("Checking if topic %q exists...", a.localDef.Metadata.Name)
+	log.Infof("Fetching remote topic...")
 	var err error
 	a.remoteDef, a.remoteConfigs, a.brokers, err = a.srv.TryRequestTopic(a.localDef.Metadata.Name)
 	if err != nil {
@@ -312,7 +312,7 @@ func (a *applier) buildCreateOp() {
 
 // createTopic executes a request to create a topic.
 func (a *applier) createTopic() error {
-	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Creating topic %q...", a.localDef.Metadata.Name)
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Creating topic...")
 
 	if err := a.srv.CreateTopic(
 		a.localDef,
@@ -486,6 +486,8 @@ func (a *applier) displayPartitionReassignments() {
 
 // updateAssignments executes a request to alter assignments.
 func (a *applier) updateAssignments() error {
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Altering partition assignments...")
+
 	if a.opts.DryRun {
 		// AlterPartitionAssignments has no 'ValidateOnly' for dry-run mode so we check
 		// in-progress partition reassignments and error if found.
@@ -496,19 +498,14 @@ func (a *applier) updateAssignments() error {
 			// Kafka would return a very similiar error if we attempted to execute the reassignment.
 			return fmt.Errorf("a partition reassignment is in progress for the topic %q", a.localDef.Metadata.Name)
 		}
-
-		log.Infof("Skipped altering partition assignments (dry-run not available)")
-	} else {
-		log.Infof("Altering partition assignments...")
-
-		if err := a.srv.AlterPartitionAssignments(
-			a.localDef.Metadata.Name,
-			a.ops.assignments,
-		); err != nil {
-			return err
-		}
-		log.Infof("Altered partition assignments for topic %q", a.localDef.Metadata.Name)
+	} else if err := a.srv.AlterPartitionAssignments(
+		a.localDef.Metadata.Name,
+		a.ops.assignments,
+	); err != nil {
+		return err
 	}
+
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Altered partition assignments for topic %q", a.localDef.Metadata.Name)
 
 	return nil
 }
