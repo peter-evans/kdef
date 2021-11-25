@@ -15,11 +15,18 @@ A definition representing a single specified Kafka broker.
 
     The ID of the target broker.
 
+- **labels** (map[string]string)
+
+    Labels are key-value pairs associated with the definition.
+
+    Labels are not directly used by kdef and have no remote state.
+    They are purely for the purposes of storing meaningful attributes with the definition that would be relevant to users.
+
 ## Spec
 
 - **configs** (map[string]string)
 
-    A map of key value config pairs.
+    A map of key-value config pairs.
 
     Note that Kafka's API does not allow reading `password` type [broker configs](https://kafka.apache.org/documentation/#brokerconfigs).
     Applying these configs is supported, but `kdef apply` will always show a diff for them.

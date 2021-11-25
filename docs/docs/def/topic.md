@@ -13,13 +13,20 @@ A definition representing a Kafka topic.
 
 - **name** (string), required
 
-    An identifier for the definition. Can be anything.
+    The topic name.
+
+- **labels** (map[string]string)
+
+    Labels are key-value pairs associated with the definition.
+
+    Labels are not directly used by kdef and have no remote state.
+    They are purely for the purposes of storing meaningful attributes with the definition that would be relevant to users.
 
 ## Spec
 
 - **configs** (map[string]string)
 
-    A map of key value config pairs.
+    A map of key-value config pairs.
 
 - **deleteUndefinedConfigs** (bool)
 

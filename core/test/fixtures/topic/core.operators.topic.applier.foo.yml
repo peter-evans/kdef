@@ -5,6 +5,9 @@ apiVersion: v1
 kind: topic
 metadata:
   name: core.operators.topic.applier.foo
+  labels:
+    foo: bar
+    baz: qux
 spec:
   configs:
     cleanup.policy: delete
@@ -43,6 +46,9 @@ apiVersion: v1
 kind: topic
 metadata:
   name: core.operators.topic.applier.foo
+  labels:
+    foo: bar
+    baz: qux
 spec:
   configs:
     cleanup.policy: delete
@@ -81,6 +87,9 @@ apiVersion: v1
 kind: topic
 metadata:
   name: core.operators.topic.applier.foo
+  labels:
+    foo: bar
+    baz: qux
 spec:
   configs:
     cleanup.policy: delete
@@ -119,6 +128,9 @@ apiVersion: v1
 kind: topic
 metadata:
   name: core.operators.topic.applier.foo
+  labels:
+    foo: bar
+    baz: qux
 spec:
   configs:
     cleanup.policy: delete
@@ -158,6 +170,9 @@ apiVersion: v1
 kind: topic
 metadata:
   name: core.operators.topic.applier.foo
+  labels:
+    foo: bar
+    baz: qux
 spec:
   configs:
     cleanup.policy: delete
@@ -196,6 +211,9 @@ apiVersion: v1
 kind: topic
 metadata:
   name: core.operators.topic.applier.foo
+  labels:
+    foo: bar
+    baz: qux
 spec:
   configs:
     cleanup.policy: delete

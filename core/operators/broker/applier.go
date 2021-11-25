@@ -140,7 +140,7 @@ func (a *applier) fetchRemote() error {
 		return err
 	}
 
-	a.remoteDef = def.NewBrokerDefinition(a.localDef.Metadata.Name, a.remoteConfigs.ToMap())
+	a.remoteDef = def.NewBrokerDefinition(a.localDef.Metadata, a.remoteConfigs.ToMap())
 
 	return nil
 }

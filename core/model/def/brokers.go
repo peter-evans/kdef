@@ -36,14 +36,15 @@ func (b BrokersDefinition) Validate() error {
 }
 
 // NewBrokersDefinition creates a brokers definition from metadata and config.
-func NewBrokersDefinition(configsMap ConfigsMap) BrokersDefinition {
+func NewBrokersDefinition(
+	metadata ResourceMetadataDefinition,
+	configsMap ConfigsMap,
+) BrokersDefinition {
 	brokersDef := BrokersDefinition{
 		ResourceDefinition: ResourceDefinition{
 			APIVersion: "v1",
 			Kind:       "brokers",
-			Metadata: ResourceMetadataDefinition{
-				Name: "brokers",
-			},
+			Metadata:   metadata,
 		},
 		Spec: BrokersSpecDefinition{
 			Configs: configsMap,

@@ -94,8 +94,10 @@ func (e *exporter) getACLDefinitions() ([]def.ACLDefinition, error) {
 		}
 
 		aclDef := def.NewACLDefinition(
-			resource.ResourceName,
-			resource.ResourceType,
+			def.ResourceMetadataDefinition{
+				Name: resource.ResourceName,
+				Type: resource.ResourceType,
+			},
 			resACLs,
 		)
 		// Default to delete undefined ACLs.

@@ -5,6 +5,9 @@ apiVersion: v1
 kind: broker
 metadata:
   name: "1"
+  labels:
+    foo: bar
+    baz: qux
 spec:
   configs:
     background.threads: 12
@@ -21,6 +24,9 @@ apiVersion: v1
 kind: broker
 metadata:
   name: "1"
+  labels:
+    foo: bar
+    baz: qux
 spec:
   configs:
     background.threads: 12
@@ -37,6 +43,9 @@ apiVersion: v1
 kind: broker
 metadata:
   name: "1"
+  labels:
+    foo: bar
+    baz: qux
 spec:
   configs:
     background.threads: 12
@@ -53,6 +62,9 @@ apiVersion: v1
 kind: broker
 metadata:
   name: "1"
+  labels:
+    foo: bar
+    baz: qux
 spec:
   configs:
     background.threads: 12
@@ -69,6 +81,9 @@ apiVersion: v1
 kind: broker
 metadata:
   name: "1"
+  labels:
+    foo: bar
+    baz: qux
 spec:
   configs:
     # background.threads: 12 # deleted
@@ -84,6 +99,9 @@ apiVersion: v1
 kind: broker
 metadata:
   name: "1"
+  labels:
+    foo: bar
+    baz: qux
 spec:
   configs:
     # background.threads: 12 # deleted

@@ -13,13 +13,13 @@ import (
 )
 
 // tryRequestTopic executes a request for the metadata of a topic that may or may not exist (Kafka 0.11.0+).
-func tryRequestTopic(cl *client.Client, topic string) (
+func tryRequestTopic(cl *client.Client, defMetadata def.ResourceMetadataDefinition) (
 	*def.TopicDefinition,
 	def.Configs,
 	meta.Brokers,
 	error,
 ) {
-	metadata, err := describeMetadata(cl, []string{topic}, false)
+	metadata, err := describeMetadata(cl, []string{defMetadata.Name}, false)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -31,7 +31,7 @@ func tryRequestTopic(cl *client.Client, topic string) (
 	}
 
 	// Fetch topic configs
-	resourceConfigs, err := describeTopicConfigs(cl, []string{topic})
+	resourceConfigs, err := describeTopicConfigs(cl, []string{defMetadata.Name})
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -39,7 +39,7 @@ func tryRequestTopic(cl *client.Client, topic string) (
 
 	// Build topic definition
 	topicDef := def.NewTopicDefinition(
-		topic,
+		defMetadata,
 		topicMetadata.PartitionAssignments,
 		topicMetadata.PartitionRackAssignments,
 		topicConfigs.ToMap(),

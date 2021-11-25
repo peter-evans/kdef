@@ -154,18 +154,14 @@ func (a ACLDefinition) Validate() error {
 
 // NewACLDefinition creates an ACL definition from metadata and config.
 func NewACLDefinition(
-	name string,
-	resourceType string,
+	metadata ResourceMetadataDefinition,
 	acls ACLEntryGroups,
 ) ACLDefinition {
 	aclDef := ACLDefinition{
 		ResourceDefinition: ResourceDefinition{
 			APIVersion: "v1",
 			Kind:       "acl",
-			Metadata: ResourceMetadataDefinition{
-				Name: name,
-				Type: resourceType,
-			},
+			Metadata:   metadata,
 		},
 		Spec: ACLSpecDefinition{
 			ACLs: acls,

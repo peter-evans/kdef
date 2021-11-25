@@ -135,13 +135,13 @@ func (s *Service) AlterTopicConfigs(topic string, configOps ConfigOperations, va
 // ========================= Topic ============================
 
 // TryRequestTopic executes a request for the metadata of a topic that may or may not exist (Kafka 0.11.0+).
-func (s *Service) TryRequestTopic(topic string) (
+func (s *Service) TryRequestTopic(defMetadata def.ResourceMetadataDefinition) (
 	*def.TopicDefinition,
 	def.Configs,
 	meta.Brokers,
 	error,
 ) {
-	return tryRequestTopic(s.cl, topic)
+	return tryRequestTopic(s.cl, defMetadata)
 }
 
 // CreateTopic executes a request to create a topic (Kafka 0.10.1+).

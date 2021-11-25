@@ -140,7 +140,10 @@ func (a *applier) fetchRemote() error {
 		return err
 	}
 
-	a.remoteDef = def.NewBrokersDefinition(a.remoteConfigs.ToMap())
+	a.remoteDef = def.NewBrokersDefinition(
+		a.localDef.Metadata,
+		a.remoteConfigs.ToMap(),
+	)
 
 	return nil
 }
@@ -171,7 +174,6 @@ func (a *applier) updateApplyResult() error {
 		}
 	}
 
-	remoteCopy.Metadata.Name = a.localDef.Metadata.Name
 	remoteCopy.Spec.DeleteUndefinedConfigs = a.localDef.Spec.DeleteUndefinedConfigs
 
 	diff, err := jsondiff.Diff(&remoteCopy, &a.localDef)
