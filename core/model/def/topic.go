@@ -170,7 +170,7 @@ func (t TopicDefinition) ValidateWithMetadata(brokers meta.Brokers) error {
 
 // NewTopicDefinition creates a topic definition from metadata and config.
 func NewTopicDefinition(
-	name string,
+	metadata ResourceMetadataDefinition,
 	partitionAssignments PartitionAssignments,
 	partitionRackAssignments PartitionRackAssignments,
 	configsMap ConfigsMap,
@@ -182,9 +182,7 @@ func NewTopicDefinition(
 		ResourceDefinition: ResourceDefinition{
 			APIVersion: "v1",
 			Kind:       "topic",
-			Metadata: ResourceMetadataDefinition{
-				Name: name,
-			},
+			Metadata:   metadata,
 		},
 		Spec: TopicSpecDefinition{
 			Partitions:        len(partitionAssignments),

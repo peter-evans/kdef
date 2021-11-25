@@ -6,6 +6,9 @@ kind: acl
 metadata:
   name: core.operators.brokers.applier.foo
   type: topic
+  labels:
+    foo: bar
+    baz: qux
 spec:
   acls:
     - principals: ["User:foo", "User:bar", "User:baz"]
@@ -29,6 +32,9 @@ kind: acl
 metadata:
   name: core.operators.brokers.applier.foo
   type: topic
+  labels:
+    foo: bar
+    baz: qux
 spec:
   acls:
     - principals: ["User:foo"]
@@ -116,6 +122,9 @@ kind: acl
 metadata:
   name: core.operators.brokers.applier.foo
   type: topic
+  labels:
+    foo: bar
+    baz: qux
 spec:
   acls:
     - principals: ["User:foo", "User:bar", "User:baz"]
@@ -139,6 +148,9 @@ kind: acl
 metadata:
   name: core.operators.brokers.applier.foo
   type: topic
+  labels:
+    foo: bar
+    baz: qux
 spec:
   acls:
     - principals: ["User:foo", "User:bar", "User:baz"]
@@ -162,6 +174,9 @@ kind: acl
 metadata:
   name: core.operators.brokers.applier.foo
   type: topic
+  labels:
+    foo: bar
+    baz: qux
 spec:
   acls:
     - principals: ["User:foo", "User:bar", "User:baz"]

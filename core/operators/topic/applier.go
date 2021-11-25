@@ -176,7 +176,7 @@ func (a *applier) createLocal() error {
 func (a *applier) tryFetchRemote() error {
 	log.Infof("Fetching remote topic...")
 	var err error
-	a.remoteDef, a.remoteConfigs, a.brokers, err = a.srv.TryRequestTopic(a.localDef.Metadata.Name)
+	a.remoteDef, a.remoteConfigs, a.brokers, err = a.srv.TryRequestTopic(a.localDef.Metadata)
 	if err != nil {
 		return err
 	}

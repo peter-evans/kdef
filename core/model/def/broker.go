@@ -59,16 +59,14 @@ func (b BrokerDefinition) ValidateWithMetadata(brokers meta.Brokers) error {
 
 // NewBrokerDefinition creates a broker definition from metadata and config.
 func NewBrokerDefinition(
-	name string,
+	metadata ResourceMetadataDefinition,
 	configsMap ConfigsMap,
 ) BrokerDefinition {
 	brokerDef := BrokerDefinition{
 		ResourceDefinition: ResourceDefinition{
 			APIVersion: "v1",
 			Kind:       "broker",
-			Metadata: ResourceMetadataDefinition{
-				Name: name,
-			},
+			Metadata:   metadata,
 		},
 		Spec: BrokerSpecDefinition{
 			Configs: configsMap,

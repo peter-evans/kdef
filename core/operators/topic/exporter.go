@@ -109,7 +109,9 @@ func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 		}
 
 		topicDef := def.NewTopicDefinition(
-			topic,
+			def.ResourceMetadataDefinition{
+				Name: topic,
+			},
 			topicMetadataMap[topic].PartitionAssignments,
 			topicMetadataMap[topic].PartitionRackAssignments,
 			topicConfigsMapMap[topic],

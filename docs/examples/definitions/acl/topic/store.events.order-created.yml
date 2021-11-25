@@ -3,6 +3,8 @@ kind: acl
 metadata:
   name: store.events.order-created
   type: topic
+  labels:
+    producer: storefront
 spec:
   acls:
     - hosts: ["*"]

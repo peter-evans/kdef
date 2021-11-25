@@ -14,13 +14,21 @@ A definition representing cluster-wide configuration for all Kafka brokers.
 - **name** (string), required
 
     An identifier for the definition.
-    Can be any value for reference.
+
+    This is not used directly by kdef and can be any meaningful value for reference.
+
+- **labels** (map[string]string)
+
+    Labels are key-value pairs associated with the definition.
+
+    Labels are not directly used by kdef and have no remote state.
+    They are purely for the purposes of storing meaningful attributes with the definition that would be relevant to users.
 
 ## Spec
 
 - **configs** (map[string]string)
 
-    A map of key value config pairs.
+    A map of key-value config pairs.
 
 - **deleteUndefinedConfigs** (bool)
 

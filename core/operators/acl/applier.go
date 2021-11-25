@@ -165,8 +165,7 @@ func (a *applier) fetchRemote() error {
 	}
 
 	a.remoteDef = def.NewACLDefinition(
-		a.localDef.Metadata.Name,
-		a.localDef.Metadata.Type,
+		a.localDef.Metadata,
 		a.remoteACLs,
 	)
 

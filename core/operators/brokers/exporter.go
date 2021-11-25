@@ -45,7 +45,12 @@ func (e *exporter) getBrokersDefinition() (*def.BrokersDefinition, error) {
 		return nil, err
 	}
 
-	brokersDef := def.NewBrokersDefinition(brokerConfigs.ToExportableMap())
+	brokersDef := def.NewBrokersDefinition(
+		def.ResourceMetadataDefinition{
+			Name: "brokers",
+		},
+		brokerConfigs.ToExportableMap(),
+	)
 
 	return &brokersDef, nil
 }

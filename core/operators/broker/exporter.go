@@ -65,7 +65,12 @@ func (e *exporter) getBrokerDefinitions() ([]def.BrokerDefinition, error) {
 			return nil, err
 		}
 		brokerDefs = append(
-			brokerDefs, def.NewBrokerDefinition(brokerIDStr, brokerConfigs.ToExportableMap()),
+			brokerDefs, def.NewBrokerDefinition(
+				def.ResourceMetadataDefinition{
+					Name: brokerIDStr,
+				},
+				brokerConfigs.ToExportableMap(),
+			),
 		)
 	}
 

@@ -21,6 +21,13 @@ A definition representing ACLs for a specified Kafka resource.
     The type of the resource that ACL entries will be applied to.
     Must be one of `topic`, `group`, `cluster`, `transactional_id`, `delegation_token`.
 
+- **labels** (map[string]string)
+
+    Labels are key-value pairs associated with the definition.
+
+    Labels are not directly used by kdef and have no remote state.
+    They are purely for the purposes of storing meaningful attributes with the definition that would be relevant to users.
+
 ## Spec
 
 - **acls** ([][ACLEntryGroup](#aclentrygroup))
