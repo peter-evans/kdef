@@ -9,6 +9,8 @@ Changes to resource definitions can be reviewed like code and applied to a clust
 
 kdef was designed to support being run in a CI-CD environment, allowing teams to manage Kafka resource definitions in source control with pull requests (GitOps).
 
+![Demo](docs/docs/demo.gif)
+
 ## Features
 
 - Definition support for:
