@@ -1,8 +1,10 @@
 kdef
 config.yml
 
+dist/
+docs/site/
+
 !docs/examples/**
 !docs/tutorial/**
 
-dist/
-docs/site/
+.DS_Store
