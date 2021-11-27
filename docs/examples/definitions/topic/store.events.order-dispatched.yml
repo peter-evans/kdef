@@ -3,7 +3,7 @@ kind: topic
 metadata:
   name: store.events.order-dispatched
   labels:
-    producer: storefront
+    producer: backoffice
 spec:
   configs:
     cleanup.policy: delete
