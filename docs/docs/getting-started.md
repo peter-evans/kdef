@@ -56,6 +56,13 @@ The cluster we spun up in the previous section has no resources. Let's apply som
 
 3. Execute the command in step 2 a second time. You should now see that there are "no changes to apply."
 
+4. Edit `definitions/topic/tutorial_topic1.yml` and make the following changes.
+
+    - `retention.ms: "43200000"`
+    - `partitions: 6`
+
+5. Execute steps 1 and 2 again to dry-run and then apply the topic defininition update.
+
 ### from stdin
 
 1. Execute the following to perform a dry-run apply of a definition passed via stdin.
@@ -74,7 +81,7 @@ The cluster we spun up in the previous section has no resources. Let's apply som
     EOF
     ```
 
-2. Remove the `--dry-run` flag and apply the definitions.
+2. Remove the `--dry-run` flag and apply the definition.
 
     ```sh
     cat <<EOF | kdef apply -
@@ -91,6 +98,38 @@ The cluster we spun up in the previous section has no resources. Let's apply som
     ```
 
 3. Execute the command in step 2 a second time. You should now see that there are "no changes to apply."
+
+4. Execute the following to perform a dry-run apply and update the topic created in step 2.
+
+    ```sh
+    cat <<EOF | kdef apply - --dry-run
+    apiVersion: v1
+    kind: topic
+    metadata:
+      name: tutorial_topic2
+    spec:
+      configs:
+        retention.ms: "43200000"
+      partitions: 6
+      replicationFactor: 2
+    EOF
+    ```
+
+5. Remove the `--dry-run` flag and apply the definition update.
+
+    ```sh
+    cat <<EOF | kdef apply -
+    apiVersion: v1
+    kind: topic
+    metadata:
+      name: tutorial_topic2
+    spec:
+      configs:
+        retention.ms: "43200000"
+      partitions: 6
+      replicationFactor: 2
+    EOF
+    ```
 
 ## Exporting definitions
 
