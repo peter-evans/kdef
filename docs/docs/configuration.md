@@ -114,6 +114,14 @@ kdef export topic \
 
 ## Examples
 
+### SASL/PLAIN
+
+The following configuration can be used to access clusters on [Confluent Cloud](https://www.confluent.io/confluent-cloud/).
+
+```yml
+--8<-- "examples/config/sasl_plain/config.yml"
+```
+
 ### Amazon MSK
 
 The following configuration can be used to access an Amazon MSK cluster with [IAM Access Control](https://docs.aws.amazon.com/msk/latest/developerguide/iam-access-control.html) enabled.
@@ -126,10 +134,4 @@ When executing kdef, the AWS SDK must be instructed as to where credentials can 
 
 ```sh
 AWS_SDK_LOAD_CONFIG=1 AWS_PROFILE=my-profile kdef export topic
-```
-
-### SASL/PLAIN
-
-```yml
---8<-- "examples/config/sasl_plain/config.yml"
 ```

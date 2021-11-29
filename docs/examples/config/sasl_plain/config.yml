@@ -3,9 +3,9 @@ seedBrokers:
   - "b-2.example.com:9092"
   - "b-3.example.com:9092"
 timeoutMs: 5000
+tls:
+  enabled: true
 sasl:
   method: plain
   user: alice
   pass: alice-secret
-tls:
-  enabled: true
