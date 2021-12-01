@@ -99,7 +99,7 @@ func Configure() error {
 func configureTLS(s *scanner.Scanner) map[string]interface{} {
 	tlsConfig := map[string]interface{}{}
 
-	fmt.Printf("\nDoes connection to your cluster broker(s) require TLS? (Yes/No)\n\n")
+	fmt.Printf("\nDoes connection to your cluster brokers require TLS? (Yes/No)\n\n")
 	if s.PromptYesNo("(No) >", false) {
 		tlsConfig["tls.enabled"] = true
 
@@ -131,7 +131,7 @@ func configureTLS(s *scanner.Scanner) map[string]interface{} {
 func configureSASL(s *scanner.Scanner) map[string]interface{} {
 	saslConfig := map[string]interface{}{}
 
-	fmt.Printf("\nDoes connection to your cluster broker(s) require SASL? (Yes/No)\n\n")
+	fmt.Printf("\nDoes connection to your cluster brokers require SASL? (Yes/No)\n\n")
 	if s.PromptYesNo("(No) >", false) {
 		fmt.Printf("\nEnter the required SASL method. (plain, scram-sha-256, scram-sha-512, aws-msk-iam)\n\n")
 		method := s.PromptLine(">", "")
