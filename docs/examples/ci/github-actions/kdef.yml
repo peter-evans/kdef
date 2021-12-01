@@ -1,0 +1,36 @@
+name: kdef
+on:
+  push:
+    branches: main
+  pull_request:
+    branches: main
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install kdef
+        uses: peter-evans/action-install-gh-release@v1.3.0
+        with:
+          repo: peter-evans/kdef
+          arch: x86_64
+
+      - name: Toggle dry-run
+        id: vars
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]] && [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+              echo "::set-output name=dry-run::";
+          else
+              echo "::set-output name=dry-run::--dry-run";
+          fi
+
+      - uses: actions/checkout@v2
+
+      - name: Apply definitions
+        run: |
+          kdef \
+            -X sasl.user=${{ secrets.SASL_USER }} \
+            -X sasl.pass=${{ secrets.SASL_PASS }} \
+            apply defs/**/*.yml \
+              ${{ steps.vars.outputs.dry-run }} \
+              --continue-on-error

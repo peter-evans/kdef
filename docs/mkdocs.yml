@@ -68,3 +68,5 @@ nav:
     - broker: def/broker.md
     - brokers: def/brokers.md
     - topic: def/topic.md
+  - Continuous Integration:
+    - GitHub Actions: ci/github-actions.md
