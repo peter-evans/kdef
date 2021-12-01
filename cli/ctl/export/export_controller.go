@@ -73,7 +73,7 @@ func (e *exportController) Execute() error {
 		return err
 	}
 	if results == nil {
-		log.Infof("No %s(s) found", e.kind)
+		log.Infof("No %s resources found", e.kind)
 		return nil
 	}
 

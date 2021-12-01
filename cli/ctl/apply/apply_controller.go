@@ -153,7 +153,7 @@ func (a *applyController) applyDefsFromFile(filepath string) (res.ApplyResults, 
 func (a *applyController) applyDefinitions(defDocs []string) (res.ApplyResults, error) {
 	resourceDefs, err := getResourceDefinitions(defDocs, a.opts.DefinitionFormat)
 	if err != nil {
-		return nil, fmt.Errorf("invalid resource definition(s): %v", err)
+		return nil, fmt.Errorf("invalid resource definition: %v", err)
 	}
 
 	var results res.ApplyResults
