@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install kdef
-        uses: peter-evans/action-install-gh-release@v1.3.0
+        uses: hyphengroup/action-install-gh-release@v1.3.0
         with:
           repo: peter-evans/kdef
           arch: x86_64
