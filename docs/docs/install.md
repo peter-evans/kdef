@@ -25,7 +25,7 @@ A specific version can be installed by using a suffix in the format `@x.x.x`.
 Download the pre-compiled binaries from the [releases page](https://github.com/peter-evans/kdef/releases) and copy them to the desired location.
 
 !!! info
-    If you would like to see the kdef binary released via a method not listed please make an [issue](https://github.com/peter-evans/kdef/issues) to request it.
+    If you would like to see the kdef binary released via a method not listed please make an [issue](https://github.com/peter-evans/kdef/issues) to discuss its feasibility.
 
 ## Running with Docker
 
@@ -46,6 +46,8 @@ docker run --rm \
         --config-path="/var/opt/kdef/my-cluster/config.yml" \
         --dry-run
 ```
+
+If connecting to a locally running Kafka cluster you may need to use `--net=host` to run the container in the host network.
 
 ## Compiling from source
 
