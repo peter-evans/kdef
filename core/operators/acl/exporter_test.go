@@ -5,6 +5,7 @@
 package acl
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -33,6 +34,8 @@ func Test_exporter_Execute(t *testing.T) {
 		},
 	)
 
+	ctx := context.Background()
+
 	// Create the test cluster
 	srv := kafka.NewService(cl)
 	maxTries := 3
@@ -44,7 +47,7 @@ func Test_exporter_Execute(t *testing.T) {
 			harness.ACLExporter.ComposeFilePaths,
 			harness.ACLExporter.Env(),
 		)
-		if srv.IsKafkaReady(harness.ACLExporter.Brokers, 90) {
+		if srv.IsKafkaReady(ctx, harness.ACLExporter.Brokers, 90) {
 			duration := time.Since(start)
 			log.Infof("kafka cluster ready in %v", duration)
 			defer compose.Down(t, c)
@@ -69,7 +72,7 @@ func Test_exporter_Execute(t *testing.T) {
 		applier := NewApplier(cl, yamlDoc, ApplierOptions{
 			DefinitionFormat: opt.YAMLFormat,
 		})
-		res := applier.Execute()
+		res := applier.Execute(ctx)
 		if err := res.GetErr(); err != nil {
 			t.Errorf("failed to apply fixture: %v", err)
 			t.FailNow()
@@ -149,7 +152,7 @@ func Test_exporter_Execute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			e := NewExporter(tt.fields.cl, tt.fields.opts)
-			got, err := e.Execute()
+			got, err := e.Execute(ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("exporter.Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return

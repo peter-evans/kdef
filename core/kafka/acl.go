@@ -21,6 +21,7 @@ type ResourceACLs struct {
 
 // describeResourceACLs executes a request to describe ACLs of a specific resource (Kafka 0.11.0+).
 func describeResourceACLs(
+	ctx context.Context,
 	cl *client.Client,
 	name string,
 	resourceType string,
@@ -37,7 +38,7 @@ func describeResourceACLs(
 	req.PermissionType = kmsg.ACLPermissionTypeAny
 	req.ResourcePatternType = kmsg.ACLResourcePatternTypeLiteral
 
-	resourceACLs, err := describeACLs(cl, req)
+	resourceACLs, err := describeACLs(ctx, cl, req)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +52,7 @@ func describeResourceACLs(
 
 // describeAllResourceACLs executes a request to describe ACLs for all resources (Kafka 0.11.0+).
 func describeAllResourceACLs(
+	ctx context.Context,
 	cl *client.Client,
 	resourceType string,
 ) ([]ResourceACLs, error) {
@@ -65,15 +67,16 @@ func describeAllResourceACLs(
 	req.PermissionType = kmsg.ACLPermissionTypeAny
 	req.ResourcePatternType = kmsg.ACLResourcePatternTypeAny
 
-	return describeACLs(cl, req)
+	return describeACLs(ctx, cl, req)
 }
 
 // describeACLs executes a request to describe resource ACLs (Kafka 0.11.0+).
 func describeACLs(
+	ctx context.Context,
 	cl *client.Client,
 	req kmsg.DescribeACLsRequest,
 ) ([]ResourceACLs, error) {
-	kresp, err := cl.Client.Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(ctx, &req)
 	if err != nil {
 		return nil, err
 	}
@@ -117,6 +120,7 @@ func describeACLs(
 
 // createACLs executes a request to create ACLs (Kafka 0.11.0+).
 func createACLs(
+	ctx context.Context,
 	cl *client.Client,
 	name string,
 	resourceType string,
@@ -158,7 +162,7 @@ func createACLs(
 	req := kmsg.NewCreateACLsRequest()
 	req.Creations = creations
 
-	kresp, err := cl.Client.Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(ctx, &req)
 	if err != nil {
 		return err
 	}
@@ -183,6 +187,7 @@ func createACLs(
 
 // deleteACLs executes a request to delete ACLs (Kafka 0.11.0+).
 func deleteACLs(
+	ctx context.Context,
 	cl *client.Client,
 	name string,
 	resourceType string,
@@ -224,7 +229,7 @@ func deleteACLs(
 	req := kmsg.NewDeleteACLsRequest()
 	req.Filters = filters
 
-	kresp, err := cl.Client.Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(ctx, &req)
 	if err != nil {
 		return err
 	}

@@ -117,7 +117,11 @@ func newConfigOps(
 }
 
 // describeBrokerConfigs executes a request to describe broker configs (Kafka 0.11.0+).
-func describeBrokerConfigs(cl *client.Client, brokerID string) (def.Configs, error) {
+func describeBrokerConfigs(
+	ctx context.Context,
+	cl *client.Client,
+	brokerID string,
+) (def.Configs, error) {
 	req := kmsg.NewDescribeConfigsRequest()
 
 	res := kmsg.NewDescribeConfigsRequestResource()
@@ -125,7 +129,7 @@ func describeBrokerConfigs(cl *client.Client, brokerID string) (def.Configs, err
 	res.ResourceName = brokerID
 	req.Resources = append(req.Resources, res)
 
-	resp, err := describeConfigs(cl, req)
+	resp, err := describeConfigs(ctx, cl, req)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +144,11 @@ type ResourceConfigs struct {
 }
 
 // describeTopicConfigs executes a request to describe topic configs (Kafka 0.11.0+).
-func describeTopicConfigs(cl *client.Client, topics []string) ([]ResourceConfigs, error) {
+func describeTopicConfigs(
+	ctx context.Context,
+	cl *client.Client,
+	topics []string,
+) ([]ResourceConfigs, error) {
 	req := kmsg.NewDescribeConfigsRequest()
 
 	for _, topic := range topics {
@@ -150,7 +158,7 @@ func describeTopicConfigs(cl *client.Client, topics []string) ([]ResourceConfigs
 		req.Resources = append(req.Resources, res)
 	}
 
-	resp, err := describeConfigs(cl, req)
+	resp, err := describeConfigs(ctx, cl, req)
 	if err != nil {
 		return nil, err
 	}
@@ -193,8 +201,12 @@ func newConfigs(configsResp []kmsg.DescribeConfigsResponseResourceConfig) def.Co
 }
 
 // describeConfigs executes a request to describe configs (Kafka 0.11.0+).
-func describeConfigs(cl *client.Client, req kmsg.DescribeConfigsRequest) ([]kmsg.DescribeConfigsResponseResource, error) {
-	kresp, err := cl.Client.Request(context.Background(), &req)
+func describeConfigs(
+	ctx context.Context,
+	cl *client.Client,
+	req kmsg.DescribeConfigsRequest,
+) ([]kmsg.DescribeConfigsResponseResource, error) {
+	kresp, err := cl.Client.Request(ctx, &req)
 	if err != nil {
 		return nil, err
 	}
@@ -219,6 +231,7 @@ func describeConfigs(cl *client.Client, req kmsg.DescribeConfigsRequest) ([]kmsg
 
 // alterBrokerConfigs executes a request to perform a non-incremental alter broker configs (Kafka 0.11.0+).
 func alterBrokerConfigs(
+	ctx context.Context,
 	cl *client.Client,
 	brokerID string,
 	configOps ConfigOperations,
@@ -230,6 +243,7 @@ func alterBrokerConfigs(
 	reqR.Configs = buildAlterConfigsResourceConfig(configOps)
 
 	if err := alterConfigs(
+		ctx,
 		cl,
 		[]kmsg.AlterConfigsRequestResource{reqR},
 		validateOnly,
@@ -242,6 +256,7 @@ func alterBrokerConfigs(
 
 // alterTopicConfigs executes a request to perform a non-incremental alter topic configs (Kafka 0.11.0+).
 func alterTopicConfigs(
+	ctx context.Context,
 	cl *client.Client,
 	topic string,
 	configOps ConfigOperations,
@@ -253,6 +268,7 @@ func alterTopicConfigs(
 	reqR.Configs = buildAlterConfigsResourceConfig(configOps)
 
 	if err := alterConfigs(
+		ctx,
 		cl,
 		[]kmsg.AlterConfigsRequestResource{reqR},
 		validateOnly,
@@ -280,6 +296,7 @@ func buildAlterConfigsResourceConfig(
 
 // alterConfigs executes a request to perform a non-incremental alter configs (Kafka 0.11.0+).
 func alterConfigs(
+	ctx context.Context,
 	cl *client.Client,
 	resources []kmsg.AlterConfigsRequestResource,
 	validateOnly bool,
@@ -288,7 +305,7 @@ func alterConfigs(
 	req.Resources = resources
 	req.ValidateOnly = validateOnly
 
-	kresp, err := cl.Client.Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(ctx, &req)
 	if err != nil {
 		return err
 	}
@@ -313,6 +330,7 @@ func alterConfigs(
 
 // incrementalAlterBrokerConfigs executes a request to perform an incremental alter broker configs (Kafka 2.3.0+).
 func incrementalAlterBrokerConfigs(
+	ctx context.Context,
 	cl *client.Client,
 	brokerID string,
 	configOps ConfigOperations,
@@ -324,6 +342,7 @@ func incrementalAlterBrokerConfigs(
 	reqR.Configs = buildIncrementalAlterConfigsResourceConfig(configOps)
 
 	if err := incrementalAlterConfigs(
+		ctx,
 		cl,
 		[]kmsg.IncrementalAlterConfigsRequestResource{reqR},
 		validateOnly,
@@ -336,6 +355,7 @@ func incrementalAlterBrokerConfigs(
 
 // incrementalAlterTopicConfigs executes a request to perform an incremental alter topic configs (Kafka 2.3.0+).
 func incrementalAlterTopicConfigs(
+	ctx context.Context,
 	cl *client.Client,
 	topic string,
 	configOps ConfigOperations,
@@ -347,6 +367,7 @@ func incrementalAlterTopicConfigs(
 	reqR.Configs = buildIncrementalAlterConfigsResourceConfig(configOps)
 
 	if err := incrementalAlterConfigs(
+		ctx,
 		cl,
 		[]kmsg.IncrementalAlterConfigsRequestResource{reqR},
 		validateOnly,
@@ -373,6 +394,7 @@ func buildIncrementalAlterConfigsResourceConfig(
 
 // incrementalAlterConfigs executes a request to perform an incremental alter configs (Kafka 2.3.0+).
 func incrementalAlterConfigs(
+	ctx context.Context,
 	cl *client.Client,
 	resources []kmsg.IncrementalAlterConfigsRequestResource,
 	validateOnly bool,
@@ -381,7 +403,7 @@ func incrementalAlterConfigs(
 	req.Resources = resources
 	req.ValidateOnly = validateOnly
 
-	kresp, err := cl.Client.Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(ctx, &req)
 	if err != nil {
 		return err
 	}

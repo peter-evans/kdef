@@ -2,6 +2,7 @@
 package topic
 
 import (
+	"context"
 	"regexp"
 	"strings"
 
@@ -38,9 +39,9 @@ type exporter struct {
 }
 
 // Execute executes the export operation.
-func (e *exporter) Execute() (res.ExportResults, error) {
+func (e *exporter) Execute(ctx context.Context) (res.ExportResults, error) {
 	log.Infof("Fetching remote topics...")
-	topicDefs, err := e.getTopicDefinitions()
+	topicDefs, err := e.getTopicDefinitions(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -62,8 +63,8 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 	return results, nil
 }
 
-func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
-	metadata, err := e.srv.DescribeMetadata(nil, true)
+func (e *exporter) getTopicDefinitions(ctx context.Context) ([]def.TopicDefinition, error) {
+	metadata, err := e.srv.DescribeMetadata(ctx, nil, true)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +76,7 @@ func (e *exporter) getTopicDefinitions() ([]def.TopicDefinition, error) {
 		topicMetadataMap[t.Topic] = t
 	}
 
-	resourceConfigs, err := e.srv.DescribeTopicConfigs(topicNames)
+	resourceConfigs, err := e.srv.DescribeTopicConfigs(ctx, topicNames)
 	if err != nil {
 		return nil, err
 	}

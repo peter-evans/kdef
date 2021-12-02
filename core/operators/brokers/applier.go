@@ -2,6 +2,7 @@
 package brokers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -60,8 +61,8 @@ type applier struct {
 }
 
 // Execute executes the applier.
-func (a *applier) Execute() *res.ApplyResult {
-	if err := a.apply(); err != nil {
+func (a *applier) Execute(ctx context.Context) *res.ApplyResult {
+	if err := a.apply(ctx); err != nil {
 		a.res.Err = err.Error()
 		log.Error(err)
 	} else if a.ops.pending() && !a.opts.DryRun {
@@ -72,7 +73,7 @@ func (a *applier) Execute() *res.ApplyResult {
 }
 
 // apply performs the apply operation sequence.
-func (a *applier) apply() error {
+func (a *applier) apply(ctx context.Context) error {
 	if err := a.createLocal(); err != nil {
 		return err
 	}
@@ -82,11 +83,11 @@ func (a *applier) apply() error {
 		return err
 	}
 
-	if err := a.fetchRemote(); err != nil {
+	if err := a.fetchRemote(ctx); err != nil {
 		return err
 	}
 
-	if err := a.buildOps(); err != nil {
+	if err := a.buildOps(ctx); err != nil {
 		return err
 	}
 
@@ -99,7 +100,7 @@ func (a *applier) apply() error {
 			a.displayPendingOps()
 		}
 
-		if err := a.executeOps(); err != nil {
+		if err := a.executeOps(ctx); err != nil {
 			return err
 		}
 
@@ -132,10 +133,10 @@ func (a *applier) createLocal() error {
 }
 
 // fetchRemote fetches the remote definition and necessary metadata.
-func (a *applier) fetchRemote() error {
+func (a *applier) fetchRemote(ctx context.Context) error {
 	log.Infof("Fetching remote cluster-wide broker configuration...")
 	var err error
-	a.remoteConfigs, err = a.srv.DescribeAllBrokerConfigs()
+	a.remoteConfigs, err = a.srv.DescribeAllBrokerConfigs(ctx)
 	if err != nil {
 		return err
 	}
@@ -149,8 +150,8 @@ func (a *applier) fetchRemote() error {
 }
 
 // buildOps builds topic operations.
-func (a *applier) buildOps() error {
-	if err := a.buildConfigOps(); err != nil {
+func (a *applier) buildOps(ctx context.Context) error {
+	if err := a.buildConfigOps(ctx); err != nil {
 		return err
 	}
 	return nil
@@ -198,9 +199,9 @@ func (a *applier) displayPendingOps() {
 }
 
 // executeOps executes update operations.
-func (a *applier) executeOps() error {
+func (a *applier) executeOps(ctx context.Context) error {
 	if len(a.ops.config) > 0 {
-		if err := a.updateConfigs(); err != nil {
+		if err := a.updateConfigs(ctx); err != nil {
 			return err
 		}
 	}
@@ -209,11 +210,12 @@ func (a *applier) executeOps() error {
 }
 
 // buildConfigOps builds alter configs operations.
-func (a *applier) buildConfigOps() error {
+func (a *applier) buildConfigOps(ctx context.Context) error {
 	log.Debugf("Comparing local and remote configs for brokers definition %q", a.localDef.Metadata.Name)
 
 	var err error
 	a.ops.config, err = a.srv.NewConfigOps(
+		ctx,
 		a.localDef.Spec.Configs,
 		a.remoteDef.Spec.Configs,
 		a.remoteConfigs,
@@ -227,7 +229,7 @@ func (a *applier) buildConfigOps() error {
 }
 
 // updateConfigs updates brokers configs.
-func (a *applier) updateConfigs() error {
+func (a *applier) updateConfigs(ctx context.Context) error {
 	if a.ops.config.ContainsOp(kafka.DeleteConfigOperation) && !a.localDef.Spec.DeleteUndefinedConfigs {
 		// This case should only occur when using non-incremental alter configs
 		return errors.New("cannot apply configs because deletion of undefined configs is not enabled")
@@ -235,6 +237,7 @@ func (a *applier) updateConfigs() error {
 
 	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Altering configs...")
 	if err := a.srv.AlterAllBrokerConfigs(
+		ctx,
 		a.ops.config,
 		a.opts.DryRun,
 	); err != nil {

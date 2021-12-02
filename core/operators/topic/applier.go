@@ -2,6 +2,7 @@
 package topic
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -76,8 +77,8 @@ type applier struct {
 }
 
 // Execute executes the applier.
-func (a *applier) Execute() *res.ApplyResult {
-	if err := a.apply(); err != nil {
+func (a *applier) Execute(ctx context.Context) *res.ApplyResult {
+	if err := a.apply(ctx); err != nil {
 		a.res.Err = err.Error()
 		log.Error(err)
 	} else if a.ops.pending() && !a.opts.DryRun {
@@ -92,7 +93,7 @@ func (a *applier) Execute() *res.ApplyResult {
 }
 
 // apply performs the apply operation sequence.
-func (a *applier) apply() error {
+func (a *applier) apply(ctx context.Context) error {
 	if err := a.createLocal(); err != nil {
 		return err
 	}
@@ -102,7 +103,7 @@ func (a *applier) apply() error {
 		return err
 	}
 
-	if err := a.tryFetchRemote(); err != nil {
+	if err := a.tryFetchRemote(ctx); err != nil {
 		return err
 	}
 
@@ -111,7 +112,7 @@ func (a *applier) apply() error {
 		return err
 	}
 
-	if err := a.buildOps(); err != nil {
+	if err := a.buildOps(ctx); err != nil {
 		return err
 	}
 
@@ -124,18 +125,18 @@ func (a *applier) apply() error {
 			a.displayPendingOps()
 		}
 
-		if err := a.executeOps(); err != nil {
+		if err := a.executeOps(ctx); err != nil {
 			return err
 		}
 
 		// Check for in-progress partition reassignments as a result of operations involving assignments.
 		if len(a.ops.assignments) > 0 {
-			if err := a.fetchPartitionReassignments(false); err != nil {
+			if err := a.fetchPartitionReassignments(ctx, false); err != nil {
 				return err
 			}
 			if len(a.reassignments) > 0 {
 				if a.opts.ReassAwaitTimeout > 0 {
-					if err := a.awaitReassignments(a.opts.ReassAwaitTimeout); err != nil {
+					if err := a.awaitReassignments(ctx, a.opts.ReassAwaitTimeout); err != nil {
 						return err
 					}
 				} else if !log.Quiet {
@@ -173,10 +174,10 @@ func (a *applier) createLocal() error {
 }
 
 // tryFetchRemote fetches the remote definition and necessary metadata.
-func (a *applier) tryFetchRemote() error {
+func (a *applier) tryFetchRemote(ctx context.Context) error {
 	log.Infof("Fetching remote topic...")
 	var err error
-	a.remoteDef, a.remoteConfigs, a.brokers, err = a.srv.TryRequestTopic(a.localDef.Metadata)
+	a.remoteDef, a.remoteConfigs, a.brokers, err = a.srv.TryRequestTopic(ctx, a.localDef.Metadata)
 	if err != nil {
 		return err
 	}
@@ -190,11 +191,11 @@ func (a *applier) tryFetchRemote() error {
 }
 
 // buildOps builds topic operations.
-func (a *applier) buildOps() error {
+func (a *applier) buildOps(ctx context.Context) error {
 	if a.ops.create {
 		a.buildCreateOp()
 	} else {
-		if err := a.buildConfigOps(); err != nil {
+		if err := a.buildConfigOps(ctx); err != nil {
 			return err
 		}
 		if err := a.buildPartitionsOp(); err != nil {
@@ -263,27 +264,27 @@ func (a *applier) displayPendingOps() {
 }
 
 // executeOps executes update operations.
-func (a *applier) executeOps() error {
+func (a *applier) executeOps(ctx context.Context) error {
 	if a.ops.create {
-		if err := a.createTopic(); err != nil {
+		if err := a.createTopic(ctx); err != nil {
 			return err
 		}
 	}
 
 	if len(a.ops.config) > 0 {
-		if err := a.updateConfigs(); err != nil {
+		if err := a.updateConfigs(ctx); err != nil {
 			return err
 		}
 	}
 
 	if len(a.ops.partitions) > 0 {
-		if err := a.updatePartitions(); err != nil {
+		if err := a.updatePartitions(ctx); err != nil {
 			return err
 		}
 	}
 
 	if len(a.ops.assignments) > 0 {
-		if err := a.updateAssignments(); err != nil {
+		if err := a.updateAssignments(ctx); err != nil {
 			return err
 		}
 	}
@@ -311,10 +312,11 @@ func (a *applier) buildCreateOp() {
 }
 
 // createTopic executes a request to create a topic.
-func (a *applier) createTopic() error {
+func (a *applier) createTopic(ctx context.Context) error {
 	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Creating topic...")
 
 	if err := a.srv.CreateTopic(
+		ctx,
 		a.localDef,
 		a.ops.createAssignments,
 		a.opts.DryRun,
@@ -327,11 +329,12 @@ func (a *applier) createTopic() error {
 }
 
 // buildConfigOps builds alter configs operations.
-func (a *applier) buildConfigOps() error {
+func (a *applier) buildConfigOps(ctx context.Context) error {
 	log.Debugf("Comparing local and remote configs for topic %q", a.localDef.Metadata.Name)
 
 	var err error
 	a.ops.config, err = a.srv.NewConfigOps(
+		ctx,
 		a.localDef.Spec.Configs,
 		a.remoteDef.Spec.Configs,
 		a.remoteConfigs,
@@ -345,7 +348,7 @@ func (a *applier) buildConfigOps() error {
 }
 
 // updateConfigs updates topic configs.
-func (a *applier) updateConfigs() error {
+func (a *applier) updateConfigs(ctx context.Context) error {
 	if a.ops.config.ContainsOp(kafka.DeleteConfigOperation) && !a.localDef.Spec.DeleteUndefinedConfigs {
 		// This case should only occur when using non-incremental alter configs.
 		return errors.New("cannot apply configs because deletion of undefined configs is not enabled")
@@ -353,6 +356,7 @@ func (a *applier) updateConfigs() error {
 
 	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Altering configs...")
 	if err := a.srv.AlterTopicConfigs(
+		ctx,
 		a.localDef.Metadata.Name,
 		a.ops.config,
 		a.opts.DryRun,
@@ -389,10 +393,11 @@ func (a *applier) buildPartitionsOp() error {
 }
 
 // updatePartitions executes a request to create partitions.
-func (a *applier) updatePartitions() error {
+func (a *applier) updatePartitions(ctx context.Context) error {
 	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Creating partitions...")
 
 	if err := a.srv.CreatePartitions(
+		ctx,
 		a.localDef.Metadata.Name,
 		a.localDef.Spec.Partitions,
 		a.ops.partitions,
@@ -444,7 +449,7 @@ func (a *applier) buildAssignmentsOp() {
 }
 
 // fetchPartitionReassignments executes a request to list partition reassignments.
-func (a *applier) fetchPartitionReassignments(suppressLog bool) error {
+func (a *applier) fetchPartitionReassignments(ctx context.Context, suppressLog bool) error {
 	if !(suppressLog) {
 		log.Debugf("Fetching in-progress partition reassignments for topic %q", a.localDef.Metadata.Name)
 	}
@@ -456,6 +461,7 @@ func (a *applier) fetchPartitionReassignments(suppressLog bool) error {
 
 	var err error
 	a.reassignments, err = a.srv.ListPartitionReassignments(
+		ctx,
 		a.localDef.Metadata.Name,
 		partitions,
 	)
@@ -485,13 +491,13 @@ func (a *applier) displayPartitionReassignments() {
 }
 
 // updateAssignments executes a request to alter assignments.
-func (a *applier) updateAssignments() error {
+func (a *applier) updateAssignments(ctx context.Context) error {
 	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Altering partition assignments...")
 
 	if a.opts.DryRun {
 		// AlterPartitionAssignments has no 'ValidateOnly' for dry-run mode so we check
 		// in-progress partition reassignments and error if found.
-		if err := a.fetchPartitionReassignments(false); err != nil {
+		if err := a.fetchPartitionReassignments(ctx, false); err != nil {
 			return err
 		}
 		if len(a.reassignments) > 0 {
@@ -499,6 +505,7 @@ func (a *applier) updateAssignments() error {
 			return fmt.Errorf("a partition reassignment is in progress for the topic %q", a.localDef.Metadata.Name)
 		}
 	} else if err := a.srv.AlterPartitionAssignments(
+		ctx,
 		a.localDef.Metadata.Name,
 		a.ops.assignments,
 	); err != nil {
@@ -511,7 +518,7 @@ func (a *applier) updateAssignments() error {
 }
 
 // awaitReassignments awaits the completion of in-progress partition reassignments.
-func (a *applier) awaitReassignments(timeoutSec int) error {
+func (a *applier) awaitReassignments(ctx context.Context, timeoutSec int) error {
 	log.Infof("Awaiting completion of partition reassignments (timeout: %d seconds)...", timeoutSec)
 	timeout := time.After(time.Duration(timeoutSec) * time.Second)
 
@@ -522,7 +529,7 @@ func (a *applier) awaitReassignments(timeoutSec int) error {
 			log.Infof("Awaiting completion of partition reassignments timed out after %d seconds", timeoutSec)
 			return nil
 		default:
-			if err := a.fetchPartitionReassignments(true); err != nil {
+			if err := a.fetchPartitionReassignments(ctx, true); err != nil {
 				return err
 			}
 			if len(a.reassignments) > 0 {

@@ -2,6 +2,7 @@
 package apply
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -71,8 +72,9 @@ cat topics/my_topic.yml | kdef apply - --dry-run`,
 				return err
 			}
 
+			ctx := context.Background()
 			ctl := apply.NewApplyController(cl, args, opts)
-			if err := ctl.Execute(); err != nil {
+			if err := ctl.Execute(ctx); err != nil {
 				return err
 			}
 

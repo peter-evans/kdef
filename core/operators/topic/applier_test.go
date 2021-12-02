@@ -39,11 +39,13 @@ func Test_applier_Execute(t *testing.T) {
 		wantApplied bool
 	}
 
+	ctx := context.Background()
+
 	runTests := func(t *testing.T, tests []testCase) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				a := NewApplier(tt.fields.cl, tt.fields.yamlDoc, tt.fields.opts)
-				got := a.Execute()
+				got := a.Execute(ctx)
 
 				if log.Verbose {
 					// Output apply result JSON
@@ -105,7 +107,7 @@ func Test_applier_Execute(t *testing.T) {
 			harness.TopicApplier.ComposeFilePaths,
 			harness.TopicApplier.Env(),
 		)
-		if srv.IsKafkaReady(harness.TopicApplier.Brokers, 90) {
+		if srv.IsKafkaReady(ctx, harness.TopicApplier.Brokers, 90) {
 			duration := time.Since(start)
 			log.Infof("kafka cluster ready in %v", duration)
 			defer compose.Down(t, c)
@@ -339,9 +341,9 @@ func Test_applier_Execute(t *testing.T) {
 			Key:   key,
 			Value: val,
 		}
-		cl.Client.Produce(context.Background(), r, func(r *kgo.Record, err error) {})
+		cl.Client.Produce(ctx, r, func(r *kgo.Record, err error) {})
 	}
-	if err := cl.Client.Flush(context.Background()); err != nil {
+	if err := cl.Client.Flush(ctx); err != nil {
 		t.Errorf("failed to produce records: %v", err)
 		t.FailNow()
 	}

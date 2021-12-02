@@ -2,6 +2,7 @@
 package acl
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -62,8 +63,8 @@ type applier struct {
 }
 
 // Execute executes the applier.
-func (a *applier) Execute() *res.ApplyResult {
-	if err := a.apply(); err != nil {
+func (a *applier) Execute(ctx context.Context) *res.ApplyResult {
+	if err := a.apply(ctx); err != nil {
 		a.res.Err = err.Error()
 		log.Error(err)
 	} else if a.ops.pending() && !a.opts.DryRun {
@@ -74,7 +75,7 @@ func (a *applier) Execute() *res.ApplyResult {
 }
 
 // apply performs the apply operation sequence.
-func (a *applier) apply() error {
+func (a *applier) apply(ctx context.Context) error {
 	if err := a.createLocal(); err != nil {
 		return err
 	}
@@ -84,7 +85,7 @@ func (a *applier) apply() error {
 		return err
 	}
 
-	if err := a.fetchRemote(); err != nil {
+	if err := a.fetchRemote(ctx); err != nil {
 		return err
 	}
 
@@ -101,7 +102,7 @@ func (a *applier) apply() error {
 			a.displayPendingOps()
 		}
 
-		if err := a.executeOps(); err != nil {
+		if err := a.executeOps(ctx); err != nil {
 			return err
 		}
 
@@ -153,10 +154,11 @@ func (a *applier) createLocal() error {
 }
 
 // fetchRemote fetches the remote definition and necessary metadata.
-func (a *applier) fetchRemote() error {
+func (a *applier) fetchRemote(ctx context.Context) error {
 	log.Infof("Fetching remote ACLs...")
 	var err error
 	a.remoteACLs, err = a.srv.DescribeResourceACLs(
+		ctx,
 		a.localDef.Metadata.Name,
 		a.localDef.Metadata.Type,
 	)
@@ -217,15 +219,15 @@ func (a *applier) displayPendingOps() {
 }
 
 // executeOps executes update operations.
-func (a *applier) executeOps() error {
+func (a *applier) executeOps(ctx context.Context) error {
 	if len(a.ops.addACLs) > 0 {
-		if err := a.addACLs(); err != nil {
+		if err := a.addACLs(ctx); err != nil {
 			return err
 		}
 	}
 
 	if len(a.ops.deleteACLs) > 0 {
-		if err := a.deleteACLs(); err != nil {
+		if err := a.deleteACLs(ctx); err != nil {
 			return err
 		}
 	}
@@ -246,11 +248,12 @@ func (a *applier) buildACLOps() error {
 }
 
 // addACLs adds ACLs.
-func (a *applier) addACLs() error {
+func (a *applier) addACLs(ctx context.Context) error {
 	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Adding ACLs...")
 
 	if !a.opts.DryRun {
 		if err := a.srv.CreateACLs(
+			ctx,
 			a.localDef.Metadata.Name,
 			a.localDef.Metadata.Type,
 			a.ops.addACLs,
@@ -264,11 +267,12 @@ func (a *applier) addACLs() error {
 }
 
 // deleteACLs deletes ACLs.
-func (a *applier) deleteACLs() error {
+func (a *applier) deleteACLs(ctx context.Context) error {
 	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Deleting ACLs...")
 
 	if !a.opts.DryRun {
 		if err := a.srv.DeleteACLs(
+			ctx,
 			a.localDef.Metadata.Name,
 			a.localDef.Metadata.Type,
 			a.ops.deleteACLs,

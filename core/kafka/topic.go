@@ -13,13 +13,17 @@ import (
 )
 
 // tryRequestTopic executes a request for the metadata of a topic that may or may not exist (Kafka 0.11.0+).
-func tryRequestTopic(cl *client.Client, defMetadata def.ResourceMetadataDefinition) (
+func tryRequestTopic(
+	ctx context.Context,
+	cl *client.Client,
+	defMetadata def.ResourceMetadataDefinition,
+) (
 	*def.TopicDefinition,
 	def.Configs,
 	meta.Brokers,
 	error,
 ) {
-	metadata, err := describeMetadata(cl, []string{defMetadata.Name}, false)
+	metadata, err := describeMetadata(ctx, cl, []string{defMetadata.Name}, false)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -31,7 +35,7 @@ func tryRequestTopic(cl *client.Client, defMetadata def.ResourceMetadataDefiniti
 	}
 
 	// Fetch topic configs
-	resourceConfigs, err := describeTopicConfigs(cl, []string{defMetadata.Name})
+	resourceConfigs, err := describeTopicConfigs(ctx, cl, []string{defMetadata.Name})
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -53,6 +57,7 @@ func tryRequestTopic(cl *client.Client, defMetadata def.ResourceMetadataDefiniti
 
 // createTopic executes a request to create a topic (Kafka 0.10.1+).
 func createTopic(
+	ctx context.Context,
 	cl *client.Client,
 	topicDef def.TopicDefinition,
 	assignments def.PartitionAssignments,
@@ -93,7 +98,7 @@ func createTopic(
 	req.TimeoutMillis = cl.TimeoutMs()
 	req.ValidateOnly = validateOnly
 
-	kresp, err := cl.Client.Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(ctx, &req)
 	if err != nil {
 		return err
 	}
@@ -118,6 +123,7 @@ func createTopic(
 
 // createPartitions executes a request to create partitions (Kafka 0.10.0+).
 func createPartitions(
+	ctx context.Context,
 	cl *client.Client,
 	topic string,
 	partitions int,
@@ -141,7 +147,7 @@ func createPartitions(
 	req.TimeoutMillis = cl.TimeoutMs()
 	req.ValidateOnly = validateOnly
 
-	kresp, err := cl.Client.Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(ctx, &req)
 	if err != nil {
 		return err
 	}
@@ -166,6 +172,7 @@ func createPartitions(
 
 // alterPartitionAssignments executes a request to alter partition assignments (Kafka 2.4.0+).
 func alterPartitionAssignments(
+	ctx context.Context,
 	cl *client.Client,
 	topic string,
 	assignments def.PartitionAssignments,
@@ -186,7 +193,7 @@ func alterPartitionAssignments(
 	req.Topics = append(req.Topics, t)
 	req.TimeoutMillis = cl.TimeoutMs()
 
-	kresp, err := cl.Client.Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(ctx, &req)
 	if err != nil {
 		return err
 	}
@@ -221,6 +228,7 @@ func alterPartitionAssignments(
 
 // listPartitionReassignments executes a request to list partition reassignments (Kafka 2.4.0+).
 func listPartitionReassignments(
+	ctx context.Context,
 	cl *client.Client,
 	topic string,
 	partitions []int32,
@@ -233,7 +241,7 @@ func listPartitionReassignments(
 	req.Topics = append(req.Topics, t)
 	req.TimeoutMillis = cl.TimeoutMs()
 
-	kresp, err := cl.Client.Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(ctx, &req)
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@
 package broker
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/peter-evans/kdef/cli/log"
@@ -26,9 +27,9 @@ type exporter struct {
 }
 
 // Execute executes the export operation.
-func (e *exporter) Execute() (res.ExportResults, error) {
+func (e *exporter) Execute(ctx context.Context) (res.ExportResults, error) {
 	log.Infof("Fetching remote per-broker configuration...")
-	brokerDefs, err := e.getBrokerDefinitions()
+	brokerDefs, err := e.getBrokerDefinitions(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -51,8 +52,8 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 	return results, nil
 }
 
-func (e *exporter) getBrokerDefinitions() ([]def.BrokerDefinition, error) {
-	metadata, err := e.srv.DescribeMetadata([]string{}, true)
+func (e *exporter) getBrokerDefinitions(ctx context.Context) ([]def.BrokerDefinition, error) {
+	metadata, err := e.srv.DescribeMetadata(ctx, []string{}, true)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +61,7 @@ func (e *exporter) getBrokerDefinitions() ([]def.BrokerDefinition, error) {
 	brokerDefs := []def.BrokerDefinition{}
 	for _, broker := range metadata.Brokers {
 		brokerIDStr := fmt.Sprint(broker.ID)
-		brokerConfigs, err := e.srv.DescribeBrokerConfigs(brokerIDStr)
+		brokerConfigs, err := e.srv.DescribeBrokerConfigs(ctx, brokerIDStr)
 		if err != nil {
 			return nil, err
 		}

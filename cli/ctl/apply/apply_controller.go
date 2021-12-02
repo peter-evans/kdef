@@ -2,6 +2,7 @@
 package apply
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -25,7 +26,7 @@ import (
 const cannotContinueOnError = "cannot continue on error"
 
 type applier interface {
-	Execute() *res.ApplyResult
+	Execute(ctx context.Context) *res.ApplyResult
 }
 
 // ControllerOptions represents options to configure an apply controller.
@@ -61,13 +62,13 @@ type applyController struct {
 }
 
 // Execute implements the execution of the apply controller.
-func (a *applyController) Execute() error {
+func (a *applyController) Execute(ctx context.Context) error {
 	results := res.ApplyResults{}
 	var ctlErrors bool
 
 	if a.args[0] == "-" {
 		// Apply definitions from stdin.
-		res, err := a.applyDefsFromStdin()
+		res, err := a.applyDefsFromStdin(ctx)
 		results = append(results, res...)
 		if err != nil {
 			log.Error(err)
@@ -84,7 +85,7 @@ func (a *applyController) Execute() error {
 					return nil
 				}
 
-				res, err := a.applyDefsFromFile(filepath.Join(basepath, p))
+				res, err := a.applyDefsFromFile(ctx, filepath.Join(basepath, p))
 				results = append(results, res...)
 				if err != nil {
 					log.Error(err)
@@ -132,25 +133,25 @@ func (a *applyController) Execute() error {
 	return nil
 }
 
-func (a *applyController) applyDefsFromStdin() (res.ApplyResults, error) {
+func (a *applyController) applyDefsFromStdin(ctx context.Context) (res.ApplyResults, error) {
 	log.Infof("Reading definition(s) from stdin")
 	defDocs, err := docparse.FromStdin(docparse.Format(a.opts.DefinitionFormat))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read definition(s): %v", err)
 	}
-	return a.applyDefinitions(defDocs)
+	return a.applyDefinitions(ctx, defDocs)
 }
 
-func (a *applyController) applyDefsFromFile(filepath string) (res.ApplyResults, error) {
+func (a *applyController) applyDefsFromFile(ctx context.Context, filepath string) (res.ApplyResults, error) {
 	log.Infof("Reading definition(s) from file %q", filepath)
 	defDocs, err := docparse.FromFile(filepath, docparse.Format(a.opts.DefinitionFormat))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read definition(s): %v", err)
 	}
-	return a.applyDefinitions(defDocs)
+	return a.applyDefinitions(ctx, defDocs)
 }
 
-func (a *applyController) applyDefinitions(defDocs []string) (res.ApplyResults, error) {
+func (a *applyController) applyDefinitions(ctx context.Context, defDocs []string) (res.ApplyResults, error) {
 	resourceDefs, err := getResourceDefinitions(defDocs, a.opts.DefinitionFormat)
 	if err != nil {
 		return nil, fmt.Errorf("invalid resource definition: %v", err)
@@ -184,7 +185,7 @@ func (a *applyController) applyDefinitions(defDocs []string) (res.ApplyResults, 
 			})
 		}
 
-		res := applier.Execute()
+		res := applier.Execute(ctx)
 		results = append(results, res)
 		if res.GetErr() != nil && !a.opts.ContinueOnError {
 			return results, nil

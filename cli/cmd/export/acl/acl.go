@@ -2,6 +2,7 @@
 package acl
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -54,8 +55,9 @@ kdef export acl --match "myapp.*"`,
 			}
 
 			// TODO: Make constants for the kinds
+			ctx := context.Background()
 			ctl := export.NewExportController(cl, args, opts, "acl")
-			if err := ctl.Execute(); err != nil {
+			if err := ctl.Execute(ctx); err != nil {
 				return err
 			}
 			return nil

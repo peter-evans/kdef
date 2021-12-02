@@ -2,6 +2,7 @@
 package brokers
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -46,8 +47,9 @@ kdef export brokers --quiet`,
 				return err
 			}
 
+			ctx := context.Background()
 			ctl := export.NewExportController(cl, args, opts, "brokers")
-			if err := ctl.Execute(); err != nil {
+			if err := ctl.Execute(ctx); err != nil {
 				return err
 			}
 			return nil

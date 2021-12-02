@@ -5,6 +5,7 @@
 package broker
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -37,11 +38,13 @@ func Test_applier_Execute(t *testing.T) {
 		wantApplied bool
 	}
 
+	ctx := context.Background()
+
 	runTests := func(t *testing.T, tests []testCase) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				a := NewApplier(tt.fields.cl, tt.fields.yamlDoc, tt.fields.opts)
-				got := a.Execute()
+				got := a.Execute(ctx)
 
 				if log.Verbose {
 					// Output apply result JSON
@@ -103,7 +106,7 @@ func Test_applier_Execute(t *testing.T) {
 			harness.BrokerApplier.ComposeFilePaths,
 			harness.BrokerApplier.Env(),
 		)
-		if srv.IsKafkaReady(harness.BrokerApplier.Brokers, 90) {
+		if srv.IsKafkaReady(ctx, harness.BrokerApplier.Brokers, 90) {
 			duration := time.Since(start)
 			log.Infof("kafka cluster ready in %v", duration)
 			defer compose.Down(t, c)
