@@ -40,25 +40,6 @@ func TestTopicDefinition_Validate(t *testing.T) {
 			wantErr: "replication factor must be greater than 0",
 		},
 		{
-			name: "Tests specifying assignments and rack assignments together",
-			topicDef: TopicDefinition{
-				ResourceDefinition: resDef,
-				Spec: TopicSpecDefinition{
-					Partitions:        3,
-					ReplicationFactor: 2,
-					Assignments: PartitionAssignments{
-						{1, 2},
-						{2, 3},
-					},
-					RackAssignments: PartitionRackAssignments{
-						{"zone-a", "zone-b"},
-						{"zone-b", "zone-a"},
-					},
-				},
-			},
-			wantErr: "assignments and rack assignments cannot be specified together",
-		},
-		{
 			name: "Tests invalid number of assignments",
 			topicDef: TopicDefinition{
 				ResourceDefinition: resDef,
@@ -162,6 +143,27 @@ func TestTopicDefinition_Validate(t *testing.T) {
 						{1, 2},
 						{2, 3},
 						{3, 1},
+					},
+				},
+			},
+			wantErr: "",
+		},
+		{
+			name: "Tests a valid TopicDefinition specifying assignments and rack assignments together",
+			topicDef: TopicDefinition{
+				ResourceDefinition: resDef,
+				Spec: TopicSpecDefinition{
+					Partitions:        3,
+					ReplicationFactor: 2,
+					Assignments: PartitionAssignments{
+						{1, 2},
+						{2, 3},
+						{3, 1},
+					},
+					RackAssignments: PartitionRackAssignments{
+						{"zone-a", "zone-b"},
+						{"zone-b", "zone-c"},
+						{"zone-c", "zone-a"},
 					},
 				},
 			},

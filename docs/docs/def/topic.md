@@ -56,7 +56,8 @@ A definition representing a Kafka topic.
     The number of replica assignments must match `partitions`, and the number of replicas in each assignment must match `replicationFactor`.
     A replica assignment cannot contain duplicate broker IDs.
 
-    Cannot be specified at the same time as `rackAssignments`.
+    If `assignments` and `rackAssignments` are specified at the same time `assignments` takes precedence.
+    `rackAssignments` will be validated but subsequently ignored.
 
     !!! example
         Assignments for 3 partitions with a replication factor of 2.
@@ -74,7 +75,8 @@ A definition representing a Kafka topic.
 
     kdef will balance replicas across available brokers within the same zone.
 
-    Cannot be specified at the same time as `assignments`.
+    If `assignments` and `rackAssignments` are specified at the same time `assignments` takes precedence.
+    `rackAssignments` will be validated but subsequently ignored.
 
     !!! example
         Rack assignments for 3 partitions with a replication factor of 2.

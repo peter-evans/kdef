@@ -412,6 +412,7 @@ func (a *applier) updatePartitions(ctx context.Context) error {
 
 // buildAssignmentsOp builds an assignments operation.
 func (a *applier) buildAssignmentsOp() {
+	// Order is important here; assignments take precedence over rack assignments.
 	switch {
 	case a.localDef.Spec.HasAssignments():
 		if !cmp.Equal(a.remoteDef.Spec.Assignments, a.localDef.Spec.Assignments) {
