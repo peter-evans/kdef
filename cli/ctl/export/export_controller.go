@@ -2,6 +2,7 @@
 package export
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,7 +22,7 @@ import (
 )
 
 type exporter interface {
-	Execute() (res.ExportResults, error)
+	Execute(ctx context.Context) (res.ExportResults, error)
 }
 
 // ControllerOptions represents options to configure an export controller.
@@ -67,8 +68,8 @@ type exportController struct {
 }
 
 // Execute implements the execution of the export controller.
-func (e *exportController) Execute() error {
-	results, err := e.exportResources()
+func (e *exportController) Execute(ctx context.Context) error {
+	results, err := e.exportResources(ctx)
 	if err != nil {
 		return err
 	}
@@ -127,7 +128,7 @@ func (e *exportController) Execute() error {
 	return nil
 }
 
-func (e *exportController) exportResources() (res.ExportResults, error) {
+func (e *exportController) exportResources(ctx context.Context) (res.ExportResults, error) {
 	var exporter exporter
 	switch e.kind {
 	case "acl":
@@ -150,7 +151,7 @@ func (e *exportController) exportResources() (res.ExportResults, error) {
 		})
 	}
 
-	results, err := exporter.Execute()
+	results, err := exporter.Execute(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -5,6 +5,7 @@
 package broker
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -27,6 +28,8 @@ func Test_exporter_Execute(t *testing.T) {
 		[]string{fmt.Sprintf("seedBrokers=localhost:%d", harness.BrokerExporter.BrokerPort)},
 	)
 
+	ctx := context.Background()
+
 	// Create the test cluster
 	srv := kafka.NewService(cl)
 	maxTries := 3
@@ -38,7 +41,7 @@ func Test_exporter_Execute(t *testing.T) {
 			harness.BrokerExporter.ComposeFilePaths,
 			harness.BrokerExporter.Env(),
 		)
-		if srv.IsKafkaReady(harness.BrokerExporter.Brokers, 90) {
+		if srv.IsKafkaReady(ctx, harness.BrokerExporter.Brokers, 90) {
 			duration := time.Since(start)
 			log.Infof("kafka cluster ready in %v", duration)
 			defer compose.Down(t, c)
@@ -76,7 +79,7 @@ func Test_exporter_Execute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			e := NewExporter(tt.fields.cl)
-			got, err := e.Execute()
+			got, err := e.Execute(ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("exporter.Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return

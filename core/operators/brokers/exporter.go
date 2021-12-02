@@ -2,6 +2,8 @@
 package brokers
 
 import (
+	"context"
+
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/kafka"
@@ -23,9 +25,9 @@ type exporter struct {
 }
 
 // Execute executes the export operation.
-func (e *exporter) Execute() (res.ExportResults, error) {
+func (e *exporter) Execute(ctx context.Context) (res.ExportResults, error) {
 	log.Infof("Fetching remote cluster-wide broker configuration...")
-	brokersDef, err := e.getBrokersDefinition()
+	brokersDef, err := e.getBrokersDefinition(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -39,8 +41,8 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 	return results, nil
 }
 
-func (e *exporter) getBrokersDefinition() (*def.BrokersDefinition, error) {
-	brokerConfigs, err := e.srv.DescribeAllBrokerConfigs()
+func (e *exporter) getBrokersDefinition(ctx context.Context) (*def.BrokersDefinition, error) {
+	brokerConfigs, err := e.srv.DescribeAllBrokerConfigs(ctx)
 	if err != nil {
 		return nil, err
 	}

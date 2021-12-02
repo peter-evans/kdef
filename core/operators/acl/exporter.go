@@ -2,6 +2,7 @@
 package acl
 
 import (
+	"context"
 	"regexp"
 
 	"github.com/peter-evans/kdef/cli/log"
@@ -37,9 +38,9 @@ type exporter struct {
 }
 
 // Execute executes the export operation.
-func (e *exporter) Execute() (res.ExportResults, error) {
+func (e *exporter) Execute(ctx context.Context) (res.ExportResults, error) {
 	log.Infof("Fetching remote ACLs...")
-	aclDefs, err := e.getACLDefinitions()
+	aclDefs, err := e.getACLDefinitions(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -62,8 +63,9 @@ func (e *exporter) Execute() (res.ExportResults, error) {
 	return results, nil
 }
 
-func (e *exporter) getACLDefinitions() ([]def.ACLDefinition, error) {
+func (e *exporter) getACLDefinitions(ctx context.Context) ([]def.ACLDefinition, error) {
 	resourceACLs, err := e.srv.DescribeAllResourceACLs(
+		ctx,
 		e.opts.ResourceType,
 	)
 	if err != nil {

@@ -31,7 +31,12 @@ type TopicMetadata struct {
 }
 
 // describeMetadata executes a request for metadata (Kafka 0.8.0+).
-func describeMetadata(cl *client.Client, topics []string, errorOnNonExistence bool) (*Metadata, error) {
+func describeMetadata(
+	ctx context.Context,
+	cl *client.Client,
+	topics []string,
+	errorOnNonExistence bool,
+) (*Metadata, error) {
 	req := kmsg.NewMetadataRequest()
 
 	// If topics is nil all topics are included.
@@ -46,7 +51,7 @@ func describeMetadata(cl *client.Client, topics []string, errorOnNonExistence bo
 		}
 	}
 
-	kresp, err := cl.Client.Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(ctx, &req)
 	if err != nil {
 		return nil, err
 	}
@@ -105,9 +110,9 @@ func describeMetadata(cl *client.Client, topics []string, errorOnNonExistence bo
 }
 
 // requestIsSupported executes a request to determine if a request key is supported by the cluster (Kafka 0.10.0+).
-func requestIsSupported(cl *client.Client, requestKey int16) (bool, error) {
+func requestIsSupported(ctx context.Context, cl *client.Client, requestKey int16) (bool, error) {
 	req := kmsg.NewApiVersionsRequest()
-	kresp, err := cl.Client.Request(context.Background(), &req)
+	kresp, err := cl.Client.Request(ctx, &req)
 	if err != nil {
 		return false, err
 	}
@@ -116,8 +121,8 @@ func requestIsSupported(cl *client.Client, requestKey int16) (bool, error) {
 }
 
 // describeCluster executes a request to describe the cluster (Kafka 2.8.0+).
-func describeCluster(cl *client.Client) (*kmsg.DescribeClusterResponse, error) {
-	kresp, err := cl.Client.Request(context.Background(), kmsg.NewPtrDescribeClusterRequest())
+func describeCluster(ctx context.Context, cl *client.Client) (*kmsg.DescribeClusterResponse, error) {
+	kresp, err := cl.Client.Request(ctx, kmsg.NewPtrDescribeClusterRequest())
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +140,7 @@ func describeCluster(cl *client.Client) (*kmsg.DescribeClusterResponse, error) {
 }
 
 // isKafkaReady executes describe cluster requests until a minimum number of brokers are alive (Kafka 2.8.0+).
-func isKafkaReady(cl *client.Client, minBrokers int, timeoutSec int) bool {
+func isKafkaReady(ctx context.Context, cl *client.Client, minBrokers int, timeoutSec int) bool {
 	timeout := time.After(time.Duration(timeoutSec) * time.Second)
 
 	for {
@@ -143,7 +148,7 @@ func isKafkaReady(cl *client.Client, minBrokers int, timeoutSec int) bool {
 		case <-timeout:
 			return false
 		default:
-			resp, err := describeCluster(cl)
+			resp, err := describeCluster(ctx, cl)
 			if err == nil {
 				if len(resp.Brokers) >= minBrokers {
 					return true

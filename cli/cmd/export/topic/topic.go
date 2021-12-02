@@ -2,6 +2,7 @@
 package topic
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -54,8 +55,9 @@ kdef export topic --match "myapp.*"`,
 				return err
 			}
 
+			ctx := context.Background()
 			ctl := export.NewExportController(cl, args, opts, "topic")
-			if err := ctl.Execute(); err != nil {
+			if err := ctl.Execute(ctx); err != nil {
 				return err
 			}
 			return nil
