@@ -1,10 +1,10 @@
 # Getting started
 
-This short tutorial will introduce some of the main features of kdef.
+This short tutorial introduces some of the main features of kdef.
 
 ## Tutorial setup
 
-1. Checkout the kdef repository and change directory to `docs/tutorial`.
+1. Clone the kdef repository and change directory to `docs/tutorial`.
 
     ```sh
     git clone git@github.com:peter-evans/kdef.git
@@ -61,7 +61,7 @@ The cluster we spun up in the previous section has no resources. Let's apply som
     - `retention.ms: "43200000"`
     - `partitions: 6`
 
-5. Execute steps 1 and 2 again to dry-run and then apply the topic defininition update.
+5. Execute steps 1 and 2 again to dry-run and then apply the topic definition update.
 
 ### from stdin
 

@@ -6,8 +6,8 @@ kdef sources configuration in the following ways.
 
 ### Config file
 
-kdef will attempt to source configuration from a file named `config.yml` in the current working directory.
-This default behaviour can be overridden by specifying the path to a file with the `--config-path` global option.
+kdef attempts to source configuration from a file named `config.yml` in the current working directory.
+Override this default behaviour by specifying the path to a file with the `--config-path` global option.
 
 The easiest way to create a configuration file for your cluster is to run through the short interactive prompt.
 
@@ -17,7 +17,7 @@ kdef configure
 
 ### Environment variables
 
-kdef will attempt to source configuration from `KDEF__` prefixed environment variables.
+kdef attempts to source configuration from `KDEF__` prefixed environment variables.
 Environment variables override config file configuration.
 
 ```sh
@@ -30,7 +30,7 @@ kdef export topic
 
 ### Command-line options
 
-kdef will attempt to source configuration from the `-X` command-line option.
+kdef attempts to source configuration from the `-X` command-line option.
 Command-line supplied configuration overrides both config file configuration and environment variables.
 
 ```sh
@@ -45,7 +45,7 @@ kdef export topic \
 
 - **seedBrokers** ([]string)
 
-    One or more seed broker addresses that kdef will connect to.
+    One or more seed broker addresses.
     The default value is `localhost:9092`.
 
 - **tls** ([TLSConfig](#tlsconfig))
@@ -54,7 +54,7 @@ kdef export topic \
 
 - **timeoutMs** (int)
 
-    Timeout in milliseconds to be used by requests with timeouts.
+    Timeout in milliseconds for API requests that support timeouts.
     The default value is `5000`.
 
 - **alterConfigsMethod** (string)
@@ -63,9 +63,9 @@ kdef export topic \
     Must be one of `auto`, `incremental`, `non-incremental`.
     The default value is `auto`.
 
-    Kafka 2.3.0+ supports "incremental alter configs." This is an improved API for altering configs.
-    When set to `auto`, kdef will detect what the cluster supports and use `incremental` if available.
-    Setting `incremental` or `non-incremental` will save an API call to determine what the cluster supports.
+    Kafka 2.3.0+ supports "incremental alter configs," an improved API for altering configs.
+    When set to `auto`, kdef detects what the cluster supports and use `incremental` if available.
+    Setting `incremental` or `non-incremental` saves an API call to determine what the cluster supports.
 
     Note that if the cluster contains brokers with a mix of Kafka versions, some Kafka 2.3.0+ and some Kafka <2.3.0, then `non-incremental` should be used.
 
@@ -73,7 +73,7 @@ kdef export topic \
 
 - **enabled** (bool)
 
-    Set to `true` if connection to cluster brokers requires TLS.
+    Set to `true` if connecting to cluster brokers requires TLS.
     The default value is `false`.
 
 - **caCertPath** (string)
@@ -91,7 +91,7 @@ kdef export topic \
 - **serverName** (string)
 
     Set if connecting via TLS requires a distinct server name.
-    When connecting via TLS, by default the client will use the hostname or IP address of the connected broker as the TLS server name.
+    When connecting via TLS, by default the client uses the hostname or IP address of the connected broker as the TLS server name.
 
 ## SASLConfig
 

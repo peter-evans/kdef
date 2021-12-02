@@ -4,7 +4,7 @@ Install the pre-compiled binary, use Docker, or compile from source.
 
 ## Install the pre-compiled binary
 
-The pre-compiled binary can be installed via one of the following methods.
+Install the pre-compiled binary via one of the following methods.
 
 ### homebrew tap
 
@@ -18,7 +18,7 @@ brew install peter-evans/kdef/kdef
 go install github.com/peter-evans/kdef@latest
 ```
 
-A specific version can be installed by using a suffix in the format `@x.x.x`.
+Install a specific version by using a suffix in the format `@x.x.x`.
 
 ### manually
 
@@ -81,4 +81,4 @@ go build -o kdef .
 ## Updating
 
 !!! important
-    Until kdef reaches `v1.0.0` and is considered stable there could be breaking changes in minor releases. Make sure to check the [release](https://github.com/peter-evans/kdef/releases) notes before updating.
+    Until kdef reaches `v1.0.0` and is considered stable, there could be breaking changes in minor releases. Make sure to check the [release](https://github.com/peter-evans/kdef/releases) notes before updating.

@@ -76,7 +76,7 @@ A group of ACL entries, where specifying more than one value for its properties 
 
 - **principals** ([]string), required
 
-    Principals to create ACLs for. When using Kafka simple authorizer this must begin with `User:`.
+    Principals to create ACLs for. When using Kafka simple authorizer, this must begin with `User:`.
 
 ## Examples
 
