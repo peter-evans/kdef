@@ -13,6 +13,7 @@ jobs:
         uses: hyphengroup/action-install-gh-release@v1.3.0
         with:
           repo: peter-evans/kdef
+          tag: v0.1.0
           arch: x86_64
 
       - name: Toggle dry-run
