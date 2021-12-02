@@ -67,7 +67,7 @@ func (t TopicDefinition) Validate() error {
 	}
 
 	if t.Spec.HasAssignments() && t.Spec.HasRackAssignments() {
-		return fmt.Errorf("assignments and rack assignments cannot be specified together")
+		log.Warnf("rack assignments will be validated but subsequently ignored because supplied assignments take precedence")
 	}
 
 	if t.Spec.HasAssignments() {
