@@ -37,7 +37,7 @@ func decreaseReplicationFactor(
 		// Create a copy to prevent the original slice being sorted.
 		sortedBrokers := append([]int32{}, replicas...)
 		sort.Slice(sortedBrokers, func(i, j int) bool {
-			// Order by increasing broker count, and then by index.
+			// Sort by increasing broker count, and then by index.
 			return brokerCounts[sortedBrokers[i]] < brokerCounts[sortedBrokers[j]] ||
 				(brokerCounts[sortedBrokers[i]] == brokerCounts[sortedBrokers[j]] && i < j)
 		})
@@ -91,14 +91,14 @@ func increaseReplicationFactor(
 			if !isLeader {
 				lastUsedBroker = replicas[len(replicas)-1]
 			}
-			// If there are no usused brokers with an ID greater than the last used then reset to zero.
+			// If there are no unused brokers with an ID greater than the last used then reset to zero.
 			// This will cause round-robin placement to begin a new cycle.
 			if i32.Max(unusedBrokers) <= lastUsedBroker {
 				lastUsedBroker = 0
 			}
 
 			// If the chosen broker will be the preferred leader we use leader counts to make sure
-			// leaders are balanced across partitions in the assignments.
+			// partition leaders are balanced across brokers.
 			brokerCounts := replicaCounts
 			if isLeader {
 				brokerCounts = leaderCounts
@@ -187,7 +187,7 @@ func SyncRackAssignments(
 				var lastUsedBroker int32
 
 				// If the chosen broker will be the preferred leader we use leader counts to make sure
-				// leaders are balanced across partitions in the assignments.
+				// partition leaders are balanced across brokers.
 				brokerCounts := replicaCounts
 				if isLeader {
 					brokerCounts = leaderCounts
@@ -238,12 +238,9 @@ func leaderCounts(assignments [][]int32) map[int32]int {
 }
 
 func leastPopulousBroker(unusedBrokers []int32, brokerCounts map[int32]int, lastUsedBroker int32) int32 {
-	// Find the unused broker with the least replicas of any partition.
 	sort.Slice(unusedBrokers, func(i, j int) bool {
 		/*
-			Sort priority:
-			- The least populous broker
-			- Round robin with increasing broker ID
+			Sort based on broker frequency in the topic, breaking ties with round-robin broker ID.
 
 			To demonstrate why this sort is somewhat complicated, in this example we want the next broker ID to be 2...
 			{1, ?},
