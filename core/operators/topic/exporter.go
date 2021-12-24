@@ -114,7 +114,7 @@ func (e *exporter) getTopicDefinitions(ctx context.Context) ([]def.TopicDefiniti
 				Name: topic,
 			},
 			topicMetadataMap[topic].PartitionAssignments,
-			topicMetadataMap[topic].PartitionRackAssignments,
+			topicMetadataMap[topic].PartitionRacks,
 			topicConfigsMapMap[topic],
 			metadata.Brokers,
 			e.opts.Assignments == opt.BrokerAssignments,

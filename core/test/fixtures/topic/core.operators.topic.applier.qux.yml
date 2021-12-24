@@ -10,10 +10,11 @@ spec:
     retention.ms: "172800000"
   partitions: 3
   replicationFactor: 1
-  rackAssignments:
-    - ["zone-a"]
-    - ["zone-b"]
-    - ["zone-c"]
+  managedAssignments:
+    rackConstraints:
+      - ["zone-a"]
+      - ["zone-b"]
+      - ["zone-c"]
   reassignment:
     awaitTimeoutSec: 30
 ---
@@ -28,10 +29,11 @@ spec:
     retention.ms: "172800000"
   partitions: 3
   replicationFactor: 2
-  rackAssignments:
-    - ["zone-a", "zone-b"]
-    - ["zone-b", "zone-c"]
-    - ["zone-c", "zone-a"]
+  managedAssignments:
+    rackConstraints:
+      - ["zone-a", "zone-b"]
+      - ["zone-b", "zone-c"]
+      - ["zone-c", "zone-a"]
   reassignment:
     awaitTimeoutSec: 30
 ---
@@ -46,12 +48,13 @@ spec:
     retention.ms: "172800000"
   partitions: 5
   replicationFactor: 2
-  rackAssignments:
-    - ["zone-a", "zone-b"]
-    - ["zone-b", "zone-c"]
-    - ["zone-c", "zone-a"]
-    - ["zone-a", "zone-b"]
-    - ["zone-b", "zone-c"]
+  managedAssignments:
+    rackConstraints:
+      - ["zone-a", "zone-b"]
+      - ["zone-b", "zone-c"]
+      - ["zone-c", "zone-a"]
+      - ["zone-a", "zone-b"]
+      - ["zone-b", "zone-c"]
   reassignment:
     awaitTimeoutSec: 30
 ---
@@ -66,13 +69,14 @@ spec:
     retention.ms: "172800000"
   partitions: 6
   replicationFactor: 3
-  rackAssignments:
-    - ["zone-a", "zone-b", "zone-c"]
-    - ["zone-b", "zone-c", "zone-a"]
-    - ["zone-c", "zone-a", "zone-b"]
-    - ["zone-a", "zone-b", "zone-c"]
-    - ["zone-b", "zone-c", "zone-a"]
-    - ["zone-c", "zone-a", "zone-b"]
+  managedAssignments:
+    rackConstraints:
+      - ["zone-a", "zone-b", "zone-c"]
+      - ["zone-b", "zone-c", "zone-a"]
+      - ["zone-c", "zone-a", "zone-b"]
+      - ["zone-a", "zone-b", "zone-c"]
+      - ["zone-b", "zone-c", "zone-a"]
+      - ["zone-c", "zone-a", "zone-b"]
   reassignment:
     awaitTimeoutSec: 30
 ---
@@ -87,12 +91,13 @@ spec:
     retention.ms: "172800000"
   partitions: 6
   replicationFactor: 2
-  rackAssignments:
-    - ["zone-a", "zone-b"]
-    - ["zone-b", "zone-c"]
-    - ["zone-c", "zone-a"]
-    - ["zone-a", "zone-b"]
-    - ["zone-b", "zone-c"]
-    - ["zone-c", "zone-a"]
+  managedAssignments:
+    rackConstraints:
+      - ["zone-a", "zone-b"]
+      - ["zone-b", "zone-c"]
+      - ["zone-c", "zone-a"]
+      - ["zone-a", "zone-b"]
+      - ["zone-b", "zone-c"]
+      - ["zone-c", "zone-a"]
   reassignment:
     awaitTimeoutSec: 30

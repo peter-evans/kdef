@@ -24,10 +24,10 @@ type Metadata struct {
 
 // TopicMetadata represents topic metadata.
 type TopicMetadata struct {
-	Topic                    string
-	PartitionAssignments     def.PartitionAssignments
-	PartitionRackAssignments def.PartitionRackAssignments
-	Exists                   bool
+	Topic                string
+	PartitionAssignments def.PartitionAssignments
+	PartitionRacks       def.PartitionRacks
+	Exists               bool
 }
 
 // describeMetadata executes a request for metadata (Kafka 0.8.0+).
@@ -88,11 +88,11 @@ func describeMetadata(
 			}
 
 			racksByBroker := brokers.RacksByBroker()
-			tm.PartitionRackAssignments = make(def.PartitionRackAssignments, len(t.Partitions))
+			tm.PartitionRacks = make(def.PartitionRacks, len(t.Partitions))
 			for i, p := range tm.PartitionAssignments {
-				tm.PartitionRackAssignments[i] = make([]string, len(p))
+				tm.PartitionRacks[i] = make([]string, len(p))
 				for j, r := range p {
-					tm.PartitionRackAssignments[i][j] = racksByBroker[r]
+					tm.PartitionRacks[i][j] = racksByBroker[r]
 				}
 			}
 		}
