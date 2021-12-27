@@ -45,7 +45,7 @@ func tryRequestTopic(
 	topicDef := def.NewTopicDefinition(
 		defMetadata,
 		topicMetadata.PartitionAssignments,
-		topicMetadata.PartitionRackAssignments,
+		topicMetadata.PartitionRacks,
 		topicConfigs.ToMap(),
 		metadata.Brokers,
 		true,

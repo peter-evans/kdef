@@ -87,35 +87,39 @@ func TestTopicDefinition_Validate(t *testing.T) {
 			wantErr: "a replica assignment cannot contain duplicate brokers",
 		},
 		{
-			name: "Tests invalid number of rack assignments",
+			name: "Tests invalid number of rack constraints",
 			topicDef: TopicDefinition{
 				ResourceDefinition: resDef,
 				Spec: TopicSpecDefinition{
 					Partitions:        3,
 					ReplicationFactor: 2,
-					RackAssignments: PartitionRackAssignments{
-						{"zone-a", "zone-b"},
-						{"zone-b", "zone-a"},
+					ManagedAssignments: &ManagedAssignmentsDefinition{
+						RackConstraints: PartitionRacks{
+							{"zone-a", "zone-b"},
+							{"zone-b", "zone-a"},
+						},
 					},
 				},
 			},
-			wantErr: "number of rack assignments must match partitions",
+			wantErr: "number of rack constraints must match partitions",
 		},
 		{
-			name: "Tests invalid number of replicas in rack assignment",
+			name: "Tests invalid number of replicas in rack constraints",
 			topicDef: TopicDefinition{
 				ResourceDefinition: resDef,
 				Spec: TopicSpecDefinition{
 					Partitions:        3,
 					ReplicationFactor: 2,
-					RackAssignments: PartitionRackAssignments{
-						{"zone-a", "zone-b"},
-						{"zone-b", "zone-c"},
-						{"zone-c"},
+					ManagedAssignments: &ManagedAssignmentsDefinition{
+						RackConstraints: PartitionRacks{
+							{"zone-a", "zone-b"},
+							{"zone-b", "zone-c"},
+							{"zone-c"},
+						},
 					},
 				},
 			},
-			wantErr: "number of replicas in each rack assignment must match replication factor",
+			wantErr: "number of replicas in a partition's rack constraints must match replication factor",
 		},
 		{
 			name: "Tests invalid rack id",
@@ -124,9 +128,11 @@ func TestTopicDefinition_Validate(t *testing.T) {
 				Spec: TopicSpecDefinition{
 					Partitions:        2,
 					ReplicationFactor: 2,
-					RackAssignments: PartitionRackAssignments{
-						{"zone-a", "zone-b"},
-						{"zone-b", ""},
+					ManagedAssignments: &ManagedAssignmentsDefinition{
+						RackConstraints: PartitionRacks{
+							{"zone-a", "zone-b"},
+							{"zone-b", ""},
+						},
 					},
 				},
 			},
@@ -149,7 +155,7 @@ func TestTopicDefinition_Validate(t *testing.T) {
 			wantErr: "",
 		},
 		{
-			name: "Tests a valid TopicDefinition specifying assignments and rack assignments together",
+			name: "Tests a valid TopicDefinition specifying assignments and rack constraints together",
 			topicDef: TopicDefinition{
 				ResourceDefinition: resDef,
 				Spec: TopicSpecDefinition{
@@ -160,10 +166,12 @@ func TestTopicDefinition_Validate(t *testing.T) {
 						{2, 3},
 						{3, 1},
 					},
-					RackAssignments: PartitionRackAssignments{
-						{"zone-a", "zone-b"},
-						{"zone-b", "zone-c"},
-						{"zone-c", "zone-a"},
+					ManagedAssignments: &ManagedAssignmentsDefinition{
+						RackConstraints: PartitionRacks{
+							{"zone-a", "zone-b"},
+							{"zone-b", "zone-c"},
+							{"zone-c", "zone-a"},
+						},
 					},
 				},
 			},
@@ -248,20 +256,22 @@ func TestTopicDefinition_ValidateWithMetadata(t *testing.T) {
 				Spec: TopicSpecDefinition{
 					Partitions:        6,
 					ReplicationFactor: 2,
-					RackAssignments: PartitionRackAssignments{
-						{"zone-a", "zone-b"},
-						{"zone-b", "zone-c"},
-						{"zone-c", "zone-a"},
-						{"zone-a", "zone-b"},
-						{"zone-b", "zone-z"},
-						{"zone-c", "zone-a"},
+					ManagedAssignments: &ManagedAssignmentsDefinition{
+						RackConstraints: PartitionRacks{
+							{"zone-a", "zone-b"},
+							{"zone-b", "zone-c"},
+							{"zone-c", "zone-a"},
+							{"zone-a", "zone-b"},
+							{"zone-b", "zone-z"},
+							{"zone-c", "zone-a"},
+						},
 					},
 				},
 			},
 			args: args{
 				brokers: brokers,
 			},
-			wantErr: "invalid rack id \"zone-z\" in rack assignments",
+			wantErr: "invalid rack id \"zone-z\" in rack constraints",
 		},
 		{
 			name: "Tests when a rack ID is specified more times than available brokers",
@@ -270,10 +280,12 @@ func TestTopicDefinition_ValidateWithMetadata(t *testing.T) {
 				Spec: TopicSpecDefinition{
 					Partitions:        3,
 					ReplicationFactor: 3,
-					RackAssignments: PartitionRackAssignments{
-						{"zone-a", "zone-b", "zone-a"},
-						{"zone-b", "zone-c", "zone-b"},
-						{"zone-c", "zone-c", "zone-c"},
+					ManagedAssignments: &ManagedAssignmentsDefinition{
+						RackConstraints: PartitionRacks{
+							{"zone-a", "zone-b", "zone-a"},
+							{"zone-b", "zone-c", "zone-b"},
+							{"zone-c", "zone-c", "zone-c"},
+						},
 					},
 				},
 			},

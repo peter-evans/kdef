@@ -220,8 +220,8 @@ func (a *applier) updateApplyResult() error {
 		if !a.localDef.Spec.HasAssignments() {
 			remoteCopy.Spec.Assignments = nil
 		}
-		if !a.localDef.Spec.HasRackAssignments() {
-			remoteCopy.Spec.RackAssignments = nil
+		if !a.localDef.Spec.HasManagedAssignments() || a.localDef.Spec.HasManagedAssignments() && !a.localDef.Spec.ManagedAssignments.HasRackConstraints() {
+			remoteCopy.Spec.ManagedAssignments = nil
 		}
 
 		// The only configs we want to see are those specified in local and those in configOps.
@@ -294,16 +294,16 @@ func (a *applier) executeOps(ctx context.Context) error {
 
 // buildCreateOp builds a create operation.
 func (a *applier) buildCreateOp() {
-	if a.localDef.Spec.HasRackAssignments() {
+	if a.localDef.Spec.HasManagedAssignments() && a.localDef.Spec.ManagedAssignments.HasRackConstraints() {
 		// Make an empty set of assignments.
-		newAssignments := make(def.PartitionAssignments, len(a.localDef.Spec.RackAssignments))
+		newAssignments := make(def.PartitionAssignments, len(a.localDef.Spec.ManagedAssignments.RackConstraints))
 		for i := range newAssignments {
-			newAssignments[i] = make([]int32, len(a.localDef.Spec.RackAssignments[0]))
+			newAssignments[i] = make([]int32, len(a.localDef.Spec.ManagedAssignments.RackConstraints[0]))
 		}
 		// Populate local assignments from defined rack assignments.
 		a.ops.createAssignments = assignments.SyncRackAssignments(
 			newAssignments,
-			a.localDef.Spec.RackAssignments,
+			a.localDef.Spec.ManagedAssignments.RackConstraints,
 			a.brokers.BrokersByRack(),
 		)
 	} else {
@@ -419,7 +419,7 @@ func (a *applier) buildAssignmentsOp() {
 			log.Debugf("Partition assignments have changed and will be updated")
 			a.ops.assignments = a.localDef.Spec.Assignments
 		}
-	case a.localDef.Spec.HasRackAssignments():
+	case a.localDef.Spec.HasManagedAssignments() && a.localDef.Spec.ManagedAssignments.HasRackConstraints():
 		var newAssignments def.PartitionAssignments
 		newAssignments = assignments.Copy(a.remoteDef.Spec.Assignments)
 		if len(a.ops.partitions) > 0 {
@@ -427,7 +427,7 @@ func (a *applier) buildAssignmentsOp() {
 		}
 		newAssignments = assignments.SyncRackAssignments(
 			newAssignments,
-			a.localDef.Spec.RackAssignments,
+			a.localDef.Spec.ManagedAssignments.RackConstraints,
 			a.brokers.BrokersByRack(),
 		)
 		if !cmp.Equal(a.remoteDef.Spec.Assignments, newAssignments) {
