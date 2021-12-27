@@ -127,10 +127,10 @@ func increaseReplicationFactor(
 func AddPartitions(
 	assignments [][]int32,
 	targetPartitions int,
+	targetRepFactor int,
 	brokers []int32,
 ) [][]int32 {
 	partitionsToAdd := targetPartitions - len(assignments)
-	targetRepFactor := len(assignments[0])
 	leaderCounts := leaderCounts(assignments)
 	replicaCounts := replicaCounts(assignments)
 
