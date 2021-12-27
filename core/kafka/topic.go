@@ -77,21 +77,16 @@ func createTopic(
 	reqT.Topic = topicDef.Metadata.Name
 	reqT.Configs = configs
 
-	if len(assignments) > 0 {
-		var assignment []kmsg.CreateTopicsRequestTopicReplicaAssignment
-		for i, replicas := range assignments {
-			assignment = append(assignment, kmsg.CreateTopicsRequestTopicReplicaAssignment{
-				Partition: int32(i),
-				Replicas:  replicas,
-			})
+	assignment := make([]kmsg.CreateTopicsRequestTopicReplicaAssignment, len(assignments))
+	for i, replicas := range assignments {
+		assignment[i] = kmsg.CreateTopicsRequestTopicReplicaAssignment{
+			Partition: int32(i),
+			Replicas:  replicas,
 		}
-		reqT.ReplicaAssignment = assignment
-		reqT.ReplicationFactor = -1
-		reqT.NumPartitions = -1
-	} else {
-		reqT.ReplicationFactor = int16(topicDef.Spec.ReplicationFactor)
-		reqT.NumPartitions = int32(topicDef.Spec.Partitions)
 	}
+	reqT.ReplicaAssignment = assignment
+	reqT.ReplicationFactor = -1
+	reqT.NumPartitions = -1
 
 	req := kmsg.NewCreateTopicsRequest()
 	req.Topics = append(req.Topics, reqT)

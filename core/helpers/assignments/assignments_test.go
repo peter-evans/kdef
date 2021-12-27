@@ -192,6 +192,7 @@ func TestAddPartitions(t *testing.T) {
 	type args struct {
 		assignments      [][]int32
 		targetPartitions int
+		targetRepFactor  int
 		brokers          []int32
 	}
 	tests := []struct {
@@ -207,6 +208,7 @@ func TestAddPartitions(t *testing.T) {
 					{2, 3, 1},
 				},
 				targetPartitions: 3,
+				targetRepFactor:  3,
 				brokers:          []int32{1, 2, 3},
 			},
 			want: [][]int32{
@@ -222,6 +224,21 @@ func TestAddPartitions(t *testing.T) {
 					{3, 1, 2},
 				},
 				targetPartitions: 6,
+				targetRepFactor:  3,
+				brokers:          []int32{1, 2, 3},
+			},
+			want: [][]int32{
+				{1, 2, 3},
+				{2, 3, 1},
+				{3, 1, 2},
+			},
+		},
+		{
+			name: "Tests adding partitions with no existing assignments",
+			args: args{
+				assignments:      [][]int32{},
+				targetPartitions: 3,
+				targetRepFactor:  3,
 				brokers:          []int32{1, 2, 3},
 			},
 			want: [][]int32{
@@ -239,6 +256,7 @@ func TestAddPartitions(t *testing.T) {
 					{3, 1, 2},
 				},
 				targetPartitions: 6,
+				targetRepFactor:  3,
 				brokers:          []int32{1, 2, 3, 4},
 			},
 			want: [][]int32{
@@ -256,6 +274,7 @@ func TestAddPartitions(t *testing.T) {
 					{2, 3, 1},
 				},
 				targetPartitions: 5,
+				targetRepFactor:  3,
 				brokers:          []int32{1, 2, 3},
 			},
 			want: [][]int32{
@@ -274,6 +293,7 @@ func TestAddPartitions(t *testing.T) {
 					{2, 1},
 				},
 				targetPartitions: 7,
+				targetRepFactor:  2,
 				brokers:          []int32{1, 2, 3},
 			},
 			want: [][]int32{
@@ -284,7 +304,12 @@ func TestAddPartitions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := AddPartitions(tt.args.assignments, tt.args.targetPartitions, tt.args.brokers); !reflect.DeepEqual(got, tt.want) {
+			if got := AddPartitions(
+				tt.args.assignments,
+				tt.args.targetPartitions,
+				tt.args.targetRepFactor,
+				tt.args.brokers,
+			); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("AddPartitions() = %v, want %v", got, tt.want)
 			}
 		})

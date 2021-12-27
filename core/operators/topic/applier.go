@@ -294,7 +294,10 @@ func (a *applier) executeOps(ctx context.Context) error {
 
 // buildCreateOp builds a create operation.
 func (a *applier) buildCreateOp() {
-	if a.localDef.Spec.HasManagedAssignments() && a.localDef.Spec.ManagedAssignments.HasRackConstraints() {
+	switch {
+	case a.localDef.Spec.HasAssignments():
+		a.ops.createAssignments = a.localDef.Spec.Assignments
+	case a.localDef.Spec.HasManagedAssignments() && a.localDef.Spec.ManagedAssignments.HasRackConstraints():
 		// Make an empty set of assignments.
 		newAssignments := make(def.PartitionAssignments, len(a.localDef.Spec.ManagedAssignments.RackConstraints))
 		for i := range newAssignments {
@@ -306,8 +309,13 @@ func (a *applier) buildCreateOp() {
 			a.localDef.Spec.ManagedAssignments.RackConstraints,
 			a.brokers.BrokersByRack(),
 		)
-	} else {
-		a.ops.createAssignments = a.localDef.Spec.Assignments
+	default:
+		a.ops.createAssignments = assignments.AddPartitions(
+			[][]int32{},
+			a.localDef.Spec.Partitions,
+			a.localDef.Spec.ReplicationFactor,
+			a.brokers.IDs(),
+		)
 	}
 }
 
@@ -382,9 +390,11 @@ func (a *applier) buildPartitionsOp() error {
 		)
 		// It's not necessary to cater specifically for rack assignments here because any miss-placements
 		// will be reassigned and migrate to the correct broker very quickly in the cluster.
+		targetRepFactor := len(a.remoteDef.Spec.Assignments[0])
 		a.ops.partitions = assignments.AddPartitions(
 			a.remoteDef.Spec.Assignments,
 			a.localDef.Spec.Partitions,
+			targetRepFactor,
 			a.brokers.IDs(),
 		)
 	}
