@@ -71,25 +71,41 @@ A definition representing a Kafka topic.
         - [3, 1]
         ```
 
-- **rackAssignments** ([][]string)
+- **managedAssignments** ([ManagedAssignments](#managedassignments))
 
-    Partition replica assignments by rack ID.
-    The number of rack assignments must match `partitions`, and the number of replicas in each rack assignment must match `replicationFactor`.
+    Configuration for kdef-managed partition assignments.
 
-    kdef will create evenly distributed replica assignments constrained by the assigned racks.
+    Cannot be specified at the same time as `assignments`.
+
+## ManagedAssignments
+
+- **rackConstraints** ([][]string)
+
+    Rack ID constraints for partition replica assignment.
+    The number of rack constraints must match `partitions`, and the number of replicas in a partition's rack constraints must match `replicationFactor`.
+
+    kdef will create evenly distributed replica assignments constrained by the specified racks.
     Partition leaders (the first replica in the assignment) will be assigned based on the broker frequency of partition leaders in the topic, breaking ties with round-robin broker ID.
     Non-leader replicas will be assigned based on broker frequency in the topic, breaking ties with round-robin broker ID.
 
-    If `assignments` and `rackAssignments` are specified at the same time `assignments` takes precedence.
-    `rackAssignments` will be validated but subsequently ignored.
+    If `assignments` and `rackConstraints` are specified at the same time `assignments` takes precedence.
+    `rackConstraints` will be validated but subsequently ignored.
 
     !!! example
-        Rack assignments for 3 partitions with a replication factor of 2.
+        Rack constraints for 3 partitions with a replication factor of 2.
         ```yml
-        rackAssignments:
-        - ["zone-a", "zone-b"]
-        - ["zone-b", "zone-c"]
-        - ["zone-c", "zone-a"]
+        rackConstraints:
+          - ["zone-a", "zone-b"]
+          - ["zone-b", "zone-c"]
+          - ["zone-c", "zone-a"]
+        ```
+
+        Rack constraints for 3 partitions with a replication factor of 3, ensuring each partition's leader and follower replicas are all in the same rack.
+        ```yml
+        rackConstraints:
+          - ["zone-a", "zone-a", "zone-a"]
+          - ["zone-b", "zone-b", "zone-b"]
+          - ["zone-c", "zone-c", "zone-c"]
         ```
 
 ## Examples
