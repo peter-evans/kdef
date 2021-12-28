@@ -3,6 +3,7 @@ package def
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gotidy/copy"
 	"github.com/peter-evans/kdef/cli/log"
@@ -10,6 +11,10 @@ import (
 	"github.com/peter-evans/kdef/core/util/i32"
 	"github.com/peter-evans/kdef/core/util/str"
 )
+
+var selectionMethods = []string{
+	"topic-use",
+}
 
 // PartitionAssignments represents partition assignments by broker ID.
 type PartitionAssignments [][]int32
@@ -19,6 +24,7 @@ type PartitionRacks [][]string
 
 // ManagedAssignmentsDefinition represents a managed assignments definition.
 type ManagedAssignmentsDefinition struct {
+	Selection       string         `json:"selection"`
 	RackConstraints PartitionRacks `json:"rackConstraints,omitempty"`
 }
 
@@ -63,7 +69,7 @@ func (t TopicDefinition) Copy() TopicDefinition {
 }
 
 // Validate validates the definition.
-func (t TopicDefinition) Validate() error {
+func (t *TopicDefinition) Validate() error {
 	if err := t.ValidateResource(); err != nil {
 		return err
 	}
@@ -77,7 +83,22 @@ func (t TopicDefinition) Validate() error {
 	}
 
 	if t.Spec.HasAssignments() && t.Spec.HasManagedAssignments() {
-		log.Warnf("managed assignments properties will be validated but subsequently ignored because supplied assignments take precedence")
+		return fmt.Errorf("assignments and managed assignments cannot be specified together")
+	}
+
+	if !t.Spec.HasAssignments() {
+		// Set managed assignments defaults
+		// TODO: refactor defaults out to before calling Validate
+		// Remove pointer on this method "*TopicDefinition"
+		if t.Spec.HasManagedAssignments() {
+			if len(t.Spec.ManagedAssignments.Selection) == 0 {
+				t.Spec.ManagedAssignments.Selection = "topic-use"
+			}
+		} else {
+			t.Spec.ManagedAssignments = &ManagedAssignmentsDefinition{
+				Selection: "topic-use",
+			}
+		}
 	}
 
 	if t.Spec.HasAssignments() {
@@ -96,19 +117,25 @@ func (t TopicDefinition) Validate() error {
 		}
 	}
 
-	if t.Spec.HasManagedAssignments() && t.Spec.ManagedAssignments.HasRackConstraints() {
-		if len(t.Spec.ManagedAssignments.RackConstraints) != t.Spec.Partitions {
-			return fmt.Errorf("number of rack constraints must match partitions")
+	if t.Spec.HasManagedAssignments() {
+		if !str.Contains(t.Spec.ManagedAssignments.Selection, selectionMethods) {
+			return fmt.Errorf("selection must be one of %q", strings.Join(selectionMethods, "|"))
 		}
 
-		for _, replicas := range t.Spec.ManagedAssignments.RackConstraints {
-			if len(replicas) != t.Spec.ReplicationFactor {
-				return fmt.Errorf("number of replicas in a partition's rack constraints must match replication factor")
+		if t.Spec.ManagedAssignments.HasRackConstraints() {
+			if len(t.Spec.ManagedAssignments.RackConstraints) != t.Spec.Partitions {
+				return fmt.Errorf("number of rack constraints must match partitions")
 			}
 
-			for _, rackID := range replicas {
-				if len(rackID) == 0 {
-					return fmt.Errorf("rack ids cannot be an empty string")
+			for _, replicas := range t.Spec.ManagedAssignments.RackConstraints {
+				if len(replicas) != t.Spec.ReplicationFactor {
+					return fmt.Errorf("number of replicas in a partition's rack constraints must match replication factor")
+				}
+
+				for _, rackID := range replicas {
+					if len(rackID) == 0 {
+						return fmt.Errorf("rack ids cannot be an empty string")
+					}
 				}
 			}
 		}
@@ -206,6 +233,7 @@ func NewTopicDefinition(
 	}
 	if includeRackConstraints {
 		topicDef.Spec.ManagedAssignments = &ManagedAssignmentsDefinition{
+			Selection:       "topic-use",
 			RackConstraints: rackConstraints,
 		}
 	}

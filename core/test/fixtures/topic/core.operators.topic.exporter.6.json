@@ -38,6 +38,7 @@
         "partitions": 3,
         "replicationFactor": 1,
         "managedAssignments": {
+          "selection": "topic-use",
           "rackConstraints": [["zone-a"], ["zone-a"], ["zone-a"]]
         }
       }
