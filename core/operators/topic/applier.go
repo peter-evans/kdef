@@ -65,11 +65,12 @@ type applier struct {
 	opts   ApplierOptions
 
 	// Internal fields.
-	localDef      def.TopicDefinition
-	remoteDef     *def.TopicDefinition
-	remoteConfigs def.Configs
-	brokers       meta.Brokers
-	ops           applierOps
+	localDef             def.TopicDefinition
+	remoteDef            *def.TopicDefinition
+	remoteConfigs        def.Configs
+	brokers              meta.Brokers
+	clusterReplicaCounts map[int32]int
+	ops                  applierOps
 
 	// Result fields.
 	res           res.ApplyResult
@@ -180,6 +181,21 @@ func (a *applier) tryFetchRemote(ctx context.Context) error {
 	a.remoteDef, a.remoteConfigs, a.brokers, err = a.srv.TryRequestTopic(ctx, a.localDef.Metadata)
 	if err != nil {
 		return err
+	}
+
+	if a.localDef.Spec.HasManagedAssignments() && a.localDef.Spec.ManagedAssignments.Selection == "cluster-topic-use" {
+		metadata, err := a.srv.DescribeMetadata(ctx, nil, true)
+		if err != nil {
+			return err
+		}
+		a.clusterReplicaCounts = make(map[int32]int)
+		for _, t := range metadata.Topics {
+			for _, replicas := range t.PartitionAssignments {
+				for _, brokerID := range replicas {
+					a.clusterReplicaCounts[brokerID]++
+				}
+			}
+		}
 	}
 
 	a.ops.create = (a.remoteDef == nil)
