@@ -87,6 +87,20 @@ func TestTopicDefinition_Validate(t *testing.T) {
 			wantErr: "a replica assignment cannot contain duplicate brokers",
 		},
 		{
+			name: "Tests invalid selection",
+			topicDef: TopicDefinition{
+				ResourceDefinition: resDef,
+				Spec: TopicSpecDefinition{
+					Partitions:        3,
+					ReplicationFactor: 2,
+					ManagedAssignments: &ManagedAssignmentsDefinition{
+						Selection: "foo",
+					},
+				},
+			},
+			wantErr: "selection must be one of",
+		},
+		{
 			name: "Tests invalid number of rack constraints",
 			topicDef: TopicDefinition{
 				ResourceDefinition: resDef,
@@ -139,23 +153,7 @@ func TestTopicDefinition_Validate(t *testing.T) {
 			wantErr: "rack ids cannot be an empty string",
 		},
 		{
-			name: "Tests a valid TopicDefinition",
-			topicDef: TopicDefinition{
-				ResourceDefinition: resDef,
-				Spec: TopicSpecDefinition{
-					Partitions:        3,
-					ReplicationFactor: 2,
-					Assignments: PartitionAssignments{
-						{1, 2},
-						{2, 3},
-						{3, 1},
-					},
-				},
-			},
-			wantErr: "",
-		},
-		{
-			name: "Tests a valid TopicDefinition specifying assignments and rack constraints together",
+			name: "Tests specifying assignments and managed assignments together",
 			topicDef: TopicDefinition{
 				ResourceDefinition: resDef,
 				Spec: TopicSpecDefinition{
@@ -173,6 +171,33 @@ func TestTopicDefinition_Validate(t *testing.T) {
 							{"zone-c", "zone-a"},
 						},
 					},
+				},
+			},
+			wantErr: "assignments and managed assignments cannot be specified together",
+		},
+		{
+			name: "Tests a valid TopicDefinition",
+			topicDef: TopicDefinition{
+				ResourceDefinition: resDef,
+				Spec: TopicSpecDefinition{
+					Partitions:        3,
+					ReplicationFactor: 2,
+					Assignments: PartitionAssignments{
+						{1, 2},
+						{2, 3},
+						{3, 1},
+					},
+				},
+			},
+			wantErr: "",
+		},
+		{
+			name: "Tests a valid TopicDefinition with managed assignments default",
+			topicDef: TopicDefinition{
+				ResourceDefinition: resDef,
+				Spec: TopicSpecDefinition{
+					Partitions:        3,
+					ReplicationFactor: 2,
 				},
 			},
 			wantErr: "",

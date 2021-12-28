@@ -220,6 +220,7 @@ func (a *applier) updateApplyResult() error {
 		if !a.localDef.Spec.HasAssignments() {
 			remoteCopy.Spec.Assignments = nil
 		}
+		// TODO: refactor this
 		if !a.localDef.Spec.HasManagedAssignments() || a.localDef.Spec.HasManagedAssignments() && !a.localDef.Spec.ManagedAssignments.HasRackConstraints() {
 			remoteCopy.Spec.ManagedAssignments = nil
 		}
@@ -236,6 +237,7 @@ func (a *applier) updateApplyResult() error {
 		}
 
 		remoteCopy.Spec.DeleteUndefinedConfigs = a.localDef.Spec.DeleteUndefinedConfigs
+		remoteCopy.Spec.ManagedAssignments = a.localDef.Spec.ManagedAssignments
 	}
 
 	diff, err := jsondiff.Diff(remoteCopy, &a.localDef)
