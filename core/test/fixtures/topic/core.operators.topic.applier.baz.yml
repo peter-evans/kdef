@@ -10,6 +10,8 @@ spec:
     retention.ms: "172800000"
   partitions: 3
   replicationFactor: 1
+  managedAssignments:
+    selection: topic-use
   reassignment:
     awaitTimeoutSec: 30
 ---
@@ -24,6 +26,8 @@ spec:
     retention.ms: "172800000"
   partitions: 3
   replicationFactor: 2
+  managedAssignments:
+    selection: topic-use
   reassignment:
     awaitTimeoutSec: 30
 ---
@@ -38,6 +42,8 @@ spec:
     retention.ms: "172800000"
   partitions: 5
   replicationFactor: 2
+  managedAssignments:
+    selection: topic-use
   reassignment:
     awaitTimeoutSec: 30
 ---
@@ -52,6 +58,8 @@ spec:
     retention.ms: "172800000"
   partitions: 6
   replicationFactor: 3
+  managedAssignments:
+    selection: topic-use
   reassignment:
     awaitTimeoutSec: 30
 ---
@@ -66,5 +74,7 @@ spec:
     retention.ms: "172800000"
   partitions: 6
   replicationFactor: 2
+  managedAssignments:
+    selection: topic-use
   reassignment:
     awaitTimeoutSec: 30

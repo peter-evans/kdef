@@ -9,8 +9,9 @@ spec:
     retention.ms: "86400000"
   partitions: 4
   replicationFactor: 2
-  rackAssignments:
-    - ["zone-a", "zone-b"]
-    - ["zone-b", "zone-c"]
-    - ["zone-c", "zone-a"]
-    - ["zone-a", "zone-b"]
+  managedAssignments:
+    rackConstraints:
+      - ["zone-a", "zone-b"]
+      - ["zone-b", "zone-c"]
+      - ["zone-c", "zone-a"]
+      - ["zone-a", "zone-b"]

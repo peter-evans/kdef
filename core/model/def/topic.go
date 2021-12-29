@@ -12,8 +12,14 @@ import (
 	"github.com/peter-evans/kdef/core/util/str"
 )
 
+const (
+	SelectionTopicClusterUse = "topic-cluster-use"
+	SelectionTopicUse        = "topic-use"
+)
+
 var selectionMethods = []string{
-	"topic-use",
+	SelectionTopicClusterUse,
+	SelectionTopicUse,
 }
 
 // PartitionAssignments represents partition assignments by broker ID.
@@ -24,7 +30,7 @@ type PartitionRacks [][]string
 
 // ManagedAssignmentsDefinition represents a managed assignments definition.
 type ManagedAssignmentsDefinition struct {
-	Selection       string         `json:"selection"`
+	Selection       string         `json:"selection,omitempty"`
 	RackConstraints PartitionRacks `json:"rackConstraints,omitempty"`
 }
 
@@ -92,11 +98,11 @@ func (t *TopicDefinition) Validate() error {
 		// Remove pointer on this method "*TopicDefinition"
 		if t.Spec.HasManagedAssignments() {
 			if len(t.Spec.ManagedAssignments.Selection) == 0 {
-				t.Spec.ManagedAssignments.Selection = "topic-use"
+				t.Spec.ManagedAssignments.Selection = SelectionTopicClusterUse
 			}
 		} else {
 			t.Spec.ManagedAssignments = &ManagedAssignmentsDefinition{
-				Selection: "topic-use",
+				Selection: SelectionTopicClusterUse,
 			}
 		}
 	}
@@ -233,7 +239,6 @@ func NewTopicDefinition(
 	}
 	if includeRackConstraints {
 		topicDef.Spec.ManagedAssignments = &ManagedAssignmentsDefinition{
-			Selection:       "topic-use",
 			RackConstraints: rackConstraints,
 		}
 	}

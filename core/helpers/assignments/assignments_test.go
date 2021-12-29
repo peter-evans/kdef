@@ -10,6 +10,7 @@ func TestAlterReplicationFactor(t *testing.T) {
 	type args struct {
 		assignments             [][]int32
 		targetReplicationFactor int
+		clusterReplicaCounts    map[int32]int
 		brokers                 []int32
 	}
 	tests := []struct {
@@ -107,6 +108,28 @@ func TestAlterReplicationFactor(t *testing.T) {
 			},
 		},
 		{
+			name: "Tests decreasing the replication factor when there are cluster replica counts",
+			args: args{
+				assignments: [][]int32{
+					{1, 2, 3},
+					{2, 3, 1},
+					{3, 1, 2},
+				},
+				targetReplicationFactor: 2,
+				clusterReplicaCounts: map[int32]int{
+					1: 0,
+					2: 1,
+					3: 0,
+				},
+				brokers: []int32{1, 2, 3},
+			},
+			want: [][]int32{
+				{1, 3},
+				{2, 3},
+				{1, 2},
+			},
+		},
+		{
 			name: "Tests increasing the replication factor by 1",
 			args: args{
 				assignments: [][]int32{
@@ -174,12 +197,35 @@ func TestAlterReplicationFactor(t *testing.T) {
 				{3, 1, 2, 4},
 			},
 		},
+		{
+			name: "Tests increasing the replication factor when there are cluster replica counts",
+			args: args{
+				assignments: [][]int32{
+					{1},
+					{2},
+					{3},
+				},
+				targetReplicationFactor: 2,
+				clusterReplicaCounts: map[int32]int{
+					1: 0,
+					2: 1,
+					3: 0,
+				},
+				brokers: []int32{1, 2, 3},
+			},
+			want: [][]int32{
+				{1, 3},
+				{2, 1},
+				{3, 2},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := AlterReplicationFactor(
 				tt.args.assignments,
 				tt.args.targetReplicationFactor,
+				tt.args.clusterReplicaCounts,
 				tt.args.brokers,
 			); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("AlterReplicationFactor() = %v, want %v", got, tt.want)
@@ -190,10 +236,11 @@ func TestAlterReplicationFactor(t *testing.T) {
 
 func TestAddPartitions(t *testing.T) {
 	type args struct {
-		assignments      [][]int32
-		targetPartitions int
-		targetRepFactor  int
-		brokers          []int32
+		assignments          [][]int32
+		targetPartitions     int
+		targetRepFactor      int
+		clusterReplicaCounts map[int32]int
+		brokers              []int32
 	}
 	tests := []struct {
 		name string
@@ -301,6 +348,25 @@ func TestAddPartitions(t *testing.T) {
 				{3, 1},
 			},
 		},
+		{
+			name: "Tests adding a partition when there are cluster replica counts",
+			args: args{
+				assignments: [][]int32{
+					{1, 2, 3},
+				},
+				targetPartitions: 2,
+				targetRepFactor:  3,
+				clusterReplicaCounts: map[int32]int{
+					1: 0,
+					2: 1,
+					3: 0,
+				},
+				brokers: []int32{1, 2, 3},
+			},
+			want: [][]int32{
+				{3, 1, 2},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -308,6 +374,7 @@ func TestAddPartitions(t *testing.T) {
 				tt.args.assignments,
 				tt.args.targetPartitions,
 				tt.args.targetRepFactor,
+				tt.args.clusterReplicaCounts,
 				tt.args.brokers,
 			); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("AddPartitions() = %v, want %v", got, tt.want)
@@ -318,9 +385,10 @@ func TestAddPartitions(t *testing.T) {
 
 func TestSyncRackAssignments(t *testing.T) {
 	type args struct {
-		assignments     [][]int32
-		rackAssignments [][]string
-		brokersByRack   map[string][]int32
+		assignments          [][]int32
+		rackConstraints      [][]string
+		brokersByRack        map[string][]int32
+		clusterReplicaCounts map[int32]int
 	}
 	tests := []struct {
 		name string
@@ -328,14 +396,14 @@ func TestSyncRackAssignments(t *testing.T) {
 		want [][]int32
 	}{
 		{
-			name: "Tests in-sync rack assignments",
+			name: "Tests in-sync rack constraints",
 			args: args{
 				assignments: [][]int32{
 					{1, 2, 4},
 					{2, 3, 5},
 					{3, 1, 6},
 				},
-				rackAssignments: [][]string{
+				rackConstraints: [][]string{
 					{"zone-a", "zone-b", "zone-a"},
 					{"zone-b", "zone-c", "zone-b"},
 					{"zone-c", "zone-a", "zone-c"},
@@ -360,7 +428,7 @@ func TestSyncRackAssignments(t *testing.T) {
 					{2, 4, 5},
 					{3, 1, 6},
 				},
-				rackAssignments: [][]string{
+				rackConstraints: [][]string{
 					{"zone-a", "zone-b", "zone-a"},
 					{"zone-b", "zone-c", "zone-b"},
 					{"zone-c", "zone-a", "zone-c"},
@@ -385,7 +453,7 @@ func TestSyncRackAssignments(t *testing.T) {
 					{2, 3, 5},
 					{4, 1, 6},
 				},
-				rackAssignments: [][]string{
+				rackConstraints: [][]string{
 					{"zone-a", "zone-b", "zone-a"},
 					{"zone-b", "zone-c", "zone-b"},
 					{"zone-c", "zone-a", "zone-c"},
@@ -410,7 +478,7 @@ func TestSyncRackAssignments(t *testing.T) {
 					{2, 4, 1},
 					{3, 1, 5},
 				},
-				rackAssignments: [][]string{
+				rackConstraints: [][]string{
 					{"zone-a", "zone-b", "zone-a"},
 					{"zone-b", "zone-c", "zone-b"},
 					{"zone-c", "zone-a", "zone-c"},
@@ -435,7 +503,7 @@ func TestSyncRackAssignments(t *testing.T) {
 					{3, 1},
 					{4, 5},
 				},
-				rackAssignments: [][]string{
+				rackConstraints: [][]string{
 					{"zone-a", "zone-b"},
 					{"zone-b", "zone-c"},
 					{"zone-c", "zone-a"},
@@ -460,7 +528,7 @@ func TestSyncRackAssignments(t *testing.T) {
 					{2, 3, 5},
 					{3, 1, 6},
 				},
-				rackAssignments: [][]string{
+				rackConstraints: [][]string{
 					{"zone-a", "zone-b"},
 					{"zone-b", "zone-c"},
 					{"zone-c", "zone-a"},
@@ -485,7 +553,7 @@ func TestSyncRackAssignments(t *testing.T) {
 					{2, 3},
 					{3, 1},
 				},
-				rackAssignments: [][]string{
+				rackConstraints: [][]string{
 					{"zone-a", "zone-b", "zone-a", "zone-c"},
 					{"zone-b", "zone-c", "zone-b", "zone-a"},
 					{"zone-c", "zone-a", "zone-c", "zone-b"},
@@ -510,7 +578,7 @@ func TestSyncRackAssignments(t *testing.T) {
 					{2, 3},
 					{2, 1},
 				},
-				rackAssignments: [][]string{
+				rackConstraints: [][]string{
 					{"zone-a", "zone-b", "zone-a", "zone-c"},
 					{"zone-b", "zone-c", "zone-b", "zone-a"},
 					{"zone-c", "zone-a", "zone-c", "zone-b"},
@@ -528,6 +596,38 @@ func TestSyncRackAssignments(t *testing.T) {
 			},
 		},
 		{
+			name: "Tests increasing the replication factor when there are cluster replica counts",
+			args: args{
+				assignments: [][]int32{
+					{1, 4},
+					{2, 5},
+					{3, 6},
+				},
+				rackConstraints: [][]string{
+					{"zone-a", "zone-b", "zone-a"},
+					{"zone-a", "zone-b", "zone-a"},
+					{"zone-a", "zone-b", "zone-a"},
+				},
+				brokersByRack: map[string][]int32{
+					"zone-a": {1, 2, 3},
+					"zone-b": {4, 5, 6},
+				},
+				clusterReplicaCounts: map[int32]int{
+					1: 1,
+					2: 0,
+					3: 0,
+					4: 0,
+					5: 0,
+					6: 0,
+				},
+			},
+			want: [][]int32{
+				{1, 4, 2},
+				{2, 5, 3},
+				{3, 6, 1},
+			},
+		},
+		{
 			name: "Tests populating empty assignments",
 			args: args{
 				assignments: [][]int32{
@@ -535,7 +635,7 @@ func TestSyncRackAssignments(t *testing.T) {
 					make([]int32, 3),
 					make([]int32, 3),
 				},
-				rackAssignments: [][]string{
+				rackConstraints: [][]string{
 					{"zone-a", "zone-b", "zone-a"},
 					{"zone-b", "zone-c", "zone-b"},
 					{"zone-c", "zone-a", "zone-c"},
@@ -555,7 +655,12 @@ func TestSyncRackAssignments(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := SyncRackAssignments(tt.args.assignments, tt.args.rackAssignments, tt.args.brokersByRack); !reflect.DeepEqual(got, tt.want) {
+			if got := SyncRackConstraints(
+				tt.args.assignments,
+				tt.args.rackConstraints,
+				tt.args.brokersByRack,
+				tt.args.clusterReplicaCounts,
+			); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("SyncRackAssignments() = %v, want %v", got, tt.want)
 			}
 		})

@@ -11,6 +11,7 @@ import (
 func AlterReplicationFactor(
 	assignments [][]int32,
 	targetRepFactor int,
+	clusterReplicaCounts map[int32]int,
 	brokers []int32,
 ) [][]int32 {
 	currentRepFactor := len(assignments[0])
@@ -19,9 +20,21 @@ func AlterReplicationFactor(
 
 	switch {
 	case targetRepFactor < currentRepFactor:
-		return decreaseReplicationFactor(assignments, targetRepFactor, replicaCounts)
+		return decreaseReplicationFactor(
+			assignments,
+			targetRepFactor,
+			replicaCounts,
+			clusterReplicaCounts,
+		)
 	case targetRepFactor > currentRepFactor:
-		return increaseReplicationFactor(assignments, targetRepFactor, leaderCounts, replicaCounts, brokers)
+		return increaseReplicationFactor(
+			assignments,
+			targetRepFactor,
+			leaderCounts,
+			replicaCounts,
+			clusterReplicaCounts,
+			brokers,
+		)
 	default:
 		return assignments
 	}
@@ -31,24 +44,42 @@ func decreaseReplicationFactor(
 	assignments [][]int32,
 	targetRepFactor int,
 	replicaCounts map[int32]int,
+	clusterReplicaCounts map[int32]int,
 ) [][]int32 {
 	// Find the broker with the most replicas of any partition.
-	mostPopulousBroker := func(replicas []int32, brokerCounts map[int32]int) int32 {
+	selectBrokerToRemove := func(
+		replicas []int32,
+		brokerCounts map[int32]int,
+		clusterReplicaCounts map[int32]int,
+	) int32 {
 		// Create a copy to prevent the original slice being sorted.
 		sortedBrokers := append([]int32{}, replicas...)
-		sort.Slice(sortedBrokers, func(i, j int) bool {
-			// Sort by increasing broker count, and then by index.
-			return brokerCounts[sortedBrokers[i]] < brokerCounts[sortedBrokers[j]] ||
-				(brokerCounts[sortedBrokers[i]] == brokerCounts[sortedBrokers[j]] && i < j)
-		})
+		if clusterReplicaCounts != nil {
+			// Sort based on broker frequency in the topic, break ties with broker frequency
+			// in the cluster, and finally break ties with index.
+			sort.Slice(sortedBrokers, func(i, j int) bool {
+				return brokerCounts[sortedBrokers[i]] < brokerCounts[sortedBrokers[j]] ||
+					(brokerCounts[sortedBrokers[i]] == brokerCounts[sortedBrokers[j]] &&
+						clusterReplicaCounts[sortedBrokers[i]] < clusterReplicaCounts[sortedBrokers[j]]) ||
+					(brokerCounts[sortedBrokers[i]] == brokerCounts[sortedBrokers[j]] &&
+						clusterReplicaCounts[sortedBrokers[i]] == clusterReplicaCounts[sortedBrokers[j]] && i < j)
+			})
+		} else {
+			// Sort based on broker frequency in the topic, breaking ties with index.
+			sort.Slice(sortedBrokers, func(i, j int) bool {
+				// Sort by increasing broker count, and then by index.
+				return brokerCounts[sortedBrokers[i]] < brokerCounts[sortedBrokers[j]] ||
+					(brokerCounts[sortedBrokers[i]] == brokerCounts[sortedBrokers[j]] && i < j)
+			})
+		}
 		return sortedBrokers[len(sortedBrokers)-1]
 	}
 
 	newAssignments := Copy(assignments)
 	for len(newAssignments[0]) > targetRepFactor {
 		for i, replicas := range newAssignments {
-			// Find the broker ID to remove.
-			brokerIDToRemove := mostPopulousBroker(replicas, replicaCounts)
+			// Select the broker ID to remove.
+			brokerIDToRemove := selectBrokerToRemove(replicas, replicaCounts, clusterReplicaCounts)
 
 			// Create the modified replica set of broker IDs.
 			modifiedReplicas := make([]int32, len(replicas)-1)
@@ -63,6 +94,9 @@ func decreaseReplicationFactor(
 
 			newAssignments[i] = modifiedReplicas
 			replicaCounts[brokerIDToRemove]--
+			if clusterReplicaCounts != nil {
+				clusterReplicaCounts[brokerIDToRemove]--
+			}
 		}
 	}
 
@@ -74,6 +108,7 @@ func increaseReplicationFactor(
 	targetRepFactor int,
 	leaderCounts map[int32]int,
 	replicaCounts map[int32]int,
+	clusterReplicaCounts map[int32]int,
 	brokers []int32,
 ) [][]int32 {
 	newAssignments := Copy(assignments)
@@ -104,8 +139,8 @@ func increaseReplicationFactor(
 				brokerCounts = leaderCounts
 			}
 
-			// Find the broker ID to add.
-			brokerIDToAdd := leastPopulousBroker(unusedBrokers, brokerCounts, lastUsedBroker)
+			// Select the broker ID to add.
+			brokerIDToAdd := selectBroker(unusedBrokers, brokerCounts, clusterReplicaCounts, lastUsedBroker)
 
 			// Create the modified replica set of broker IDs.
 			modifiedReplicas := make([]int32, len(replicas)+1)
@@ -116,6 +151,9 @@ func increaseReplicationFactor(
 			replicaCounts[brokerIDToAdd]++
 			if isLeader {
 				leaderCounts[brokerIDToAdd]++
+			}
+			if clusterReplicaCounts != nil {
+				clusterReplicaCounts[brokerIDToAdd]++
 			}
 		}
 	}
@@ -128,6 +166,7 @@ func AddPartitions(
 	assignments [][]int32,
 	targetPartitions int,
 	targetRepFactor int,
+	clusterReplicaCounts map[int32]int,
 	brokers []int32,
 ) [][]int32 {
 	partitionsToAdd := targetPartitions - len(assignments)
@@ -140,20 +179,22 @@ func AddPartitions(
 		targetRepFactor,
 		leaderCounts,
 		replicaCounts,
+		clusterReplicaCounts,
 		brokers,
 	)
 
 	return newPartitionAssignments
 }
 
-// SyncRackAssignments checks partition assignments are in sync with rack assignments, updating if necessary.
-func SyncRackAssignments(
+// SyncRackConstraints checks partition assignments are in sync with rack constraints, updating if necessary.
+func SyncRackConstraints(
 	assignments [][]int32,
-	rackAssignments [][]string,
+	rackConstraints [][]string,
 	brokersByRack map[string][]int32,
+	clusterReplicaCounts map[int32]int,
 ) [][]int32 {
 	// Modify assignments by the target replication factor.
-	targetRepFactor := len(rackAssignments[0])
+	targetRepFactor := len(rackConstraints[0])
 	newAssignments := make([][]int32, len(assignments))
 	for i, replicas := range assignments {
 		newReplicas := make([]int32, targetRepFactor)
@@ -167,12 +208,12 @@ func SyncRackAssignments(
 	// Loop through the assignments and update replicas that are out of sync with the assigned rack.
 	for replica := 0; replica < len(newAssignments[0]); replica++ {
 		for partition, replicas := range newAssignments {
-			rack := rackAssignments[partition][replica]
+			rack := rackConstraints[partition][replica]
 
 			// Build a list of used brokers for this rack on this partition.
 			var usedRackBrokers []int32
 			for r, b := range replicas {
-				if rackAssignments[partition][r] == rack && i32.Contains(b, brokersByRack[rack]) {
+				if rackConstraints[partition][r] == rack && i32.Contains(b, brokersByRack[rack]) {
 					usedRackBrokers = append(usedRackBrokers, b)
 				}
 			}
@@ -183,7 +224,7 @@ func SyncRackAssignments(
 				// Find unused broker IDs for this rack.
 				unusedRackBrokers := i32.Diff(brokersByRack[rack], usedRackBrokers)
 
-				// Last used broker is not used for rack assignments.
+				// Last used broker is not used for rack constraints.
 				var lastUsedBroker int32
 
 				// If the chosen broker will be the preferred leader we use leader counts to make sure
@@ -193,8 +234,8 @@ func SyncRackAssignments(
 					brokerCounts = leaderCounts
 				}
 
-				// Find the broker ID to add.
-				brokerIDToAdd := leastPopulousBroker(unusedRackBrokers, brokerCounts, lastUsedBroker)
+				// Select the broker ID to add.
+				brokerIDToAdd := selectBroker(unusedRackBrokers, brokerCounts, clusterReplicaCounts, lastUsedBroker)
 
 				// Replace the broker.
 				newAssignments[partition][replica] = brokerIDToAdd
@@ -203,6 +244,9 @@ func SyncRackAssignments(
 			replicaCounts[newAssignments[partition][replica]]++
 			if isLeader {
 				leaderCounts[newAssignments[partition][replica]]++
+			}
+			if clusterReplicaCounts != nil {
+				clusterReplicaCounts[newAssignments[partition][replica]]++
 			}
 		}
 	}
@@ -237,34 +281,60 @@ func leaderCounts(assignments [][]int32) map[int32]int {
 	return leaderCounts
 }
 
-func leastPopulousBroker(unusedBrokers []int32, brokerCounts map[int32]int, lastUsedBroker int32) int32 {
+func selectBroker(
+	unusedBrokers []int32,
+	brokerCounts map[int32]int,
+	clusterReplicaCounts map[int32]int,
+	lastUsedBroker int32,
+) int32 {
+	if clusterReplicaCounts != nil {
+		return selectByTopicClusterUse(unusedBrokers, brokerCounts, clusterReplicaCounts, lastUsedBroker)
+	}
+	return selectByTopicUse(unusedBrokers, brokerCounts, lastUsedBroker)
+}
+
+func selectByTopicUse(unusedBrokers []int32, brokerCounts map[int32]int, lastUsedBroker int32) int32 {
 	sort.Slice(unusedBrokers, func(i, j int) bool {
 		/*
 			Sort based on broker frequency in the topic, breaking ties with round-robin broker ID.
 
-			To demonstrate why this sort is somewhat complicated, in this example we want the next broker ID to be 2...
-			{1, ?},
-			{2,  },
-			{3,  },
-			...but in the very next placement cycle we want the next broker ID to be 3, not 1.
-			{1, 2},
-			{2, ?},
-			{3,  },
-
-			Sort:
-			  Broker i has less replicas than j
-			  OR Broker i has the same number of replicas as j
-			    AND broker ID i and j are both greater than the last used broker for this partition
-			    AND broker ID i is less than j
-			  OR Broker i has the same number of replicas as j
-			    AND either broker ID i or j are less than the last used broker for this partition
-			    AND the difference between broker ID i and the last used broker is greater than that of j
+			Broker i has less replicas than j
+			OR Broker i has the same number of replicas as j
+			  AND broker ID i and j are both greater than the last used broker for this partition
+			  AND broker ID i is less than j
+			OR Broker i has the same number of replicas as j
+			  AND either broker ID i or j are less than the last used broker for this partition
+			  AND the difference between broker ID i and the last used broker is greater than that of j
 		*/
 		return brokerCounts[unusedBrokers[i]] < brokerCounts[unusedBrokers[j]] ||
 			(brokerCounts[unusedBrokers[i]] == brokerCounts[unusedBrokers[j]] &&
 				unusedBrokers[i] > lastUsedBroker && unusedBrokers[j] > lastUsedBroker &&
 				unusedBrokers[i] < unusedBrokers[j]) ||
 			(brokerCounts[unusedBrokers[i]] == brokerCounts[unusedBrokers[j]] &&
+				(unusedBrokers[i] < lastUsedBroker || unusedBrokers[j] < lastUsedBroker) &&
+				unusedBrokers[i]-lastUsedBroker > unusedBrokers[j]-lastUsedBroker)
+	})
+	return unusedBrokers[0]
+}
+
+func selectByTopicClusterUse(
+	unusedBrokers []int32,
+	brokerCounts map[int32]int,
+	clusterReplicaCounts map[int32]int,
+	lastUsedBroker int32,
+) int32 {
+	sort.Slice(unusedBrokers, func(i, j int) bool {
+		// Sort based on broker frequency in the topic, break ties with broker frequency
+		// in the cluster, and finally break ties with round-robin broker ID.
+		return brokerCounts[unusedBrokers[i]] < brokerCounts[unusedBrokers[j]] ||
+			(brokerCounts[unusedBrokers[i]] == brokerCounts[unusedBrokers[j]] &&
+				clusterReplicaCounts[unusedBrokers[i]] < clusterReplicaCounts[unusedBrokers[j]]) ||
+			(brokerCounts[unusedBrokers[i]] == brokerCounts[unusedBrokers[j]] &&
+				clusterReplicaCounts[unusedBrokers[i]] == clusterReplicaCounts[unusedBrokers[j]] &&
+				unusedBrokers[i] > lastUsedBroker && unusedBrokers[j] > lastUsedBroker &&
+				unusedBrokers[i] < unusedBrokers[j]) ||
+			(brokerCounts[unusedBrokers[i]] == brokerCounts[unusedBrokers[j]] &&
+				clusterReplicaCounts[unusedBrokers[i]] == clusterReplicaCounts[unusedBrokers[j]] &&
 				(unusedBrokers[i] < lastUsedBroker || unusedBrokers[j] < lastUsedBroker) &&
 				unusedBrokers[i]-lastUsedBroker > unusedBrokers[j]-lastUsedBroker)
 	})

@@ -15,6 +15,7 @@ spec:
       - ["zone-a"]
       - ["zone-b"]
       - ["zone-c"]
+    selection: topic-use
   reassignment:
     awaitTimeoutSec: 30
 ---
@@ -34,6 +35,7 @@ spec:
       - ["zone-a", "zone-b"]
       - ["zone-b", "zone-c"]
       - ["zone-c", "zone-a"]
+    selection: topic-use
   reassignment:
     awaitTimeoutSec: 30
 ---
@@ -55,6 +57,7 @@ spec:
       - ["zone-c", "zone-a"]
       - ["zone-a", "zone-b"]
       - ["zone-b", "zone-c"]
+    selection: topic-use
   reassignment:
     awaitTimeoutSec: 30
 ---
@@ -77,6 +80,7 @@ spec:
       - ["zone-a", "zone-b", "zone-c"]
       - ["zone-b", "zone-c", "zone-a"]
       - ["zone-c", "zone-a", "zone-b"]
+    selection: topic-use
   reassignment:
     awaitTimeoutSec: 30
 ---
@@ -99,5 +103,6 @@ spec:
       - ["zone-a", "zone-b"]
       - ["zone-b", "zone-c"]
       - ["zone-c", "zone-a"]
+    selection: topic-use
   reassignment:
     awaitTimeoutSec: 30

@@ -41,17 +41,9 @@ A definition representing a Kafka topic.
 
     Note that decreasing the number of partitions is not supported.
 
-    If `assignments` or `rackAssignments` are not specified, kdef will create evenly distributed replica assignments for new partitions.
-    Partition leaders (the first replica in the assignment) will be assigned based on the broker frequency of partition leaders in the topic, breaking ties with round-robin broker ID.
-    Non-leader replicas will be assigned based on broker frequency in the topic, breaking ties with round-robin broker ID.
-
 - **replicationFactor** (int), required
 
     Replication factor for the topic. Cannot exceed the number of available brokers.
-
-    If `assignments` or `rackAssignments` are not specified, kdef will create evenly distributed replica assignments.
-    When increasing the replication factor, replicas will be assigned based on broker frequency in the topic, breaking ties with round-robin broker ID.
-    When decreasing the replication factor, replicas are removed based on broker frequency in the topic, breaking ties with the highest replica index. i.e. `[1, 2, 3] -> [1, 2]`.
 
 - **assignments** ([][]int)
 
@@ -59,8 +51,7 @@ A definition representing a Kafka topic.
     The number of replica assignments must match `partitions`, and the number of replicas in each assignment must match `replicationFactor`.
     A replica assignment for a partition cannot contain duplicate broker IDs.
 
-    If `assignments` and `rackAssignments` are specified at the same time `assignments` takes precedence.
-    `rackAssignments` will be validated but subsequently ignored.
+    Cannot be specified at the same time as `managedAssignments`.
 
     !!! example
         Assignments for 3 partitions with a replication factor of 2.
@@ -74,22 +65,22 @@ A definition representing a Kafka topic.
 - **managedAssignments** ([ManagedAssignments](#managedassignments))
 
     Configuration for kdef-managed partition assignments.
+    The definition will default to managed assignments if `assignments` are not specified.
 
     Cannot be specified at the same time as `assignments`.
 
 ## ManagedAssignments
 
+When using managed assignments, kdef will make evenly distributed replica assignments based on the configuration in this section.
+
+kdef employs a general strategy of balancing partition replicas across available brokers for topic performance and availability.
+In particular, partition leaders (the first replica in the assignment) are evenly distributed across available brokers.
+
 - **rackConstraints** ([][]string)
 
     Rack ID constraints for partition replica assignment.
+    kdef will maintain evenly distributed replica assignments constrained by the specified racks.
     The number of rack constraints must match `partitions`, and the number of replicas in a partition's rack constraints must match `replicationFactor`.
-
-    kdef will create evenly distributed replica assignments constrained by the specified racks.
-    Partition leaders (the first replica in the assignment) will be assigned based on the broker frequency of partition leaders in the topic, breaking ties with round-robin broker ID.
-    Non-leader replicas will be assigned based on broker frequency in the topic, breaking ties with round-robin broker ID.
-
-    If `assignments` and `rackConstraints` are specified at the same time `assignments` takes precedence.
-    `rackConstraints` will be validated but subsequently ignored.
 
     !!! example
         Rack constraints for 3 partitions with a replication factor of 2.
@@ -100,13 +91,27 @@ A definition representing a Kafka topic.
           - ["zone-c", "zone-a"]
         ```
 
-        Rack constraints for 3 partitions with a replication factor of 3, ensuring each partition's leader and follower replicas are all in the same rack.
+        Rack constraints for 3 partitions with a replication factor of 3. This example ensures each partition's leader and follower replicas are all in the same rack.
         ```yml
         rackConstraints:
           - ["zone-a", "zone-a", "zone-a"]
           - ["zone-b", "zone-b", "zone-b"]
           - ["zone-c", "zone-c", "zone-c"]
         ```
+
+- **selection** (string)
+
+    The method used to select a broker for a replica.
+    After constraints have been applied, each replica assignment is selected from a pool of qualifying brokers using this method.
+
+    Selection methods:
+
+    - `topic-cluster-use` (default) - Maintain balanced usage of brokers within the topic and cluster. Broker selection for a replica is made based on broker usage within the topic, breaking ties with broker usage across the cluster.
+    - `topic-use` - Maintain balanced usage of brokers within the topic. Broker selection for a replica is made based on broker usage within the topic.
+
+    If the above selection methods are unable to narrow the pool to a single broker, ties will broken in two ways.
+    When adding replicas, ties will be broken with round-robin broker ID.
+    When removing replicas, ties will be broken with the highest replica index.
 
 ## Examples
 

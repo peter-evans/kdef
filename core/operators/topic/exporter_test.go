@@ -150,7 +150,7 @@ func Test_exporter_Execute(t *testing.T) {
 			wantErr:  false,
 		},
 		{
-			name: "6: Test export of topics including rack assignments",
+			name: "6: Test export of topics including rack constraints",
 			fields: fields{
 				cl: cl,
 				opts: ExporterOptions{
