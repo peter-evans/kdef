@@ -65,11 +65,12 @@ type applier struct {
 	opts   ApplierOptions
 
 	// Internal fields.
-	localDef      def.TopicDefinition
-	remoteDef     *def.TopicDefinition
-	remoteConfigs def.Configs
-	brokers       meta.Brokers
-	ops           applierOps
+	localDef             def.TopicDefinition
+	remoteDef            *def.TopicDefinition
+	remoteConfigs        def.Configs
+	brokers              meta.Brokers
+	clusterReplicaCounts map[int32]int
+	ops                  applierOps
 
 	// Result fields.
 	res           res.ApplyResult
@@ -180,6 +181,21 @@ func (a *applier) tryFetchRemote(ctx context.Context) error {
 	a.remoteDef, a.remoteConfigs, a.brokers, err = a.srv.TryRequestTopic(ctx, a.localDef.Metadata)
 	if err != nil {
 		return err
+	}
+
+	if a.localDef.Spec.HasManagedAssignments() && a.localDef.Spec.ManagedAssignments.Selection == def.SelectionTopicClusterUse {
+		metadata, err := a.srv.DescribeMetadata(ctx, nil, true)
+		if err != nil {
+			return err
+		}
+		a.clusterReplicaCounts = make(map[int32]int)
+		for _, t := range metadata.Topics {
+			for _, replicas := range t.PartitionAssignments {
+				for _, brokerID := range replicas {
+					a.clusterReplicaCounts[brokerID]++
+				}
+			}
+		}
 	}
 
 	a.ops.create = (a.remoteDef == nil)
@@ -305,17 +321,19 @@ func (a *applier) buildCreateOp() {
 		for i := range newAssignments {
 			newAssignments[i] = make([]int32, len(a.localDef.Spec.ManagedAssignments.RackConstraints[0]))
 		}
-		// Populate local assignments from defined rack assignments.
-		a.ops.createAssignments = assignments.SyncRackAssignments(
+		// Populate local assignments from defined rack constraints.
+		a.ops.createAssignments = assignments.SyncRackConstraints(
 			newAssignments,
 			a.localDef.Spec.ManagedAssignments.RackConstraints,
 			a.brokers.BrokersByRack(),
+			a.clusterReplicaCounts,
 		)
 	default:
 		a.ops.createAssignments = assignments.AddPartitions(
 			[][]int32{},
 			a.localDef.Spec.Partitions,
 			a.localDef.Spec.ReplicationFactor,
+			a.clusterReplicaCounts,
 			a.brokers.IDs(),
 		)
 	}
@@ -390,13 +408,14 @@ func (a *applier) buildPartitionsOp() error {
 			a.remoteDef.Spec.Partitions,
 			a.localDef.Spec.Partitions,
 		)
-		// It's not necessary to cater specifically for rack assignments here because any miss-placements
+		// It's not necessary to cater specifically for rack constraints here because any miss-placements
 		// will be reassigned and migrate to the correct broker very quickly in the cluster.
 		targetRepFactor := len(a.remoteDef.Spec.Assignments[0])
 		a.ops.partitions = assignments.AddPartitions(
 			a.remoteDef.Spec.Assignments,
 			a.localDef.Spec.Partitions,
 			targetRepFactor,
+			a.clusterReplicaCounts,
 			a.brokers.IDs(),
 		)
 	}
@@ -424,7 +443,6 @@ func (a *applier) updatePartitions(ctx context.Context) error {
 
 // buildAssignmentsOp builds an assignments operation.
 func (a *applier) buildAssignmentsOp() {
-	// Order is important here; assignments take precedence over rack assignments.
 	switch {
 	case a.localDef.Spec.HasAssignments():
 		if !cmp.Equal(a.remoteDef.Spec.Assignments, a.localDef.Spec.Assignments) {
@@ -437,10 +455,11 @@ func (a *applier) buildAssignmentsOp() {
 		if len(a.ops.partitions) > 0 {
 			newAssignments = append(newAssignments, a.ops.partitions...)
 		}
-		newAssignments = assignments.SyncRackAssignments(
+		newAssignments = assignments.SyncRackConstraints(
 			newAssignments,
 			a.localDef.Spec.ManagedAssignments.RackConstraints,
 			a.brokers.BrokersByRack(),
+			a.clusterReplicaCounts,
 		)
 		if !cmp.Equal(a.remoteDef.Spec.Assignments, newAssignments) {
 			log.Debugf("Partition assignments are out of sync with defined racks and will be updated")
@@ -456,6 +475,7 @@ func (a *applier) buildAssignmentsOp() {
 		a.ops.assignments = assignments.AlterReplicationFactor(
 			newAssignments,
 			a.localDef.Spec.ReplicationFactor,
+			a.clusterReplicaCounts,
 			a.brokers.IDs(),
 		)
 	}

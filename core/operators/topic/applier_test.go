@@ -629,7 +629,7 @@ func Test_applier_Execute(t *testing.T) {
 		},
 	})
 
-	// Tests rack assignments
+	// Tests rack constraints
 	quxDocs := tutil.FileToYAMLDocs(t, "../../test/fixtures/topic/core.operators.topic.applier.qux.yml")
 	quxDiffs := getDiffsFixture(t, "../../test/fixtures/topic/core.operators.topic.applier.qux.json")
 	runTests(t, []testCase{
