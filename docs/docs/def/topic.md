@@ -8,6 +8,9 @@ A definition representing a Kafka topic.
 - **kind**: topic
 - **metadata** ([Metadata](#metadata))
 - **spec** ([Spec](#spec))
+- **state** (State)
+
+    An internal-use only property group that kdef uses to show underlying state changes.
 
 ## Metadata
 

@@ -117,6 +117,8 @@ func (a *applier) apply(ctx context.Context) error {
 		return err
 	}
 
+	a.updateLocalState()
+
 	if err := a.updateApplyResult(); err != nil {
 		return err
 	}
@@ -222,6 +224,29 @@ func (a *applier) buildOps(ctx context.Context) error {
 	return nil
 }
 
+// updateLocalState updates the state property group of the local definition.
+func (a *applier) updateLocalState() {
+	// The state property group of the local definition is updated to show the underlying state changes.
+	if a.localDef.Spec.HasManagedAssignments() {
+		switch {
+		case a.ops.create:
+			a.localDef.State = &def.TopicStateDefinition{
+				Assignments: a.ops.createAssignments,
+			}
+		case len(a.ops.assignments) > 0:
+			// Includes partition ops
+			a.localDef.State = &def.TopicStateDefinition{
+				Assignments: a.ops.assignments,
+			}
+		case len(a.ops.partitions) > 0:
+			a.localDef.State = &def.TopicStateDefinition{
+				Assignments: a.ops.assignments,
+			}
+			a.localDef.State.Assignments = append(a.localDef.State.Assignments, a.ops.partitions...)
+		}
+	}
+}
+
 // updateApplyResult updates the apply result with the remote definition and human readable diff.
 func (a *applier) updateApplyResult() error {
 	var remoteCopy *def.TopicDefinition
@@ -258,6 +283,10 @@ func (a *applier) updateApplyResult() error {
 		}
 
 		remoteCopy.Spec.DeleteUndefinedConfigs = a.localDef.Spec.DeleteUndefinedConfigs
+
+		if a.localDef.State == nil {
+			remoteCopy.State = nil
+		}
 	}
 
 	diff, err := jsondiff.Diff(remoteCopy, &a.localDef)

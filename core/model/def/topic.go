@@ -34,6 +34,11 @@ type ManagedAssignmentsDefinition struct {
 	RackConstraints PartitionRacks `json:"rackConstraints,omitempty"`
 }
 
+// HasRackConstraints determines if a managed assignments definition has rack constraints.
+func (m ManagedAssignmentsDefinition) HasRackConstraints() bool {
+	return len(m.RackConstraints) > 0
+}
+
 // TopicSpecDefinition represents a topic spec definition.
 type TopicSpecDefinition struct {
 	Configs                ConfigsMap                    `json:"configs,omitempty"`
@@ -54,15 +59,16 @@ func (t TopicSpecDefinition) HasManagedAssignments() bool {
 	return t.ManagedAssignments != nil
 }
 
-// HasRackConstraints determines if a managed assignments definition has rack constraints.
-func (m ManagedAssignmentsDefinition) HasRackConstraints() bool {
-	return len(m.RackConstraints) > 0
+// TopicStateDefinition represents a topic state definition.
+type TopicStateDefinition struct {
+	Assignments PartitionAssignments `json:"assignments,omitempty"`
 }
 
 // TopicDefinition represents a topic resource definition.
 type TopicDefinition struct {
 	ResourceDefinition
-	Spec TopicSpecDefinition `json:"spec"`
+	Spec  TopicSpecDefinition   `json:"spec"`
+	State *TopicStateDefinition `json:"state,omitempty"`
 }
 
 // Copy creates a copy of this TopicDefinition.
@@ -95,7 +101,7 @@ func (t *TopicDefinition) Validate() error {
 	if !t.Spec.HasAssignments() {
 		// Set managed assignments defaults
 		// TODO: refactor defaults out to before calling Validate
-		// Remove pointer on this method "*TopicDefinition"
+		// Remove pointer on this method "*TopicDefinition" (also needed for State)
 		if t.Spec.HasManagedAssignments() {
 			if len(t.Spec.ManagedAssignments.Selection) == 0 {
 				t.Spec.ManagedAssignments.Selection = SelectionTopicClusterUse
@@ -146,6 +152,8 @@ func (t *TopicDefinition) Validate() error {
 			}
 		}
 	}
+
+	t.State = nil
 
 	return nil
 }
@@ -220,6 +228,7 @@ func NewTopicDefinition(
 	brokers meta.Brokers,
 	includeAssignments bool,
 	includeRackConstraints bool,
+	includeState bool,
 ) TopicDefinition {
 	topicDef := TopicDefinition{
 		ResourceDefinition: ResourceDefinition{
@@ -240,6 +249,11 @@ func NewTopicDefinition(
 	if includeRackConstraints {
 		topicDef.Spec.ManagedAssignments = &ManagedAssignmentsDefinition{
 			RackConstraints: rackConstraints,
+		}
+	}
+	if includeState {
+		topicDef.State = &TopicStateDefinition{
+			Assignments: partitionAssignments,
 		}
 	}
 
