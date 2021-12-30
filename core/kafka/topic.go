@@ -50,6 +50,7 @@ func tryRequestTopic(
 		metadata.Brokers,
 		true,
 		true,
+		true,
 	)
 
 	return &topicDef, topicConfigs, metadata.Brokers, nil

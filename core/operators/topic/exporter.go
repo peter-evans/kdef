@@ -119,6 +119,7 @@ func (e *exporter) getTopicDefinitions(ctx context.Context) ([]def.TopicDefiniti
 			metadata.Brokers,
 			e.opts.Assignments == opt.BrokerAssignments,
 			e.opts.Assignments == opt.RackAssignments,
+			false,
 		)
 		// Default to delete undefined configs.
 		topicDef.Spec.DeleteUndefinedConfigs = true
