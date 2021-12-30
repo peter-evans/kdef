@@ -108,6 +108,7 @@ func TestTopicDefinition_Validate(t *testing.T) {
 					Partitions:        3,
 					ReplicationFactor: 2,
 					ManagedAssignments: &ManagedAssignmentsDefinition{
+						Selection: "topic-cluster-use",
 						RackConstraints: PartitionRacks{
 							{"zone-a", "zone-b"},
 							{"zone-b", "zone-a"},
@@ -125,6 +126,7 @@ func TestTopicDefinition_Validate(t *testing.T) {
 					Partitions:        3,
 					ReplicationFactor: 2,
 					ManagedAssignments: &ManagedAssignmentsDefinition{
+						Selection: "topic-cluster-use",
 						RackConstraints: PartitionRacks{
 							{"zone-a", "zone-b"},
 							{"zone-b", "zone-c"},
@@ -143,6 +145,7 @@ func TestTopicDefinition_Validate(t *testing.T) {
 					Partitions:        2,
 					ReplicationFactor: 2,
 					ManagedAssignments: &ManagedAssignmentsDefinition{
+						Selection: "topic-cluster-use",
 						RackConstraints: PartitionRacks{
 							{"zone-a", "zone-b"},
 							{"zone-b", ""},

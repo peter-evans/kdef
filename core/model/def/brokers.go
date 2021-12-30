@@ -2,7 +2,12 @@
 package def
 
 import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/ghodss/yaml"
 	"github.com/gotidy/copy"
+	"github.com/peter-evans/kdef/core/model/opt"
 )
 
 // BrokersSpecDefinition represents a brokers spec definition.
@@ -52,4 +57,27 @@ func NewBrokersDefinition(
 	}
 
 	return brokersDef
+}
+
+// LoadBrokersDefinition loads a brokers definition from a document.
+func LoadBrokersDefinition(
+	defDoc string,
+	format opt.DefinitionFormat,
+) (BrokersDefinition, error) {
+	var def BrokersDefinition
+
+	switch format {
+	case opt.YAMLFormat:
+		if err := yaml.Unmarshal([]byte(defDoc), &def); err != nil {
+			return def, err
+		}
+	case opt.JSONFormat:
+		if err := json.Unmarshal([]byte(defDoc), &def); err != nil {
+			return def, err
+		}
+	default:
+		return def, fmt.Errorf("unsupported format")
+	}
+
+	return def, nil
 }

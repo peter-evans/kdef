@@ -2,11 +2,14 @@
 package def
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/bradfitz/slice" //nolint
+	"github.com/ghodss/yaml"
 	"github.com/gotidy/copy"
+	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/util/str"
 )
 
@@ -169,4 +172,27 @@ func NewACLDefinition(
 	}
 
 	return aclDef
+}
+
+// LoadACLDefinition loads an ACL definition from a document.
+func LoadACLDefinition(
+	defDoc string,
+	format opt.DefinitionFormat,
+) (ACLDefinition, error) {
+	var def ACLDefinition
+
+	switch format {
+	case opt.YAMLFormat:
+		if err := yaml.Unmarshal([]byte(defDoc), &def); err != nil {
+			return def, err
+		}
+	case opt.JSONFormat:
+		if err := json.Unmarshal([]byte(defDoc), &def); err != nil {
+			return def, err
+		}
+	default:
+		return def, fmt.Errorf("unsupported format")
+	}
+
+	return def, nil
 }
