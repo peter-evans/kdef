@@ -2,12 +2,15 @@
 package def
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
+	"github.com/ghodss/yaml"
 	"github.com/gotidy/copy"
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/core/model/meta"
+	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/util/i32"
 	"github.com/peter-evans/kdef/core/util/str"
 )
@@ -81,7 +84,7 @@ func (t TopicDefinition) Copy() TopicDefinition {
 }
 
 // Validate validates the definition.
-func (t *TopicDefinition) Validate() error {
+func (t TopicDefinition) Validate() error {
 	if err := t.ValidateResource(); err != nil {
 		return err
 	}
@@ -96,21 +99,6 @@ func (t *TopicDefinition) Validate() error {
 
 	if t.Spec.HasAssignments() && t.Spec.HasManagedAssignments() {
 		return fmt.Errorf("assignments and managed assignments cannot be specified together")
-	}
-
-	if !t.Spec.HasAssignments() {
-		// Set managed assignments defaults
-		// TODO: refactor defaults out to before calling Validate
-		// Remove pointer on this method "*TopicDefinition" (also needed for State)
-		if t.Spec.HasManagedAssignments() {
-			if len(t.Spec.ManagedAssignments.Selection) == 0 {
-				t.Spec.ManagedAssignments.Selection = SelectionTopicClusterUse
-			}
-		} else {
-			t.Spec.ManagedAssignments = &ManagedAssignmentsDefinition{
-				Selection: SelectionTopicClusterUse,
-			}
-		}
 	}
 
 	if t.Spec.HasAssignments() {
@@ -152,8 +140,6 @@ func (t *TopicDefinition) Validate() error {
 			}
 		}
 	}
-
-	t.State = nil
 
 	return nil
 }
@@ -258,4 +244,42 @@ func NewTopicDefinition(
 	}
 
 	return topicDef
+}
+
+// LoadTopicDefinition loads a topic definition from a document.
+func LoadTopicDefinition(
+	defDoc string,
+	format opt.DefinitionFormat,
+) (TopicDefinition, error) {
+	var def TopicDefinition
+
+	switch format {
+	case opt.YAMLFormat:
+		if err := yaml.Unmarshal([]byte(defDoc), &def); err != nil {
+			return def, err
+		}
+	case opt.JSONFormat:
+		if err := json.Unmarshal([]byte(defDoc), &def); err != nil {
+			return def, err
+		}
+	default:
+		return def, fmt.Errorf("unsupported format")
+	}
+
+	// Set defaults
+	if !def.Spec.HasAssignments() {
+		if def.Spec.HasManagedAssignments() {
+			if len(def.Spec.ManagedAssignments.Selection) == 0 {
+				def.Spec.ManagedAssignments.Selection = SelectionTopicClusterUse
+			}
+		} else {
+			def.Spec.ManagedAssignments = &ManagedAssignmentsDefinition{
+				Selection: SelectionTopicClusterUse,
+			}
+		}
+	}
+
+	def.State = nil
+
+	return def, nil
 }

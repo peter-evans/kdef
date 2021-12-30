@@ -3,11 +3,9 @@ package brokers
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 
-	"github.com/ghodss/yaml"
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/core/client"
 	"github.com/peter-evans/kdef/core/helpers/jsondiff"
@@ -114,17 +112,10 @@ func (a *applier) apply(ctx context.Context) error {
 
 // createLocal creates the local definition.
 func (a *applier) createLocal() error {
-	switch a.opts.DefinitionFormat {
-	case opt.YAMLFormat:
-		if err := yaml.Unmarshal([]byte(a.defDoc), &a.localDef); err != nil {
-			return err
-		}
-	case opt.JSONFormat:
-		if err := json.Unmarshal([]byte(a.defDoc), &a.localDef); err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("unsupported format")
+	var err error
+	a.localDef, err = def.LoadBrokersDefinition(a.defDoc, a.opts.DefinitionFormat)
+	if err != nil {
+		return err
 	}
 
 	a.res.LocalDef = &a.localDef
