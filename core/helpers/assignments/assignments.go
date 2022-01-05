@@ -202,6 +202,8 @@ func SyncRackConstraints(
 		newAssignments[i] = newReplicas
 	}
 
+	// The counts start from zero to make the assignments more predictable.
+	// If there are a lot of out-of-sync replicas then the actual counts are meaningless.
 	leaderCounts := make(map[int32]int)
 	replicaCounts := make(map[int32]int)
 
@@ -220,7 +222,8 @@ func SyncRackConstraints(
 
 			// Check if the assigned broker is out of sync with the defined rack.
 			isLeader := replica == 0
-			if !i32.Contains(replicas[replica], brokersByRack[rack]) {
+			currentBrokerID := replicas[replica]
+			if !i32.Contains(currentBrokerID, brokersByRack[rack]) {
 				// Find unused broker IDs for this rack.
 				unusedRackBrokers := i32.Diff(brokersByRack[rack], usedRackBrokers)
 
@@ -246,6 +249,7 @@ func SyncRackConstraints(
 				leaderCounts[newAssignments[partition][replica]]++
 			}
 			if clusterReplicaCounts != nil {
+				clusterReplicaCounts[currentBrokerID]--
 				clusterReplicaCounts[newAssignments[partition][replica]]++
 			}
 		}
