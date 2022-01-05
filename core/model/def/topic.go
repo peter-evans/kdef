@@ -2,12 +2,15 @@
 package def
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
-	"github.com/ghodss/yaml"
 	"github.com/gotidy/copy"
+	"github.com/knadh/koanf"
+	"github.com/knadh/koanf/parsers/json"
+	"github.com/knadh/koanf/parsers/yaml"
+	"github.com/knadh/koanf/providers/rawbytes"
+	"github.com/mitchellh/mapstructure"
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/core/model/meta"
 	"github.com/peter-evans/kdef/core/model/opt"
@@ -246,6 +249,10 @@ func NewTopicDefinition(
 	return topicDef
 }
 
+// var topicDefinitionDefaults = map[string]interface{}{
+// 	"spec.managedAssignments.selection": SelectionTopicClusterUse,
+// }
+
 // LoadTopicDefinition loads a topic definition from a document.
 func LoadTopicDefinition(
 	defDoc string,
@@ -253,19 +260,40 @@ func LoadTopicDefinition(
 ) (TopicDefinition, error) {
 	var def TopicDefinition
 
+	k := koanf.New(".")
+
+	// Load defaults
+	// if err := k.Load(confmap.Provider(topicDefinitionDefaults, "."), nil); err != nil {
+	// 	return def, err
+	// }
+
 	switch format {
 	case opt.YAMLFormat:
-		if err := yaml.Unmarshal([]byte(defDoc), &def); err != nil {
+		if err := k.Load(rawbytes.Provider([]byte(defDoc)), yaml.Parser()); err != nil {
 			return def, err
 		}
 	case opt.JSONFormat:
-		if err := json.Unmarshal([]byte(defDoc), &def); err != nil {
+		if err := k.Load(rawbytes.Provider([]byte(defDoc)), json.Parser()); err != nil {
 			return def, err
 		}
 	default:
 		return def, fmt.Errorf("unsupported format")
 	}
 
+	if err := k.UnmarshalWithConf("", &def, koanf.UnmarshalConf{
+		Tag: "json",
+		DecoderConfig: &mapstructure.DecoderConfig{
+			DecodeHook:       mapstructure.ComposeDecodeHookFunc(mapstructure.StringToTimeDurationHookFunc()),
+			Metadata:         nil,
+			Result:           &def,
+			WeaklyTypedInput: true,
+			Squash:           true,
+		},
+	}); err != nil {
+		return def, err
+	}
+
+	// Do this before unmarshal by checking if the key exists.
 	// Set defaults
 	if !def.Spec.HasAssignments() {
 		if def.Spec.HasManagedAssignments() {
