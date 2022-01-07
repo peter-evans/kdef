@@ -77,25 +77,25 @@ func decreaseReplicationFactor(
 
 	newAssignments := Copy(assignments)
 	for len(newAssignments[0]) > targetRepFactor {
-		for i, replicas := range newAssignments {
+		for partition, replicas := range newAssignments {
 			// Select the broker ID to remove.
-			brokerIDToRemove := selectBrokerToRemove(replicas, replicaCounts, clusterReplicaCounts)
+			selectedBrokerID := selectBrokerToRemove(replicas, replicaCounts, clusterReplicaCounts)
 
 			// Create the modified replica set of broker IDs.
 			modifiedReplicas := make([]int32, len(replicas)-1)
 			j := 0
 			for _, brokerID := range replicas {
-				if brokerID == brokerIDToRemove {
+				if brokerID == selectedBrokerID {
 					continue
 				}
 				modifiedReplicas[j] = brokerID
 				j++
 			}
 
-			newAssignments[i] = modifiedReplicas
-			replicaCounts[brokerIDToRemove]--
+			newAssignments[partition] = modifiedReplicas
+			replicaCounts[selectedBrokerID]--
 			if clusterReplicaCounts != nil {
-				clusterReplicaCounts[brokerIDToRemove]--
+				clusterReplicaCounts[selectedBrokerID]--
 			}
 		}
 	}
@@ -113,7 +113,7 @@ func increaseReplicationFactor(
 ) [][]int32 {
 	newAssignments := Copy(assignments)
 	for len(newAssignments[0]) < targetRepFactor {
-		for i, replicas := range newAssignments {
+		for partition, replicas := range newAssignments {
 			// Find unused broker IDs for this partition.
 			unusedBrokers := i32.Diff(brokers, replicas)
 
@@ -140,20 +140,20 @@ func increaseReplicationFactor(
 			}
 
 			// Select the broker ID to add.
-			brokerIDToAdd := selectBroker(unusedBrokers, brokerCounts, clusterReplicaCounts, lastUsedBroker)
+			selectedBrokerID := selectBroker(unusedBrokers, brokerCounts, clusterReplicaCounts, lastUsedBroker)
 
 			// Create the modified replica set of broker IDs.
 			modifiedReplicas := make([]int32, len(replicas)+1)
 			copy(modifiedReplicas, replicas)
-			modifiedReplicas[len(modifiedReplicas)-1] = brokerIDToAdd
+			modifiedReplicas[len(modifiedReplicas)-1] = selectedBrokerID
 
-			newAssignments[i] = modifiedReplicas
-			replicaCounts[brokerIDToAdd]++
+			newAssignments[partition] = modifiedReplicas
+			replicaCounts[selectedBrokerID]++
 			if isLeader {
-				leaderCounts[brokerIDToAdd]++
+				leaderCounts[selectedBrokerID]++
 			}
 			if clusterReplicaCounts != nil {
-				clusterReplicaCounts[brokerIDToAdd]++
+				clusterReplicaCounts[selectedBrokerID]++
 			}
 		}
 	}
@@ -196,10 +196,10 @@ func SyncRackConstraints(
 	// Modify assignments by the target replication factor.
 	targetRepFactor := len(rackConstraints[0])
 	newAssignments := make([][]int32, len(assignments))
-	for i, replicas := range assignments {
+	for partition, replicas := range assignments {
 		newReplicas := make([]int32, targetRepFactor)
 		copy(newReplicas, replicas)
-		newAssignments[i] = newReplicas
+		newAssignments[partition] = newReplicas
 	}
 
 	// The counts start from zero to make the assignments more predictable.
@@ -227,7 +227,7 @@ func SyncRackConstraints(
 				// Find unused broker IDs for this rack.
 				unusedRackBrokers := i32.Diff(brokersByRack[rack], usedRackBrokers)
 
-				// Last used broker is not used for rack constraints.
+				// Last used broker is not used with rack constraints.
 				var lastUsedBroker int32
 
 				// If the chosen broker will be the preferred leader we use leader counts to make sure
@@ -238,11 +238,147 @@ func SyncRackConstraints(
 				}
 
 				// Select the broker ID to add.
-				brokerIDToAdd := selectBroker(unusedRackBrokers, brokerCounts, clusterReplicaCounts, lastUsedBroker)
+				selectedBrokerID := selectBroker(unusedRackBrokers, brokerCounts, clusterReplicaCounts, lastUsedBroker)
 
 				// Replace the broker.
-				newAssignments[partition][replica] = brokerIDToAdd
+				newAssignments[partition][replica] = selectedBrokerID
 			}
+			// Update counts.
+			replicaCounts[newAssignments[partition][replica]]++
+			if isLeader {
+				leaderCounts[newAssignments[partition][replica]]++
+			}
+			if clusterReplicaCounts != nil {
+				clusterReplicaCounts[currentBrokerID]--
+				clusterReplicaCounts[newAssignments[partition][replica]]++
+			}
+		}
+	}
+
+	return newAssignments
+}
+
+func Rebalance(
+	assignments [][]int32,
+	clusterReplicaCounts map[int32]int,
+	brokers []int32,
+) [][]int32 {
+	leaderCounts := make(map[int32]int)
+	replicaCounts := make(map[int32]int)
+
+	newAssignments := Copy(assignments)
+	for partition, replicas := range newAssignments {
+		for replica, currentBrokerID := range replicas {
+			isLeader := replica == 0
+
+			// Find unused broker IDs for this partition.
+			unusedBrokers := i32.Diff(brokers, newAssignments[partition])
+
+			// Skip if no replacements are possible.
+			if !isLeader && len(unusedBrokers) == 0 {
+				continue
+			}
+
+			// Determine the last used broker ID for this partition.
+			var lastUsedBroker int32
+			if !isLeader {
+				lastUsedBroker = replicas[replica-1]
+			}
+			// If there are no unused brokers with an ID greater than the last used then reset to zero.
+			// This will cause round-robin placement to begin a new cycle.
+			if len(unusedBrokers) > 0 && i32.Max(unusedBrokers) <= lastUsedBroker {
+				lastUsedBroker = 0
+			}
+
+			// If the chosen broker will be the preferred leader we use leader counts to make sure
+			// partition leaders are balanced across brokers.
+			brokerCounts := replicaCounts
+			brokerPool := unusedBrokers
+			if isLeader {
+				brokerCounts = leaderCounts
+				brokerPool = brokers
+			}
+
+			// Select the broker ID to add.
+			selectedBrokerID := selectBroker(brokerPool, brokerCounts, clusterReplicaCounts, lastUsedBroker)
+
+			// Replace if the selected broker's count is at least 1 less than the current broker's count.
+			// OR if the current follower replica is now the same as the leader of the partition.
+			// This second case could occur if the leader is replaced by a broker already in use.
+			if brokerCounts[currentBrokerID]-brokerCounts[selectedBrokerID] >= 1 ||
+				(!isLeader && currentBrokerID == newAssignments[partition][0]) {
+				newAssignments[partition][replica] = selectedBrokerID
+			}
+
+			// Update counts.
+			replicaCounts[newAssignments[partition][replica]]++
+			if isLeader {
+				leaderCounts[newAssignments[partition][replica]]++
+			}
+			if clusterReplicaCounts != nil {
+				clusterReplicaCounts[currentBrokerID]--
+				clusterReplicaCounts[newAssignments[partition][replica]]++
+			}
+		}
+	}
+
+	return newAssignments
+}
+
+func RebalanceWithRackConstraints(
+	assignments [][]int32,
+	rackConstraints [][]string,
+	clusterReplicaCounts map[int32]int,
+	brokersByRack map[string][]int32,
+) [][]int32 {
+	leaderCounts := make(map[int32]int)
+	replicaCounts := make(map[int32]int)
+
+	newAssignments := Copy(assignments)
+	for partition, replicas := range newAssignments {
+		for replica, currentBrokerID := range replicas {
+			isLeader := replica == 0
+			rack := rackConstraints[partition][replica]
+
+			// Build a list of used brokers for this rack on this partition.
+			var usedRackBrokers []int32
+			for r, b := range newAssignments[partition] {
+				if rackConstraints[partition][r] == rack && i32.Contains(b, brokersByRack[rack]) {
+					usedRackBrokers = append(usedRackBrokers, b)
+				}
+			}
+
+			// Find unused broker IDs for this rack.
+			unusedBrokers := i32.Diff(brokersByRack[rack], usedRackBrokers)
+
+			// Skip if no replacements are possible.
+			if !isLeader && len(unusedBrokers) == 0 {
+				continue
+			}
+
+			// Last used broker is not used with rack constraints.
+			var lastUsedBroker int32
+
+			// If the chosen broker will be the preferred leader we use leader counts to make sure
+			// partition leaders are balanced across brokers.
+			brokerCounts := replicaCounts
+			brokerPool := unusedBrokers
+			if isLeader {
+				brokerCounts = leaderCounts
+				brokerPool = brokersByRack[rack]
+			}
+
+			// Select the broker ID to add.
+			selectedBrokerID := selectBroker(brokerPool, brokerCounts, clusterReplicaCounts, lastUsedBroker)
+
+			// Replace if the selected broker's count is at least 1 less than the current broker's count.
+			// OR if the current follower replica is now the same as the leader of the partition.
+			// This second case could occur if the leader is replaced by a broker already in use.
+			if brokerCounts[currentBrokerID]-brokerCounts[selectedBrokerID] >= 1 ||
+				(!isLeader && currentBrokerID == newAssignments[partition][0]) {
+				newAssignments[partition][replica] = selectedBrokerID
+			}
+
 			// Update counts.
 			replicaCounts[newAssignments[partition][replica]]++
 			if isLeader {
@@ -261,8 +397,8 @@ func SyncRackConstraints(
 // Copy makes a copy of partition assignments.
 func Copy(assignments [][]int32) [][]int32 {
 	c := make([][]int32, len(assignments))
-	for i, replicas := range assignments {
-		c[i] = append([]int32{}, replicas...)
+	for partition, replicas := range assignments {
+		c[partition] = append([]int32{}, replicas...)
 	}
 	return c
 }
