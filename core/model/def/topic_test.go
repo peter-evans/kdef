@@ -87,6 +87,21 @@ func TestTopicDefinition_Validate(t *testing.T) {
 			wantErr: "a replica assignment cannot contain duplicate brokers",
 		},
 		{
+			name: "Tests invalid balance",
+			topicDef: TopicDefinition{
+				ResourceDefinition: resDef,
+				Spec: TopicSpecDefinition{
+					Partitions:        3,
+					ReplicationFactor: 2,
+					ManagedAssignments: &ManagedAssignmentsDefinition{
+						Balance:   "foo",
+						Selection: "topic-cluster-use",
+					},
+				},
+			},
+			wantErr: "balance must be one of",
+		},
+		{
 			name: "Tests invalid selection",
 			topicDef: TopicDefinition{
 				ResourceDefinition: resDef,
@@ -94,6 +109,7 @@ func TestTopicDefinition_Validate(t *testing.T) {
 					Partitions:        3,
 					ReplicationFactor: 2,
 					ManagedAssignments: &ManagedAssignmentsDefinition{
+						Balance:   "new",
 						Selection: "foo",
 					},
 				},
@@ -108,6 +124,7 @@ func TestTopicDefinition_Validate(t *testing.T) {
 					Partitions:        3,
 					ReplicationFactor: 2,
 					ManagedAssignments: &ManagedAssignmentsDefinition{
+						Balance:   "new",
 						Selection: "topic-cluster-use",
 						RackConstraints: PartitionRacks{
 							{"zone-a", "zone-b"},
@@ -126,6 +143,7 @@ func TestTopicDefinition_Validate(t *testing.T) {
 					Partitions:        3,
 					ReplicationFactor: 2,
 					ManagedAssignments: &ManagedAssignmentsDefinition{
+						Balance:   "new",
 						Selection: "topic-cluster-use",
 						RackConstraints: PartitionRacks{
 							{"zone-a", "zone-b"},
@@ -145,6 +163,7 @@ func TestTopicDefinition_Validate(t *testing.T) {
 					Partitions:        2,
 					ReplicationFactor: 2,
 					ManagedAssignments: &ManagedAssignmentsDefinition{
+						Balance:   "new",
 						Selection: "topic-cluster-use",
 						RackConstraints: PartitionRacks{
 							{"zone-a", "zone-b"},

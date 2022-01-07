@@ -116,6 +116,15 @@ In particular, partition leaders (the first replica in the assignment) are evenl
     When adding replicas, ties will be broken with round-robin broker ID.
     When removing replicas, ties will be broken with the highest replica index.
 
+- **balance** (string)
+
+    The scope of the managed assignments strategy when a topic is applied.
+
+    Balance scopes:
+
+    - `new` (default) - Only new assignments are balanced by the managed strategy. New assignments refers to additional replicas added when partitions are increased, or the replication factor is increased.
+    - `all` - All assignments are in scope of the managed strategy, and changes may be made to rebalance replicas across available brokers. Setting this scope is equivalent to performing a partition rebalance on apply.
+
 ## Examples
 
 ```yml

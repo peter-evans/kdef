@@ -16,6 +16,16 @@ import (
 )
 
 const (
+	BalanceNew = "new"
+	BalanceAll = "all"
+)
+
+var balanceScopes = []string{
+	BalanceNew,
+	BalanceAll,
+}
+
+const (
 	SelectionTopicClusterUse = "topic-cluster-use"
 	SelectionTopicUse        = "topic-use"
 )
@@ -33,6 +43,7 @@ type PartitionRacks [][]string
 
 // ManagedAssignmentsDefinition represents a managed assignments definition.
 type ManagedAssignmentsDefinition struct {
+	Balance         string         `json:"balance,omitempty"`
 	Selection       string         `json:"selection,omitempty"`
 	RackConstraints PartitionRacks `json:"rackConstraints,omitempty"`
 }
@@ -118,6 +129,10 @@ func (t TopicDefinition) Validate() error {
 	}
 
 	if t.Spec.HasManagedAssignments() {
+		if !str.Contains(t.Spec.ManagedAssignments.Balance, balanceScopes) {
+			return fmt.Errorf("balance must be one of %q", strings.Join(balanceScopes, "|"))
+		}
+
 		if !str.Contains(t.Spec.ManagedAssignments.Selection, selectionMethods) {
 			return fmt.Errorf("selection must be one of %q", strings.Join(selectionMethods, "|"))
 		}
@@ -269,11 +284,15 @@ func LoadTopicDefinition(
 	// Set defaults
 	if !def.Spec.HasAssignments() {
 		if def.Spec.HasManagedAssignments() {
+			if len(def.Spec.ManagedAssignments.Balance) == 0 {
+				def.Spec.ManagedAssignments.Balance = BalanceNew
+			}
 			if len(def.Spec.ManagedAssignments.Selection) == 0 {
 				def.Spec.ManagedAssignments.Selection = SelectionTopicClusterUse
 			}
 		} else {
 			def.Spec.ManagedAssignments = &ManagedAssignmentsDefinition{
+				Balance:   BalanceNew,
 				Selection: SelectionTopicClusterUse,
 			}
 		}

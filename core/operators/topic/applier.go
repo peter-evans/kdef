@@ -259,6 +259,7 @@ func (a *applier) updateApplyResult() error {
 			if !a.localDef.Spec.ManagedAssignments.HasRackConstraints() {
 				remoteCopy.Spec.ManagedAssignments.RackConstraints = nil
 			}
+			remoteCopy.Spec.ManagedAssignments.Balance = a.localDef.Spec.ManagedAssignments.Balance
 			remoteCopy.Spec.ManagedAssignments.Selection = a.localDef.Spec.ManagedAssignments.Selection
 		}
 
@@ -467,41 +468,70 @@ func (a *applier) updatePartitions(ctx context.Context) error {
 
 // buildAssignmentsOp builds an assignments operation.
 func (a *applier) buildAssignmentsOp() {
-	switch {
-	case a.localDef.Spec.HasAssignments():
+	if a.localDef.Spec.HasAssignments() {
 		if !cmp.Equal(a.remoteDef.Spec.Assignments, a.localDef.Spec.Assignments) {
 			log.Debugf("Partition assignments have changed and will be updated")
 			a.ops.assignments = a.localDef.Spec.Assignments
 		}
-	case a.localDef.Spec.HasManagedAssignments() && a.localDef.Spec.ManagedAssignments.HasRackConstraints():
-		var newAssignments def.PartitionAssignments
-		newAssignments = assignments.Copy(a.remoteDef.Spec.Assignments)
-		if len(a.ops.partitions) > 0 {
-			newAssignments = append(newAssignments, a.ops.partitions...)
+	} else { // Managed assignments.
+		if a.localDef.Spec.ManagedAssignments.HasRackConstraints() {
+			var newAssignments def.PartitionAssignments
+			newAssignments = assignments.Copy(a.remoteDef.Spec.Assignments)
+			if len(a.ops.partitions) > 0 {
+				newAssignments = append(newAssignments, a.ops.partitions...)
+			}
+			newAssignments = assignments.SyncRackConstraints(
+				newAssignments,
+				a.localDef.Spec.ManagedAssignments.RackConstraints,
+				a.brokers.BrokersByRack(),
+				a.clusterReplicaCounts,
+			)
+			if !cmp.Equal(a.remoteDef.Spec.Assignments, newAssignments) {
+				log.Debugf("Partition assignments are out of sync with defined racks and will be updated")
+				a.ops.assignments = newAssignments
+			}
+		} else if a.localDef.Spec.ReplicationFactor != a.remoteDef.Spec.ReplicationFactor {
+			log.Debugf("Replication factor has changed and will be updated")
+			var newAssignments def.PartitionAssignments
+			newAssignments = assignments.Copy(a.remoteDef.Spec.Assignments)
+			if len(a.ops.partitions) > 0 {
+				newAssignments = append(newAssignments, a.ops.partitions...)
+			}
+			a.ops.assignments = assignments.AlterReplicationFactor(
+				newAssignments,
+				a.localDef.Spec.ReplicationFactor,
+				a.clusterReplicaCounts,
+				a.brokers.IDs(),
+			)
 		}
-		newAssignments = assignments.SyncRackConstraints(
-			newAssignments,
-			a.localDef.Spec.ManagedAssignments.RackConstraints,
-			a.brokers.BrokersByRack(),
-			a.clusterReplicaCounts,
-		)
-		if !cmp.Equal(a.remoteDef.Spec.Assignments, newAssignments) {
-			log.Debugf("Partition assignments are out of sync with defined racks and will be updated")
-			a.ops.assignments = newAssignments
+
+		if a.localDef.Spec.ManagedAssignments.Balance == def.BalanceAll {
+			prebalancedAssignments := a.remoteDef.Spec.Assignments
+			if len(a.ops.assignments) > 0 {
+				prebalancedAssignments = a.ops.assignments
+			}
+
+			var rebalancedAssignments def.PartitionAssignments
+			if a.localDef.Spec.ManagedAssignments.HasRackConstraints() {
+				rebalancedAssignments = assignments.RebalanceWithRackConstraints(
+					prebalancedAssignments,
+					a.localDef.Spec.ManagedAssignments.RackConstraints,
+					a.clusterReplicaCounts,
+					a.brokers.BrokersByRack(),
+				)
+			} else {
+				rebalancedAssignments = assignments.Rebalance(
+					prebalancedAssignments,
+					a.clusterReplicaCounts,
+					a.brokers.IDs(),
+				)
+			}
+
+			if !cmp.Equal(prebalancedAssignments, rebalancedAssignments) {
+				log.Debugf("Partition assignments have been rebalanced and will be updated")
+				a.ops.assignments = rebalancedAssignments
+			}
 		}
-	case a.localDef.Spec.ReplicationFactor != a.remoteDef.Spec.ReplicationFactor:
-		log.Debugf("Replication factor has changed and will be updated")
-		var newAssignments def.PartitionAssignments
-		newAssignments = assignments.Copy(a.remoteDef.Spec.Assignments)
-		if len(a.ops.partitions) > 0 {
-			newAssignments = append(newAssignments, a.ops.partitions...)
-		}
-		a.ops.assignments = assignments.AlterReplicationFactor(
-			newAssignments,
-			a.localDef.Spec.ReplicationFactor,
-			a.clusterReplicaCounts,
-			a.brokers.IDs(),
-		)
 	}
 }
 

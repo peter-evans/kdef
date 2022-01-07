@@ -666,3 +666,338 @@ func TestSyncRackAssignments(t *testing.T) {
 		})
 	}
 }
+
+func TestRebalance(t *testing.T) {
+	type args struct {
+		assignments          [][]int32
+		clusterReplicaCounts map[int32]int
+		brokers              []int32
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]int32
+	}{
+		{
+			name: "Tests no unused brokers",
+			args: args{
+				assignments: [][]int32{
+					{1, 2, 3},
+					{2, 3, 1},
+					{3, 1, 2},
+				},
+				clusterReplicaCounts: nil,
+				brokers:              []int32{1, 2, 3},
+			},
+			want: [][]int32{
+				{1, 2, 3},
+				{2, 3, 1},
+				{3, 1, 2},
+			},
+		},
+		{
+			name: "Tests no unused brokers with leader rebalance",
+			args: args{
+				assignments: [][]int32{
+					{1, 2, 3},
+					{2, 3, 1},
+					{2, 1, 3},
+				},
+				clusterReplicaCounts: nil,
+				brokers:              []int32{1, 2, 3},
+			},
+			want: [][]int32{
+				{1, 2, 3},
+				{2, 3, 1},
+				{3, 1, 2},
+			},
+		},
+		{
+			name: "Tests follower rebalance",
+			args: args{
+				assignments: [][]int32{
+					{1, 2, 3},
+					{2, 3, 1},
+					{3, 1, 2},
+				},
+				clusterReplicaCounts: nil,
+				brokers:              []int32{1, 2, 3, 4},
+			},
+			want: [][]int32{
+				{1, 2, 3},
+				{2, 4, 1},
+				{3, 4, 2},
+			},
+		},
+		{
+			name: "Tests leader and follower rebalance",
+			args: args{
+				assignments: [][]int32{
+					{1, 2, 3},
+					{1, 3, 2},
+					{3, 1, 2},
+				},
+				clusterReplicaCounts: nil,
+				brokers:              []int32{1, 2, 3, 4},
+			},
+			want: [][]int32{
+				{1, 2, 3},
+				{2, 4, 1},
+				{3, 4, 2},
+			},
+		},
+		{
+			name: "Tests leader and follower rebalance when there are cluster replica counts",
+			args: args{
+				assignments: [][]int32{
+					{1, 2, 3},
+					{1, 3, 2},
+					{3, 1, 2},
+				},
+				clusterReplicaCounts: map[int32]int{
+					1: 0,
+					2: 1,
+					3: 0,
+					4: 0,
+				},
+				brokers: []int32{1, 2, 3, 4},
+			},
+			want: [][]int32{
+				{1, 2, 3},
+				{3, 4, 2},
+				{2, 1, 4},
+			},
+		},
+		{
+			name: "Tests no changes",
+			args: args{
+				assignments: [][]int32{
+					{1, 2, 3},
+					{2, 4, 1},
+					{3, 4, 2},
+				},
+				clusterReplicaCounts: nil,
+				brokers:              []int32{1, 2, 3, 4},
+			},
+			want: [][]int32{
+				{1, 2, 3},
+				{2, 4, 1},
+				{3, 4, 2},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Rebalance(tt.args.assignments, tt.args.clusterReplicaCounts, tt.args.brokers); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Rebalance() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRebalanceWithRackConstraints(t *testing.T) {
+	type args struct {
+		assignments          [][]int32
+		rackConstraints      [][]string
+		clusterReplicaCounts map[int32]int
+		brokersByRack        map[string][]int32
+	}
+	tests := []struct {
+		name string
+		args args
+		want [][]int32
+	}{
+		{
+			name: "Tests no unused brokers",
+			args: args{
+				assignments: [][]int32{
+					{1, 2, 3},
+					{2, 3, 1},
+					{3, 1, 2},
+				},
+				rackConstraints: [][]string{
+					{"zone-a", "zone-b", "zone-b"},
+					{"zone-b", "zone-b", "zone-a"},
+					{"zone-b", "zone-a", "zone-b"},
+				},
+				clusterReplicaCounts: nil,
+				brokersByRack: map[string][]int32{
+					"zone-a": {1},
+					"zone-b": {2, 3},
+				},
+			},
+			want: [][]int32{
+				{1, 2, 3},
+				{2, 3, 1},
+				{3, 1, 2},
+			},
+		},
+		{
+			name: "Tests no unused brokers with leader rebalance",
+			args: args{
+				assignments: [][]int32{
+					{1, 2, 3},
+					{2, 3, 1},
+					{2, 1, 3},
+				},
+				rackConstraints: [][]string{
+					{"zone-a", "zone-b", "zone-b"},
+					{"zone-b", "zone-b", "zone-a"},
+					{"zone-b", "zone-a", "zone-b"},
+				},
+				clusterReplicaCounts: nil,
+				brokersByRack: map[string][]int32{
+					"zone-a": {1},
+					"zone-b": {2, 3},
+				},
+			},
+			want: [][]int32{
+				{1, 2, 3},
+				{2, 3, 1},
+				{3, 1, 2},
+			},
+		},
+		{
+			name: "Tests follower rebalance",
+			args: args{
+				assignments: [][]int32{
+					{1, 2, 3},
+					{2, 3, 1},
+					{3, 1, 2},
+				},
+				rackConstraints: [][]string{
+					{"zone-a", "zone-b", "zone-c"},
+					{"zone-b", "zone-c", "zone-a"},
+					{"zone-c", "zone-a", "zone-b"},
+				},
+				clusterReplicaCounts: nil,
+				brokersByRack: map[string][]int32{
+					"zone-a": {1, 4},
+					"zone-b": {2, 5},
+					"zone-c": {3, 6},
+				},
+			},
+			want: [][]int32{
+				{1, 2, 3},
+				{2, 6, 4},
+				{3, 1, 5},
+			},
+		},
+		{
+			name: "Tests leader and follower rebalance",
+			args: args{
+				assignments: [][]int32{
+					{1, 2, 3},
+					{2, 3, 1},
+					{3, 1, 2},
+					{1, 2, 3},
+					{2, 3, 1},
+					{3, 1, 2},
+				},
+				rackConstraints: [][]string{
+					{"zone-a", "zone-b", "zone-c"},
+					{"zone-b", "zone-c", "zone-a"},
+					{"zone-c", "zone-a", "zone-b"},
+					{"zone-a", "zone-b", "zone-c"},
+					{"zone-b", "zone-c", "zone-a"},
+					{"zone-c", "zone-a", "zone-b"},
+				},
+				clusterReplicaCounts: nil,
+				brokersByRack: map[string][]int32{
+					"zone-a": {1, 4},
+					"zone-b": {2, 5},
+					"zone-c": {3, 6},
+				},
+			},
+			want: [][]int32{
+				{1, 2, 3},
+				{2, 6, 4},
+				{3, 1, 5},
+				{4, 5, 6},
+				{5, 3, 1},
+				{6, 4, 2},
+			},
+		},
+		{
+			name: "Tests leader and follower rebalance when there are cluster replica counts",
+			args: args{
+				assignments: [][]int32{
+					{1, 2, 3},
+					{2, 3, 1},
+					{3, 1, 2},
+					{1, 2, 3},
+				},
+				rackConstraints: [][]string{
+					{"zone-a", "zone-b", "zone-c"},
+					{"zone-b", "zone-c", "zone-a"},
+					{"zone-c", "zone-a", "zone-b"},
+					{"zone-a", "zone-b", "zone-c"},
+				},
+				clusterReplicaCounts: map[int32]int{
+					1: 0,
+					2: 0,
+					3: 0,
+					4: 1,
+					5: 0,
+					6: 0,
+					7: 0,
+					8: 0,
+					9: 0,
+				},
+				brokersByRack: map[string][]int32{
+					"zone-a": {1, 4, 7},
+					"zone-b": {2, 5, 8},
+					"zone-c": {3, 6, 9},
+				},
+			},
+			want: [][]int32{
+				{1, 2, 3},
+				{2, 6, 7},
+				{3, 4, 5},
+				{7, 8, 9},
+			},
+		},
+		{
+			name: "Tests no changes",
+			args: args{
+				assignments: [][]int32{
+					{1, 2, 3},
+					{2, 6, 4},
+					{3, 1, 5},
+					{4, 5, 6},
+					{5, 3, 1},
+					{6, 4, 2},
+				},
+				rackConstraints: [][]string{
+					{"zone-a", "zone-b", "zone-c"},
+					{"zone-b", "zone-c", "zone-a"},
+					{"zone-c", "zone-a", "zone-b"},
+					{"zone-a", "zone-b", "zone-c"},
+					{"zone-b", "zone-c", "zone-a"},
+					{"zone-c", "zone-a", "zone-b"},
+				},
+				clusterReplicaCounts: nil,
+				brokersByRack: map[string][]int32{
+					"zone-a": {1, 4},
+					"zone-b": {2, 5},
+					"zone-c": {3, 6},
+				},
+			},
+			want: [][]int32{
+				{1, 2, 3},
+				{2, 6, 4},
+				{3, 1, 5},
+				{4, 5, 6},
+				{5, 3, 1},
+				{6, 4, 2},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := RebalanceWithRackConstraints(tt.args.assignments, tt.args.rackConstraints, tt.args.clusterReplicaCounts, tt.args.brokersByRack); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("RebalanceWithRackConstraints() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

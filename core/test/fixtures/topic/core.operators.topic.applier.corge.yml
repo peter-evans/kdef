@@ -1,0 +1,26 @@
+---
+# Version 0
+# Create topic
+apiVersion: v1
+kind: topic
+metadata:
+  name: core.operators.topic.applier.corge
+spec:
+  partitions: 3
+  replicationFactor: 3
+  assignments:
+    - [101, 102, 103]
+    - [102, 103, 101]
+    - [102, 101, 103]
+---
+# Version 1
+# Rebalance
+apiVersion: v1
+kind: topic
+metadata:
+  name: core.operators.topic.applier.corge
+spec:
+  partitions: 3
+  replicationFactor: 3
+  managedAssignments:
+    balance: all
