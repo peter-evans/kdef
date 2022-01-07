@@ -24,6 +24,7 @@ import (
 // ApplierOptions represents options to configure an applier.
 type ApplierOptions struct {
 	DefinitionFormat  opt.DefinitionFormat
+	PropertyOverrides []string
 	DryRun            bool
 	ReassAwaitTimeout int
 }
@@ -157,7 +158,7 @@ func (a *applier) apply(ctx context.Context) error {
 // createLocal creates the local definition.
 func (a *applier) createLocal() error {
 	var err error
-	a.localDef, err = def.LoadTopicDefinition(a.defDoc, a.opts.DefinitionFormat)
+	a.localDef, err = def.LoadTopicDefinition(a.defDoc, a.opts.DefinitionFormat, a.opts.PropertyOverrides)
 	if err != nil {
 		return err
 	}

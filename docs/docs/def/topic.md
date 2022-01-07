@@ -125,6 +125,12 @@ In particular, partition leaders (the first replica in the assignment) are evenl
     - `new` (default) - Only new assignments are balanced by the managed strategy. New assignments refers to additional replicas added when partitions are increased, or the replication factor is increased.
     - `all` - All assignments are in scope of the managed strategy, and changes may be made to rebalance replicas across available brokers. Setting this scope is equivalent to performing a partition rebalance on apply.
 
+    !!! tip
+        Setting scope `all` permanently in definitions could be disruputive if activity in the cluster causes frequent rebalancing.
+        Consider only periodically rebalancing by using the apply command's property override `-P` option to chose when to set the `all` scope.
+
+        i.e. `-P topic.spec.managedAssignments.balance=all`
+
 ## Examples
 
 ```yml

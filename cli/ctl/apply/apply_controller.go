@@ -32,9 +32,10 @@ type applier interface {
 // ControllerOptions represents options to configure an apply controller.
 type ControllerOptions struct {
 	// Applier options.
-	ReassAwaitTimeout int
 	DefinitionFormat  opt.DefinitionFormat
+	PropertyOverrides []string
 	DryRun            bool
+	ReassAwaitTimeout int
 
 	// Apply controller specific options.
 	ContinueOnError bool
@@ -164,22 +165,26 @@ func (a *applyController) applyDefinitions(ctx context.Context, defDocs []string
 		switch resourceDef.Kind {
 		case "acl":
 			applier = acl.NewApplier(a.cl, defDocs[i], acl.ApplierOptions{
-				DefinitionFormat: a.opts.DefinitionFormat,
-				DryRun:           a.opts.DryRun,
+				DefinitionFormat:  a.opts.DefinitionFormat,
+				PropertyOverrides: a.opts.PropertyOverrides,
+				DryRun:            a.opts.DryRun,
 			})
 		case "broker":
 			applier = broker.NewApplier(a.cl, defDocs[i], broker.ApplierOptions{
-				DefinitionFormat: a.opts.DefinitionFormat,
-				DryRun:           a.opts.DryRun,
+				DefinitionFormat:  a.opts.DefinitionFormat,
+				PropertyOverrides: a.opts.PropertyOverrides,
+				DryRun:            a.opts.DryRun,
 			})
 		case "brokers":
 			applier = brokers.NewApplier(a.cl, defDocs[i], brokers.ApplierOptions{
-				DefinitionFormat: a.opts.DefinitionFormat,
-				DryRun:           a.opts.DryRun,
+				DefinitionFormat:  a.opts.DefinitionFormat,
+				PropertyOverrides: a.opts.PropertyOverrides,
+				DryRun:            a.opts.DryRun,
 			})
 		case "topic":
 			applier = topic.NewApplier(a.cl, defDocs[i], topic.ApplierOptions{
 				DefinitionFormat:  a.opts.DefinitionFormat,
+				PropertyOverrides: a.opts.PropertyOverrides,
 				DryRun:            a.opts.DryRun,
 				ReassAwaitTimeout: a.opts.ReassAwaitTimeout,
 			})

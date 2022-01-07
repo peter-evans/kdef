@@ -17,8 +17,9 @@ import (
 
 // ApplierOptions represents options to configure an applier.
 type ApplierOptions struct {
-	DefinitionFormat opt.DefinitionFormat
-	DryRun           bool
+	DefinitionFormat  opt.DefinitionFormat
+	PropertyOverrides []string
+	DryRun            bool
 }
 
 // NewApplier creates a new applier.

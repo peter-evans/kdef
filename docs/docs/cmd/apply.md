@@ -80,6 +80,15 @@ cat topics/my_topic.yml | kdef apply - --dry-run
     By default kdef does not wait for reassignment operations to complete and exits immediately.
     Optionally, kdef can be instructed with this option to await the completion of partition reassignments.
 
+- **--prop-override / -P** ([]string)
+
+    Definition property override for overridable properties (e.g. `-P topic.spec.managedAssignments.balance=all`).
+    This is a repeatable option.
+
+    Overridable properties:
+
+    - `topic.spec.managedAssignments.balance`
+
 ## Global options
 
 --8<-- "docs/cmd/global-options.md"

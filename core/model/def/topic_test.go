@@ -2,9 +2,11 @@
 package def
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/peter-evans/kdef/core/model/meta"
+	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/test/tutil"
 )
 
@@ -365,6 +367,105 @@ func TestTopicDefinition_ValidateWithMetadata(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.topicDef.ValidateWithMetadata(tt.args.brokers); !tutil.ErrorContains(err, tt.wantErr) {
 				t.Errorf("TopicDefinition.ValidateWithMetadata() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestLoadTopicDefinition(t *testing.T) {
+	type args struct {
+		defDoc        string
+		format        opt.DefinitionFormat
+		propOverrides []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    TopicDefinition
+		wantErr string
+	}{
+		{
+			name: "Tests a malformed property override",
+			args: args{
+				defDoc:        "apiVersion: v1\nkind: topic\nmetadata:\n  name: baz\nspec:\n  partitions: 3\n  replicationFactor: 1",
+				format:        opt.YAMLFormat,
+				propOverrides: []string{"topic.foo-"},
+			},
+			want:    TopicDefinition{},
+			wantErr: "property override \"topic.foo-\" not a 'key=value' pair",
+		},
+		{
+			name: "Tests attempting to override a property that is not overridable",
+			args: args{
+				defDoc:        "apiVersion: v1\nkind: topic\nmetadata:\n  name: baz\nspec:\n  partitions: 3\n  replicationFactor: 1",
+				format:        opt.YAMLFormat,
+				propOverrides: []string{"topic.foo=bar"},
+			},
+			want:    TopicDefinition{},
+			wantErr: "property \"topic.foo\" is not overridable",
+		},
+		{
+			name: "Tests loading a valid topic definition",
+			args: args{
+				defDoc:        "apiVersion: v1\nkind: topic\nmetadata:\n  name: baz\nspec:\n  partitions: 3\n  replicationFactor: 1",
+				format:        opt.YAMLFormat,
+				propOverrides: nil,
+			},
+			want: TopicDefinition{
+				ResourceDefinition: ResourceDefinition{
+					APIVersion: "v1",
+					Kind:       "topic",
+					Metadata: ResourceMetadataDefinition{
+						Name: "baz",
+					},
+				},
+				Spec: TopicSpecDefinition{
+					Partitions:        3,
+					ReplicationFactor: 1,
+					ManagedAssignments: &ManagedAssignmentsDefinition{
+						Balance:   BalanceNew,
+						Selection: SelectionTopicClusterUse,
+					},
+				},
+			},
+			wantErr: "",
+		},
+		{
+			name: "Tests loading a valid topic definition with overrides",
+			args: args{
+				defDoc:        "apiVersion: v1\nkind: topic\nmetadata:\n  name: baz\nspec:\n  partitions: 3\n  replicationFactor: 1",
+				format:        opt.YAMLFormat,
+				propOverrides: []string{"topic.spec.managedAssignments.balance=all"},
+			},
+			want: TopicDefinition{
+				ResourceDefinition: ResourceDefinition{
+					APIVersion: "v1",
+					Kind:       "topic",
+					Metadata: ResourceMetadataDefinition{
+						Name: "baz",
+					},
+				},
+				Spec: TopicSpecDefinition{
+					Partitions:        3,
+					ReplicationFactor: 1,
+					ManagedAssignments: &ManagedAssignmentsDefinition{
+						Balance:   BalanceAll,
+						Selection: SelectionTopicClusterUse,
+					},
+				},
+			},
+			wantErr: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := LoadTopicDefinition(tt.args.defDoc, tt.args.format, tt.args.propOverrides)
+			if !tutil.ErrorContains(err, tt.wantErr) {
+				t.Errorf("LoadTopicDefinition() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err == nil && !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("LoadTopicDefinition() = %v, want %v", got, tt.want)
 			}
 		})
 	}

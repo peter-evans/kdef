@@ -112,6 +112,13 @@ cat topics/my_topic.yml | kdef apply - --dry-run`,
 		0,
 		"time in seconds to wait for topic partition reassignments to complete before timing out",
 	)
+	cmd.Flags().StringArrayVarP(
+		&opts.PropertyOverrides,
+		"prop-override",
+		"P",
+		nil,
+		"definition property override for overridable properties (e.g. -P topic.spec.managedAssignments.balance=all)",
+	)
 
 	return cmd
 }

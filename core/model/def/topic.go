@@ -265,6 +265,7 @@ func NewTopicDefinition(
 func LoadTopicDefinition(
 	defDoc string,
 	format opt.DefinitionFormat,
+	propOverrides []string,
 ) (TopicDefinition, error) {
 	var def TopicDefinition
 
@@ -295,6 +296,24 @@ func LoadTopicDefinition(
 				Balance:   BalanceNew,
 				Selection: SelectionTopicClusterUse,
 			}
+		}
+	}
+
+	// Apply property overrides
+	for _, po := range propOverrides {
+		if !strings.HasPrefix(po, "topic.") {
+			continue
+		}
+		kv := strings.SplitN(po, "=", 2)
+		if len(kv) != 2 {
+			return def, fmt.Errorf("property override %q not a 'key=value' pair", po)
+		}
+		log.Debugf("Setting property override %q", po)
+		switch kv[0] {
+		case "topic.spec.managedAssignments.balance":
+			def.Spec.ManagedAssignments.Balance = kv[1]
+		default:
+			return def, fmt.Errorf("property %q is not overridable", kv[0])
 		}
 	}
 
