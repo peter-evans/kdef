@@ -844,5 +844,20 @@ func Test_applier_Execute(t *testing.T) {
 			wantErr:     "",
 			wantApplied: true,
 		},
+		{
+			// Maintain leaders
+			name: "5: Dry-run topic corge version 2",
+			fields: fields{
+				cl:      cl,
+				yamlDoc: corgeDocs[2],
+				opts: ApplierOptions{
+					DefinitionFormat: opt.YAMLFormat,
+					DryRun:           true,
+				},
+			},
+			wantDiff:    corgeDiffs[2],
+			wantErr:     "",
+			wantApplied: false,
+		},
 	})
 }

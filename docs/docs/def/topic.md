@@ -72,6 +72,12 @@ A definition representing a Kafka topic.
 
     Cannot be specified at the same time as `assignments`.
 
+- **maintainLeaders** (bool)
+
+    Performs leader election on the preferred leader (the first replica in the assignment) of partitions if leadership has been lost to another broker.
+
+    The default value is `false`.
+
 ## ManagedAssignments
 
 When using managed assignments, kdef will make evenly distributed replica assignments based on the configuration in this section.

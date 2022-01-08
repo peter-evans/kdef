@@ -19,6 +19,7 @@ import (
 	"github.com/peter-evans/kdef/core/model/meta"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/model/res"
+	"github.com/peter-evans/kdef/core/util/i32"
 )
 
 // ApplierOptions represents options to configure an applier.
@@ -48,13 +49,18 @@ type applierOps struct {
 	config            kafka.ConfigOperations
 	partitions        def.PartitionAssignments
 	assignments       def.PartitionAssignments
+	leaderElection    struct {
+		leaders    []int32
+		partitions []int32
+	}
 }
 
 func (a applierOps) pending() bool {
 	return a.create ||
 		len(a.config) > 0 ||
 		len(a.partitions) > 0 ||
-		len(a.assignments) > 0
+		len(a.assignments) > 0 ||
+		len(a.leaderElection.partitions) > 0
 }
 
 type applier struct {
@@ -67,6 +73,7 @@ type applier struct {
 	localDef             def.TopicDefinition
 	remoteDef            *def.TopicDefinition
 	remoteConfigs        def.Configs
+	remotePartitionISR   def.PartitionAssignments
 	brokers              meta.Brokers
 	clusterReplicaCounts map[int32]int
 	ops                  applierOps
@@ -172,12 +179,13 @@ func (a *applier) createLocal() error {
 func (a *applier) tryFetchRemote(ctx context.Context) error {
 	log.Infof("Fetching remote topic...")
 	var err error
-	a.remoteDef, a.remoteConfigs, a.brokers, err = a.srv.TryRequestTopic(ctx, a.localDef.Metadata)
+	a.remoteDef, a.remoteConfigs, a.remotePartitionISR, a.brokers, err = a.srv.TryRequestTopic(ctx, a.localDef.Metadata)
 	if err != nil {
 		return err
 	}
 
 	if a.localDef.Spec.HasManagedAssignments() && a.localDef.Spec.ManagedAssignments.Selection == def.SelectionTopicClusterUse {
+		// Describe metadata for all topics in the cluster.
 		metadata, err := a.srv.DescribeMetadata(ctx, nil, true)
 		if err != nil {
 			return err
@@ -212,6 +220,7 @@ func (a *applier) buildOps(ctx context.Context) error {
 			return err
 		}
 		a.buildAssignmentsOp()
+		a.buildLeaderElectionOp()
 	}
 	return nil
 }
@@ -235,6 +244,16 @@ func (a *applier) updateLocalState() {
 				Assignments: a.ops.assignments,
 			}
 			a.localDef.State.Assignments = append(a.localDef.State.Assignments, a.ops.partitions...)
+		}
+	}
+
+	if len(a.ops.leaderElection.partitions) > 0 {
+		if a.localDef.State != nil {
+			a.localDef.State.Leaders = a.ops.leaderElection.leaders
+		} else {
+			a.localDef.State = &def.TopicStateDefinition{
+				Leaders: a.ops.leaderElection.leaders,
+			}
 		}
 	}
 }
@@ -276,9 +295,17 @@ func (a *applier) updateApplyResult() error {
 		}
 
 		remoteCopy.Spec.DeleteUndefinedConfigs = a.localDef.Spec.DeleteUndefinedConfigs
+		remoteCopy.Spec.MaintainLeaders = a.localDef.Spec.MaintainLeaders
 
 		if a.localDef.State == nil {
 			remoteCopy.State = nil
+		} else {
+			if a.localDef.State.Assignments == nil {
+				remoteCopy.State.Assignments = nil
+			}
+			if a.localDef.State.Leaders == nil {
+				remoteCopy.State.Leaders = nil
+			}
 		}
 	}
 
@@ -329,6 +356,12 @@ func (a *applier) executeOps(ctx context.Context) error {
 
 	if len(a.ops.assignments) > 0 {
 		if err := a.updateAssignments(ctx); err != nil {
+			return err
+		}
+	}
+
+	if len(a.ops.leaderElection.partitions) > 0 {
+		if err := a.electPartitionLeaders(ctx); err != nil {
 			return err
 		}
 	}
@@ -634,4 +667,52 @@ func (a *applier) awaitReassignments(ctx context.Context, timeoutSec int) error 
 			continue
 		}
 	}
+}
+
+// buildLeaderElectionOp builds a leader election operation.
+func (a *applier) buildLeaderElectionOp() {
+	if a.localDef.Spec.MaintainLeaders {
+		assignments := a.remoteDef.Spec.Assignments
+		if len(a.ops.assignments) > 0 {
+			assignments = a.ops.assignments
+		}
+
+		a.ops.leaderElection.leaders = make([]int32, len(assignments))
+		for partition, replicas := range assignments {
+			preferredLeader := replicas[0]
+			a.ops.leaderElection.leaders[partition] = preferredLeader
+			// If the current leader is not the preferred leader, set for election.
+			if a.remoteDef.State.Leaders[partition] != preferredLeader {
+				// Check that the preferred leader is an in-sync replica.
+				if i32.Contains(preferredLeader, a.remotePartitionISR[partition]) {
+					a.ops.leaderElection.partitions = append(a.ops.leaderElection.partitions, int32(partition))
+				} else {
+					log.Warnf(
+						"Cannot elect preferred leader %q of partition %q because it is not an in-sync replica.",
+						fmt.Sprint(preferredLeader),
+						partition,
+					)
+				}
+			}
+		}
+	}
+}
+
+// electPartitionLeaders executes a request to elect partition leaders.
+func (a *applier) electPartitionLeaders(ctx context.Context) error {
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Electing partition leaders...")
+
+	if !a.opts.DryRun {
+		if err := a.srv.ElectLeaders(
+			ctx,
+			a.localDef.Metadata.Name,
+			a.ops.leaderElection.partitions,
+		); err != nil {
+			return err
+		}
+	}
+
+	log.InfoMaybeWithKeyf("dry-run", a.opts.DryRun, "Elected partition leaders for topic %q", a.localDef.Metadata.Name)
+
+	return nil
 }

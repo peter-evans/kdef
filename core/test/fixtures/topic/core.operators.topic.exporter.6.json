@@ -39,7 +39,8 @@
         "replicationFactor": 1,
         "managedAssignments": {
           "rackConstraints": [["zone-a"], ["zone-a"], ["zone-a"]]
-        }
+        },
+        "maintainLeaders": false
       }
     }
   }
