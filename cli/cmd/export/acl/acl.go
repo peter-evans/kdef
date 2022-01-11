@@ -38,6 +38,7 @@ kdef export acl --match "myapp.*"`,
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		DisableFlagsInUseLine: true,
+		Args:                  cobra.NoArgs,
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			opts.DefinitionFormat = opt.ParseDefinitionFormat(defFormat)
 			if opts.DefinitionFormat == opt.UnsupportedFormat {
@@ -56,7 +57,7 @@ kdef export acl --match "myapp.*"`,
 
 			// TODO: Make constants for the kinds
 			ctx := context.Background()
-			ctl := export.NewExportController(cl, args, opts, "acl")
+			ctl := export.NewExportController(cl, opts, "acl")
 			if err := ctl.Execute(ctx); err != nil {
 				return err
 			}

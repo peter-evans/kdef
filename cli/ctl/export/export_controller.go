@@ -48,13 +48,11 @@ type ControllerOptions struct {
 // NewExportController creates a new export controller.
 func NewExportController(
 	cl *client.Client,
-	args []string,
 	opts ControllerOptions,
 	kind string,
 ) *exportController { //revive:disable-line:unexported-return
 	return &exportController{
 		cl:   cl,
-		args: args,
 		opts: opts,
 		kind: kind,
 	}
@@ -62,7 +60,6 @@ func NewExportController(
 
 type exportController struct {
 	cl   *client.Client
-	args []string
 	opts ControllerOptions
 	kind string
 }
