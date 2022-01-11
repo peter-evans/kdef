@@ -63,7 +63,13 @@ kdef export brokers --quiet`,
 		"yaml",
 		fmt.Sprintf("resource definition format [%s]", strings.Join(opt.DefinitionFormatValidValues, "|")),
 	)
-	cmd.Flags().StringVarP(&opts.OutputDir, "output-dir", "o", "", "output directory (must exist)")
+	cmd.Flags().StringVarP(
+		&opts.OutputDir,
+		"output-dir",
+		"o",
+		"",
+		"output directory path for definition files; non-existent directories will be created",
+	)
 	cmd.Flags().BoolVarP(&opts.Overwrite, "overwrite", "w", false, "overwrite existing files in output directory")
 
 	return cmd

@@ -71,7 +71,13 @@ kdef export topic --match "myapp.*"`,
 		"yaml",
 		fmt.Sprintf("resource definition format [%s]", strings.Join(opt.DefinitionFormatValidValues, "|")),
 	)
-	cmd.Flags().StringVarP(&opts.OutputDir, "output-dir", "o", "", "output directory (must exist)")
+	cmd.Flags().StringVarP(
+		&opts.OutputDir,
+		"output-dir",
+		"o",
+		"",
+		"output directory path for definition files; non-existent directories will be created",
+	)
 	cmd.Flags().BoolVarP(&opts.Overwrite, "overwrite", "w", false, "overwrite existing files in output directory")
 	cmd.Flags().StringVarP(&opts.Match, "match", "m", ".*", "regular expression matching topic names to include")
 	cmd.Flags().StringVarP(&opts.Exclude, "exclude", "e", ".^", "regular expression matching topic names to exclude")
