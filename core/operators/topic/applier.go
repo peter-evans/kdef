@@ -241,7 +241,7 @@ func (a *applier) updateLocalState() {
 			}
 		case len(a.ops.partitions) > 0:
 			a.localDef.State = &def.TopicStateDefinition{
-				Assignments: a.ops.assignments,
+				Assignments: a.remoteDef.Spec.Assignments,
 			}
 			a.localDef.State.Assignments = append(a.localDef.State.Assignments, a.ops.partitions...)
 		}
