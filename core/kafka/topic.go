@@ -20,24 +20,27 @@ func tryRequestTopic(
 ) (
 	*def.TopicDefinition,
 	def.Configs,
+	def.PartitionAssignments,
 	meta.Brokers,
 	error,
 ) {
 	metadata, err := describeMetadata(ctx, cl, []string{defMetadata.Name}, false)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	// Check if the topic exists
 	topicMetadata := metadata.Topics[0]
 	if !topicMetadata.Exists {
-		return nil, nil, metadata.Brokers, nil
+		return nil, nil, nil, metadata.Brokers, nil
 	}
+	partitionLeaders := metadata.Topics[0].PartitionLeaders
+	partitionISR := metadata.Topics[0].PartitionISR
 
 	// Fetch topic configs
 	resourceConfigs, err := describeTopicConfigs(ctx, cl, []string{defMetadata.Name})
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 	topicConfigs := resourceConfigs[0].Configs
 
@@ -46,14 +49,14 @@ func tryRequestTopic(
 		defMetadata,
 		topicMetadata.PartitionAssignments,
 		topicMetadata.PartitionRacks,
+		partitionLeaders,
 		topicConfigs.ToMap(),
-		metadata.Brokers,
 		true,
 		true,
 		true,
 	)
 
-	return &topicDef, topicConfigs, metadata.Brokers, nil
+	return &topicDef, topicConfigs, partitionISR, metadata.Brokers, nil
 }
 
 // createTopic executes a request to create a topic (Kafka 0.10.1+).
@@ -266,4 +269,49 @@ func listPartitionReassignments(
 	reassignments.Sort()
 
 	return reassignments, nil
+}
+
+// electLeaders executes a request to elect preferred partition leaders (Kafka 2.4.0+).
+func electLeaders(
+	ctx context.Context,
+	cl *client.Client,
+	topic string,
+	partitions []int32,
+) error {
+	reqT := kmsg.NewElectLeadersRequestTopic()
+	reqT.Topic = topic
+	reqT.Partitions = partitions
+
+	req := kmsg.NewElectLeadersRequest()
+	req.Topics = []kmsg.ElectLeadersRequestTopic{reqT}
+	req.ElectionType = 0
+	req.TimeoutMillis = cl.TimeoutMs()
+
+	kresp, err := cl.Client.Request(ctx, &req)
+	if err != nil {
+		return err
+	}
+	resp := kresp.(*kmsg.ElectLeadersResponse)
+
+	if len(resp.Topics) != 1 {
+		return fmt.Errorf("requested %d topic(s) but received %d", 1, len(resp.Topics))
+	}
+
+	if err := kerr.ErrorForCode(resp.ErrorCode); err != nil {
+		return err
+	}
+
+	for _, topic := range resp.Topics {
+		for _, partition := range topic.Partitions {
+			if err := kerr.ErrorForCode(partition.ErrorCode); err != nil {
+				errMsg := err.Error()
+				if partition.ErrorMessage != nil {
+					errMsg = fmt.Sprintf("%s: %s", errMsg, *partition.ErrorMessage)
+				}
+				return fmt.Errorf(errMsg)
+			}
+		}
+	}
+
+	return nil
 }

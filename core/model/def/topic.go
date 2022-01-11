@@ -4,6 +4,7 @@ package def
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -41,6 +42,9 @@ type PartitionAssignments [][]int32
 // PartitionRacks represents assigned racks for partitions.
 type PartitionRacks [][]string
 
+// PartitionLeaders represents partition leaders by broker ID.
+type PartitionLeaders []int32
+
 // ManagedAssignmentsDefinition represents a managed assignments definition.
 type ManagedAssignmentsDefinition struct {
 	Balance         string         `json:"balance,omitempty"`
@@ -61,6 +65,7 @@ type TopicSpecDefinition struct {
 	ReplicationFactor      int                           `json:"replicationFactor"`
 	Assignments            PartitionAssignments          `json:"assignments,omitempty"`
 	ManagedAssignments     *ManagedAssignmentsDefinition `json:"managedAssignments,omitempty"`
+	MaintainLeaders        bool                          `json:"maintainLeaders"`
 }
 
 // HasAssignments determines if a spec has assignments.
@@ -76,6 +81,7 @@ func (t TopicSpecDefinition) HasManagedAssignments() bool {
 // TopicStateDefinition represents a topic state definition.
 type TopicStateDefinition struct {
 	Assignments PartitionAssignments `json:"assignments,omitempty"`
+	Leaders     PartitionLeaders     `json:"leaders,omitempty"`
 }
 
 // TopicDefinition represents a topic resource definition.
@@ -225,8 +231,8 @@ func NewTopicDefinition(
 	metadata ResourceMetadataDefinition,
 	partitionAssignments PartitionAssignments,
 	rackConstraints PartitionRacks,
+	partitionLeaders PartitionLeaders,
 	configsMap ConfigsMap,
-	brokers meta.Brokers,
 	includeAssignments bool,
 	includeRackConstraints bool,
 	includeState bool,
@@ -255,6 +261,7 @@ func NewTopicDefinition(
 	if includeState {
 		topicDef.State = &TopicStateDefinition{
 			Assignments: partitionAssignments,
+			Leaders:     partitionLeaders,
 		}
 	}
 
@@ -312,6 +319,12 @@ func LoadTopicDefinition(
 		switch kv[0] {
 		case "topic.spec.managedAssignments.balance":
 			def.Spec.ManagedAssignments.Balance = kv[1]
+		case "topic.spec.maintainLeaders":
+			maintainLeaders, err := strconv.ParseBool(kv[1])
+			if err != nil {
+				return def, fmt.Errorf("value %q is not valid for property %q", kv[1], kv[0])
+			}
+			def.Spec.MaintainLeaders = maintainLeaders
 		default:
 			return def, fmt.Errorf("property %q is not overridable", kv[0])
 		}

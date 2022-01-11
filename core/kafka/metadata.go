@@ -27,6 +27,8 @@ type TopicMetadata struct {
 	Topic                string
 	PartitionAssignments def.PartitionAssignments
 	PartitionRacks       def.PartitionRacks
+	PartitionLeaders     def.PartitionLeaders
+	PartitionISR         def.PartitionAssignments
 	Exists               bool
 }
 
@@ -83,8 +85,12 @@ func describeMetadata(
 
 		if exists {
 			tm.PartitionAssignments = make(def.PartitionAssignments, len(t.Partitions))
+			tm.PartitionLeaders = make([]int32, len(t.Partitions))
+			tm.PartitionISR = make(def.PartitionAssignments, len(t.Partitions))
 			for _, p := range t.Partitions {
 				tm.PartitionAssignments[p.Partition] = p.Replicas
+				tm.PartitionLeaders[p.Partition] = p.Leader
+				tm.PartitionISR[p.Partition] = p.ISR
 			}
 
 			racksByBroker := brokers.RacksByBroker()

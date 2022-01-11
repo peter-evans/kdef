@@ -24,3 +24,14 @@ spec:
   replicationFactor: 3
   managedAssignments:
     balance: all
+---
+# Version 2
+# Maintain leaders
+apiVersion: v1
+kind: topic
+metadata:
+  name: core.operators.topic.applier.corge
+spec:
+  partitions: 3
+  replicationFactor: 3
+  maintainLeaders: true

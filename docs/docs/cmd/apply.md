@@ -88,6 +88,7 @@ cat topics/my_topic.yml | kdef apply - --dry-run
     Overridable properties:
 
     - `topic.spec.managedAssignments.balance`
+    - `topic.spec.maintainLeaders`
 
 ## Global options
 

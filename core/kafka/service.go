@@ -158,6 +158,7 @@ func (s *Service) AlterTopicConfigs(
 func (s *Service) TryRequestTopic(ctx context.Context, defMetadata def.ResourceMetadataDefinition) (
 	*def.TopicDefinition,
 	def.Configs,
+	def.PartitionAssignments,
 	meta.Brokers,
 	error,
 ) {
@@ -201,6 +202,15 @@ func (s *Service) AlterPartitionAssignments(
 	assignments def.PartitionAssignments,
 ) error {
 	return alterPartitionAssignments(ctx, s.cl, topic, assignments)
+}
+
+// ElectLeaders executes a request to elect preferred partition leaders (Kafka 2.4.0+).
+func (s *Service) ElectLeaders(
+	ctx context.Context,
+	topic string,
+	partitions []int32,
+) error {
+	return electLeaders(ctx, s.cl, topic, partitions)
 }
 
 // ========================= ACL =============================
