@@ -34,6 +34,7 @@ kdef export broker --quiet`,
 		SilenceUsage:          true,
 		SilenceErrors:         true,
 		DisableFlagsInUseLine: true,
+		Args:                  cobra.NoArgs,
 		PreRunE: func(_ *cobra.Command, args []string) error {
 			opts.DefinitionFormat = opt.ParseDefinitionFormat(defFormat)
 			if opts.DefinitionFormat == opt.UnsupportedFormat {
@@ -48,7 +49,7 @@ kdef export broker --quiet`,
 			}
 
 			ctx := context.Background()
-			ctl := export.NewExportController(cl, args, opts, "broker")
+			ctl := export.NewExportController(cl, opts, "broker")
 			if err := ctl.Execute(ctx); err != nil {
 				return err
 			}
