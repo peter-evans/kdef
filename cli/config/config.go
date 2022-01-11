@@ -15,6 +15,7 @@ import (
 	"github.com/knadh/koanf/providers/file"
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/core/client"
+	"github.com/peter-evans/kdef/core/util/str"
 )
 
 const (
@@ -29,6 +30,10 @@ var defaultClientConfig = map[string]interface{}{
 	"asVersion":          "",
 	"logLevel":           "none",
 	"alterConfigsMethod": "auto",
+}
+
+var sensitiveConfigKeys = []string{
+	"sasl.pass",
 }
 
 // DefaultConfigPath determines the default configuration file path.
@@ -108,7 +113,11 @@ func loadConfig(configPath string, configOpts []string) (*client.Config, error) 
 	}
 
 	for _, key := range k.Keys() {
-		log.Debugf("%s: %v", key, k.Get(key))
+		var val interface{} = "***"
+		if !str.Contains(key, sensitiveConfigKeys) {
+			val = k.Get(key)
+		}
+		log.Debugf("%s: %v", key, val)
 	}
 
 	return cc, nil
