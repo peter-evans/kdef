@@ -42,3 +42,25 @@ A definition representing cluster-wide configuration for all Kafka brokers.
 ```yml
 --8<-- "examples/definitions/brokers/store-cluster.yml"
 ```
+
+## Schema
+
+**Definition:**
+```js
+{
+    "apiVersion": string,
+    "kind": string,
+    "metadata": {
+        "name": string,
+        "labels": [
+            string
+        ]
+    },
+    "spec": {
+        "configs": {
+            string: string
+        },
+        "deleteUndefinedConfigs": bool
+    }
+}
+```
