@@ -63,6 +63,21 @@ cat topics/my_topic.yml | kdef apply - --dry-run
     Implies `--quiet` and outputs JSON apply results.
     The default value is `false`.
 
+    Schema:
+    ```js
+    [
+        {
+            "local": object, // local definition
+            "remote": object, // remote definition
+            "data": null|object, // additional data
+            "diff": string,
+            "error": string,
+            "applied": bool
+        }
+    ]
+    ```
+    For definition and additional data schemas see the documentation for each definition.
+
 - **--continue-on-error / -c** (bool)
 
     Applying resource definitions is not interrupted if there are errors.

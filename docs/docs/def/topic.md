@@ -154,3 +154,74 @@ In particular, partition leaders (the first replica in the assignment) are evenl
 ```yml
 --8<-- "examples/definitions/topic/store.events.order-dispatched.yml"
 ```
+
+## Schema
+
+**Definition:**
+```js
+{
+    "apiVersion": string,
+    "kind": string,
+    "metadata": {
+        "name": string,
+        "labels": [
+            string
+        ]
+    },
+    "spec": {
+        "configs": {
+            string: string
+        },
+        "deleteUndefinedConfigs": bool,
+        "partitions": int,
+        "replicationFactor": int,
+        "assignments": [
+            [
+                int
+            ]
+        ],
+        "managedAssignments": {
+            "rackConstraints": [
+                [
+                    string
+                ]
+            ],
+            "selection": string,
+            "balance": string
+        },
+        "maintainLeaders": bool
+    },
+    "state": {
+        "assignments": [
+            [
+                int
+            ]
+        ],
+        "leaders": [
+            int
+        ]
+    }
+}
+```
+
+**Additional Data:**
+
+The following additional data is output with the apply result when using the `--json-output` option.
+```js
+{
+    "partitionReassignments": null|[
+        {
+            "partition": int,
+            "replicas": [
+                int
+            ],
+            "addingReplicas": null|[
+                int
+            ],
+            "removingReplicas": null|[
+                int
+            ]
+        }
+    ]
+}
+```

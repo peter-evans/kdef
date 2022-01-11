@@ -43,3 +43,25 @@ A definition representing a single specified Kafka broker.
 ```yml
 --8<-- "examples/definitions/broker/1.yml"
 ```
+
+## Schema
+
+**Definition:**
+```js
+{
+    "apiVersion": string,
+    "kind": string,
+    "metadata": {
+        "name": string,
+        "labels": [
+            string
+        ]
+    },
+    "spec": {
+        "configs": {
+            string: string
+        },
+        "deleteUndefinedConfigs": bool
+    }
+}
+```

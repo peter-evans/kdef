@@ -87,3 +87,37 @@ A group of ACL entries, where specifying more than one value for its properties 
 ```yml
 --8<-- "examples/definitions/acl/topic/store.events.order-created.yml"
 ```
+
+## Schema
+
+**Definition:**
+```js
+{
+    "apiVersion": string,
+    "kind": string,
+    "metadata": {
+        "name": string,
+        "type": string,
+        "labels": [
+            string
+        ]
+    },
+    "spec": {
+        "acls": [
+            {
+                "hosts": [
+                    string
+                ],
+                "operations": [
+                    string
+                ],
+                "permissionType": string,
+                "principals": [
+                    string
+                ]
+            }
+        ],
+        "deleteUndefinedAcls": bool
+    }
+}
+```
