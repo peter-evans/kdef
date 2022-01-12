@@ -304,6 +304,10 @@ func electLeaders(
 	for _, topic := range resp.Topics {
 		for _, partition := range topic.Partitions {
 			if err := kerr.ErrorForCode(partition.ErrorCode); err != nil {
+				if partition.ErrorCode == kerr.ElectionNotNeeded.Code {
+					// The preferred leader is already the leader.
+					continue
+				}
 				errMsg := err.Error()
 				if partition.ErrorMessage != nil {
 					errMsg = fmt.Sprintf("%s: %s", errMsg, *partition.ErrorMessage)
