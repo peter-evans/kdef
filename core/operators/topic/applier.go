@@ -681,8 +681,16 @@ func (a *applier) buildLeaderElectionOp() {
 		for partition, replicas := range assignments {
 			preferredLeader := replicas[0]
 			a.ops.leaderElection.leaders[partition] = preferredLeader
-			// If the current leader is not the preferred leader, set for election.
-			if a.remoteDef.State.Leaders[partition] != preferredLeader {
+
+			if partition >= len(a.remoteDef.Spec.Assignments) {
+				// Additional partitions that don't yet exist at the remote.
+				continue
+			}
+
+			// If the preferred leader is not in the middle of being reassigned,
+			// AND the current leader is not the preferred leader, set for election.
+			if a.remoteDef.Spec.Assignments[partition][0] == preferredLeader &&
+				a.remoteDef.State.Leaders[partition] != preferredLeader {
 				// Check that the preferred leader is an in-sync replica.
 				if i32.Contains(preferredLeader, a.remotePartitionISR[partition]) {
 					a.ops.leaderElection.partitions = append(a.ops.leaderElection.partitions, int32(partition))
