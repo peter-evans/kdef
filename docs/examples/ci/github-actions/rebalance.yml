@@ -1,9 +1,11 @@
-name: kdef
+name: rebalance
 on:
-  push:
-    branches: main
-  pull_request:
-    branches: main
+  workflow_dispatch:
+    inputs:
+      dryrun:
+        description: 'dry-run (true/false)'
+        required: true
+        default: true
 
 jobs:
   apply:
@@ -19,7 +21,7 @@ jobs:
       - name: Toggle dry-run
         id: vars
         run: |
-          if [[ "${{ github.event_name }}" == "push" ]] && [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          if [[ "${{ github.event.inputs.dryrun }}" == "false" ]]; then
               echo "::set-output name=dry-run::";
           else
               echo "::set-output name=dry-run::--dry-run";
@@ -34,4 +36,5 @@ jobs:
             -X sasl.pass=${{ secrets.SASL_PASS }} \
             apply defs/**/*.yml \
               ${{ steps.vars.outputs.dry-run }} \
-              --continue-on-error
+              --continue-on-error \
+              -P topic.spec.managedAssignments.balance=all

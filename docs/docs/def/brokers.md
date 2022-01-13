@@ -39,7 +39,7 @@ A definition representing cluster-wide configuration for all Kafka brokers.
 
 ## Examples
 
-```yml
+```yaml
 --8<-- "examples/definitions/brokers/store-cluster.yml"
 ```
 

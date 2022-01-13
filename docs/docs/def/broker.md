@@ -40,7 +40,7 @@ A definition representing a single specified Kafka broker.
 
 ## Examples
 
-```yml
+```yaml
 --8<-- "examples/definitions/broker/1.yml"
 ```
 
