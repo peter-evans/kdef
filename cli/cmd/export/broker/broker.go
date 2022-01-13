@@ -10,6 +10,7 @@ import (
 
 	"github.com/peter-evans/kdef/cli/config"
 	"github.com/peter-evans/kdef/cli/ctl/export"
+	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/opt"
 )
 
@@ -49,7 +50,7 @@ kdef export broker --quiet`,
 			}
 
 			ctx := context.Background()
-			ctl := export.NewExportController(cl, opts, "broker")
+			ctl := export.NewExportController(cl, opts, def.KindBroker)
 			if err := ctl.Execute(ctx); err != nil {
 				return err
 			}

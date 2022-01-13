@@ -19,7 +19,7 @@ func TestBrokerDefinition_Validate(t *testing.T) {
 			brokerDef: BrokerDefinition{
 				ResourceDefinition: ResourceDefinition{
 					APIVersion: "v1",
-					Kind:       "broker",
+					Kind:       KindBroker,
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
 					},
@@ -32,7 +32,7 @@ func TestBrokerDefinition_Validate(t *testing.T) {
 			brokerDef: BrokerDefinition{
 				ResourceDefinition: ResourceDefinition{
 					APIVersion: "v1",
-					Kind:       "broker",
+					Kind:       KindBroker,
 					Metadata: ResourceMetadataDefinition{
 						Name: "1",
 					},
@@ -71,7 +71,7 @@ func TestBrokerDefinition_ValidateWithMetadata(t *testing.T) {
 			brokerDef: BrokerDefinition{
 				ResourceDefinition: ResourceDefinition{
 					APIVersion: "v1",
-					Kind:       "broker",
+					Kind:       KindBroker,
 					Metadata: ResourceMetadataDefinition{
 						Name: "9",
 					},
@@ -87,7 +87,7 @@ func TestBrokerDefinition_ValidateWithMetadata(t *testing.T) {
 			brokerDef: BrokerDefinition{
 				ResourceDefinition: ResourceDefinition{
 					APIVersion: "v1",
-					Kind:       "broker",
+					Kind:       KindBroker,
 					Metadata: ResourceMetadataDefinition{
 						Name: "1",
 					},

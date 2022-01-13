@@ -13,6 +13,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/core/client"
+	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/model/res"
 	"github.com/peter-evans/kdef/core/operators/acl"
@@ -128,18 +129,18 @@ func (e *exportController) Execute(ctx context.Context) error {
 func (e *exportController) exportResources(ctx context.Context) (res.ExportResults, error) {
 	var exporter exporter
 	switch e.kind {
-	case "acl":
+	case def.KindACL:
 		exporter = acl.NewExporter(e.cl, acl.ExporterOptions{
 			Match:        e.opts.Match,
 			Exclude:      e.opts.Exclude,
 			ResourceType: e.opts.ACLResourceType,
 			AutoGroup:    e.opts.ACLAutoGroup,
 		})
-	case "broker":
+	case def.KindBroker:
 		exporter = broker.NewExporter(e.cl)
-	case "brokers":
+	case def.KindBrokers:
 		exporter = brokers.NewExporter(e.cl)
-	case "topic":
+	case def.KindTopic:
 		exporter = topic.NewExporter(e.cl, topic.ExporterOptions{
 			Match:           e.opts.Match,
 			Exclude:         e.opts.Exclude,

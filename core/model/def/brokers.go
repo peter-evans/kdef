@@ -10,6 +10,8 @@ import (
 	"github.com/peter-evans/kdef/core/model/opt"
 )
 
+const KindBrokers string = "brokers"
+
 // BrokersSpecDefinition represents a brokers spec definition.
 type BrokersSpecDefinition struct {
 	Configs                ConfigsMap `json:"configs,omitempty"`
@@ -48,7 +50,7 @@ func NewBrokersDefinition(
 	brokersDef := BrokersDefinition{
 		ResourceDefinition: ResourceDefinition{
 			APIVersion: "v1",
-			Kind:       "brokers",
+			Kind:       KindBrokers,
 			Metadata:   metadata,
 		},
 		Spec: BrokersSpecDefinition{

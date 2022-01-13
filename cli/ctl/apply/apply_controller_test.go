@@ -62,7 +62,7 @@ func Test_getResourceDefinitions(t *testing.T) {
 			want: []def.ResourceDefinition{
 				{
 					APIVersion: "v1",
-					Kind:       "acl",
+					Kind:       def.KindACL,
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "topic_foo",
 						Type: "topic",
@@ -70,21 +70,21 @@ func Test_getResourceDefinitions(t *testing.T) {
 				},
 				{
 					APIVersion: "v1",
-					Kind:       "broker",
+					Kind:       def.KindBroker,
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "1",
 					},
 				},
 				{
 					APIVersion: "v1",
-					Kind:       "brokers",
+					Kind:       def.KindBrokers,
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "brokers_foo",
 					},
 				},
 				{
 					APIVersion: "v1",
-					Kind:       "topic",
+					Kind:       def.KindTopic,
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "topic_foo",
 					},
@@ -133,7 +133,7 @@ func Test_getResourceDefinitions(t *testing.T) {
 			want: []def.ResourceDefinition{
 				{
 					APIVersion: "v1",
-					Kind:       "acl",
+					Kind:       def.KindACL,
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "topic_foo",
 						Type: "topic",
@@ -141,21 +141,21 @@ func Test_getResourceDefinitions(t *testing.T) {
 				},
 				{
 					APIVersion: "v1",
-					Kind:       "broker",
+					Kind:       def.KindBroker,
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "1",
 					},
 				},
 				{
 					APIVersion: "v1",
-					Kind:       "brokers",
+					Kind:       def.KindBrokers,
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "brokers_foo",
 					},
 				},
 				{
 					APIVersion: "v1",
-					Kind:       "topic",
+					Kind:       def.KindTopic,
 					Metadata: def.ResourceMetadataDefinition{
 						Name: "topic_foo",
 					},

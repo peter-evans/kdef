@@ -10,6 +10,7 @@ import (
 
 	"github.com/peter-evans/kdef/cli/config"
 	"github.com/peter-evans/kdef/cli/ctl/export"
+	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/util/str"
 )
@@ -55,9 +56,8 @@ kdef export acl --match "myapp.*"`,
 				return err
 			}
 
-			// TODO: Make constants for the kinds
 			ctx := context.Background()
-			ctl := export.NewExportController(cl, opts, "acl")
+			ctl := export.NewExportController(cl, opts, def.KindACL)
 			if err := ctl.Execute(ctx); err != nil {
 				return err
 			}
