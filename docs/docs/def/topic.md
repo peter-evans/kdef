@@ -58,7 +58,7 @@ A definition representing a Kafka topic.
 
     !!! example
         Assignments for 3 partitions with a replication factor of 2.
-        ```yml
+        ```yaml
         assignments:
         - [1, 2]
         - [2, 3]
@@ -93,7 +93,7 @@ In particular, partition leaders (the first replica in the assignment) are evenl
 
     !!! example
         Rack constraints for 3 partitions with a replication factor of 2.
-        ```yml
+        ```yaml
         rackConstraints:
           - ["zone-a", "zone-b"]
           - ["zone-b", "zone-c"]
@@ -101,7 +101,7 @@ In particular, partition leaders (the first replica in the assignment) are evenl
         ```
 
         Rack constraints for 3 partitions with a replication factor of 3. This example ensures each partition's leader and follower replicas are all in the same rack.
-        ```yml
+        ```yaml
         rackConstraints:
           - ["zone-a", "zone-a", "zone-a"]
           - ["zone-b", "zone-b", "zone-b"]
@@ -139,19 +139,19 @@ In particular, partition leaders (the first replica in the assignment) are evenl
 
 ## Examples
 
-```yml
+```yaml
 --8<-- "examples/definitions/topic/store.events.order-created.yml"
 ```
 
-```yml
+```yaml
 --8<-- "examples/definitions/topic/store.events.order-updated.yml"
 ```
 
-```yml
+```yaml
 --8<-- "examples/definitions/topic/store.events.order-picked.yml"
 ```
 
-```yml
+```yaml
 --8<-- "examples/definitions/topic/store.events.order-dispatched.yml"
 ```
 
