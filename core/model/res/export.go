@@ -9,7 +9,6 @@ import (
 
 // ExportResult represents an export result.
 type ExportResult struct {
-	// TODO: Change ID to name?
 	ID   string      `json:"id"`
 	Type string      `json:"type,omitempty"`
 	Def  interface{} `json:"definition"`

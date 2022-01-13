@@ -8,10 +8,10 @@ import (
 )
 
 var definitionKindVersions = map[string][]string{
-	"acl":     {"v1"},
-	"broker":  {"v1"},
-	"brokers": {"v1"},
-	"topic":   {"v1"},
+	KindACL:     {"v1"},
+	KindBroker:  {"v1"},
+	KindBrokers: {"v1"},
+	KindTopic:   {"v1"},
 }
 
 // ResourceMetadataLabels represents resource metadata labels.

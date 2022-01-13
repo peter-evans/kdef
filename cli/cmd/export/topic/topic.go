@@ -10,6 +10,7 @@ import (
 
 	"github.com/peter-evans/kdef/cli/config"
 	"github.com/peter-evans/kdef/cli/ctl/export"
+	"github.com/peter-evans/kdef/core/model/def"
 	"github.com/peter-evans/kdef/core/model/opt"
 )
 
@@ -57,7 +58,7 @@ kdef export topic --match "myapp.*"`,
 			}
 
 			ctx := context.Background()
-			ctl := export.NewExportController(cl, opts, "topic")
+			ctl := export.NewExportController(cl, opts, def.KindTopic)
 			if err := ctl.Execute(ctx); err != nil {
 				return err
 			}

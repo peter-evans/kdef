@@ -18,7 +18,7 @@ func TestACLDefinition_Validate(t *testing.T) {
 			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
 					APIVersion: "v1",
-					Kind:       "acl",
+					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
 					},
@@ -31,7 +31,7 @@ func TestACLDefinition_Validate(t *testing.T) {
 			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
 					APIVersion: "v1",
-					Kind:       "acl",
+					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
 						Type: "bar",
@@ -45,7 +45,7 @@ func TestACLDefinition_Validate(t *testing.T) {
 			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
 					APIVersion: "v1",
-					Kind:       "acl",
+					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
 						Type: "cluster",
@@ -59,7 +59,7 @@ func TestACLDefinition_Validate(t *testing.T) {
 			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
 					APIVersion: "v1",
-					Kind:       "acl",
+					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
 						Type: "topic",
@@ -82,7 +82,7 @@ func TestACLDefinition_Validate(t *testing.T) {
 			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
 					APIVersion: "v1",
-					Kind:       "acl",
+					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
 						Type: "topic",
@@ -105,7 +105,7 @@ func TestACLDefinition_Validate(t *testing.T) {
 			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
 					APIVersion: "v1",
-					Kind:       "acl",
+					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
 						Type: "topic",
@@ -128,7 +128,7 @@ func TestACLDefinition_Validate(t *testing.T) {
 			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
 					APIVersion: "v1",
-					Kind:       "acl",
+					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
 						Type: "topic",
@@ -152,7 +152,7 @@ func TestACLDefinition_Validate(t *testing.T) {
 			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
 					APIVersion: "v1",
-					Kind:       "acl",
+					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
 						Type: "topic",
@@ -176,7 +176,7 @@ func TestACLDefinition_Validate(t *testing.T) {
 			aclDef: ACLDefinition{
 				ResourceDefinition: ResourceDefinition{
 					APIVersion: "v1",
-					Kind:       "acl",
+					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
 						Name: "foo",
 						Type: "topic",

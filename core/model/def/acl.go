@@ -13,6 +13,8 @@ import (
 	"github.com/peter-evans/kdef/core/util/str"
 )
 
+const KindACL string = "acl"
+
 var aclResourceTypes = []string{
 	"topic",
 	"group",
@@ -163,7 +165,7 @@ func NewACLDefinition(
 	aclDef := ACLDefinition{
 		ResourceDefinition: ResourceDefinition{
 			APIVersion: "v1",
-			Kind:       "acl",
+			Kind:       KindACL,
 			Metadata:   metadata,
 		},
 		Spec: ACLSpecDefinition{

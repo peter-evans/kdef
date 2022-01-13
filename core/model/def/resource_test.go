@@ -22,7 +22,7 @@ func TestResourceDefinition_ValidateResource(t *testing.T) {
 			name: "Tests invalid apiVersion",
 			fields: fields{
 				APIVersion: "foo",
-				Kind:       "topic",
+				Kind:       KindTopic,
 				Metadata: ResourceMetadataDefinition{
 					Name: "foo",
 				},
@@ -44,7 +44,7 @@ func TestResourceDefinition_ValidateResource(t *testing.T) {
 			name: "Tests missing metadata name",
 			fields: fields{
 				APIVersion: "v1",
-				Kind:       "topic",
+				Kind:       KindTopic,
 			},
 			wantErr: "metadata name must be supplied",
 		},
@@ -52,7 +52,7 @@ func TestResourceDefinition_ValidateResource(t *testing.T) {
 			name: "Tests valid resource definition",
 			fields: fields{
 				APIVersion: "v1",
-				Kind:       "topic",
+				Kind:       KindTopic,
 				Metadata: ResourceMetadataDefinition{
 					Name: "foo",
 				},

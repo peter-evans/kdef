@@ -13,7 +13,7 @@ import (
 func TestTopicDefinition_Validate(t *testing.T) {
 	resDef := ResourceDefinition{
 		APIVersion: "v1",
-		Kind:       "topic",
+		Kind:       KindTopic,
 		Metadata: ResourceMetadataDefinition{
 			Name: "foo",
 		},
@@ -239,7 +239,7 @@ func TestTopicDefinition_Validate(t *testing.T) {
 func TestTopicDefinition_ValidateWithMetadata(t *testing.T) {
 	resDef := ResourceDefinition{
 		APIVersion: "v1",
-		Kind:       "topic",
+		Kind:       KindTopic,
 		Metadata: ResourceMetadataDefinition{
 			Name: "foo",
 		},
@@ -414,7 +414,7 @@ func TestLoadTopicDefinition(t *testing.T) {
 			want: TopicDefinition{
 				ResourceDefinition: ResourceDefinition{
 					APIVersion: "v1",
-					Kind:       "topic",
+					Kind:       KindTopic,
 					Metadata: ResourceMetadataDefinition{
 						Name: "baz",
 					},
@@ -440,7 +440,7 @@ func TestLoadTopicDefinition(t *testing.T) {
 			want: TopicDefinition{
 				ResourceDefinition: ResourceDefinition{
 					APIVersion: "v1",
-					Kind:       "topic",
+					Kind:       KindTopic,
 					Metadata: ResourceMetadataDefinition{
 						Name: "baz",
 					},

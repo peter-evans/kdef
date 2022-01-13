@@ -163,25 +163,25 @@ func (a *applyController) applyDefinitions(ctx context.Context, defDocs []string
 		var applier applier
 
 		switch resourceDef.Kind {
-		case "acl":
+		case def.KindACL:
 			applier = acl.NewApplier(a.cl, defDocs[i], acl.ApplierOptions{
 				DefinitionFormat:  a.opts.DefinitionFormat,
 				PropertyOverrides: a.opts.PropertyOverrides,
 				DryRun:            a.opts.DryRun,
 			})
-		case "broker":
+		case def.KindBroker:
 			applier = broker.NewApplier(a.cl, defDocs[i], broker.ApplierOptions{
 				DefinitionFormat:  a.opts.DefinitionFormat,
 				PropertyOverrides: a.opts.PropertyOverrides,
 				DryRun:            a.opts.DryRun,
 			})
-		case "brokers":
+		case def.KindBrokers:
 			applier = brokers.NewApplier(a.cl, defDocs[i], brokers.ApplierOptions{
 				DefinitionFormat:  a.opts.DefinitionFormat,
 				PropertyOverrides: a.opts.PropertyOverrides,
 				DryRun:            a.opts.DryRun,
 			})
-		case "topic":
+		case def.KindTopic:
 			applier = topic.NewApplier(a.cl, defDocs[i], topic.ApplierOptions{
 				DefinitionFormat:  a.opts.DefinitionFormat,
 				PropertyOverrides: a.opts.PropertyOverrides,

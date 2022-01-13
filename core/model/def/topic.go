@@ -16,6 +16,8 @@ import (
 	"github.com/peter-evans/kdef/core/util/str"
 )
 
+const KindTopic string = "topic"
+
 const (
 	BalanceNew = "new"
 	BalanceAll = "all"
@@ -240,7 +242,7 @@ func NewTopicDefinition(
 	topicDef := TopicDefinition{
 		ResourceDefinition: ResourceDefinition{
 			APIVersion: "v1",
-			Kind:       "topic",
+			Kind:       KindTopic,
 			Metadata:   metadata,
 		},
 		Spec: TopicSpecDefinition{
