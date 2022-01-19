@@ -64,7 +64,7 @@ brews:
 
 dockers:
   - image_templates:
-      - "peterevans/kdef:latest" # TODO: make repo public
+      - "peterevans/kdef:latest"
       - "peterevans/kdef:{{ .Version }}"
       - "ghcr.io/peter-evans/kdef:latest"
       - "ghcr.io/peter-evans/kdef:{{ .Version }}"
