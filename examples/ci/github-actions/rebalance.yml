@@ -1,0 +1,40 @@
+name: rebalance
+on:
+  workflow_dispatch:
+    inputs:
+      dryrun:
+        description: 'dry-run (true/false)'
+        required: true
+        default: true
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install kdef
+        uses: hyphengroup/action-install-gh-release@v1.3.0
+        with:
+          repo: peter-evans/kdef
+          tag: v0.2.1
+          arch: x86_64
+
+      - name: Toggle dry-run
+        id: vars
+        run: |
+          if [[ "${{ github.event.inputs.dryrun }}" == "false" ]]; then
+              echo "::set-output name=dry-run::";
+          else
+              echo "::set-output name=dry-run::--dry-run";
+          fi
+
+      - uses: actions/checkout@v2
+
+      - name: Apply definitions
+        run: |
+          kdef \
+            -X sasl.user=${{ secrets.SASL_USER }} \
+            -X sasl.pass=${{ secrets.SASL_PASS }} \
+            apply defs/**/*.yml \
+              ${{ steps.vars.outputs.dry-run }} \
+              --continue-on-error \
+              -P topic.spec.managedAssignments.balance=all
