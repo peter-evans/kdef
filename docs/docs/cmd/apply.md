@@ -107,4 +107,4 @@ cat topics/my_topic.yml | kdef apply - --dry-run
 
 ## Global options
 
---8<-- "cmd/global-options.md"
+--8<-- "docs/cmd/global-options.md"

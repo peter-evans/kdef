@@ -119,7 +119,7 @@ kdef export topic \
 The following configuration can be used to access clusters on [Confluent Cloud](https://www.confluent.io/confluent-cloud/).
 
 ```yaml
---8<-- "examples/config/sasl_plain/config.yml"
+--8<-- "docs/examples/config/sasl_plain/config.yml"
 ```
 
 ### Amazon MSK
@@ -127,7 +127,7 @@ The following configuration can be used to access clusters on [Confluent Cloud](
 The following configuration can be used to access an Amazon MSK cluster with [IAM Access Control](https://docs.aws.amazon.com/msk/latest/developerguide/iam-access-control.html) enabled.
 
 ```yaml
---8<-- "examples/config/sasl_aws_msk_iam/config.yml"
+--8<-- "docs/examples/config/sasl_aws_msk_iam/config.yml"
 ```
 
 When executing kdef, the AWS SDK must be instructed as to where credentials can be sourced. See [here](https://docs.aws.amazon.com/sdk-for-go/api/aws/session/) for further documentation.

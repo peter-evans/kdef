@@ -40,7 +40,7 @@ A definition representing cluster-wide configuration for all Kafka brokers.
 ## Examples
 
 ```yaml
---8<-- "examples/definitions/brokers/store-cluster.yml"
+--8<-- "docs/examples/definitions/brokers/store-cluster.yml"
 ```
 
 ## Schema

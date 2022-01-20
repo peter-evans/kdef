@@ -81,11 +81,11 @@ A group of ACL entries, where specifying more than one value for its properties 
 ## Examples
 
 ```yaml
---8<-- "examples/definitions/acl/cluster/kafka-cluster.yml"
+--8<-- "docs/examples/definitions/acl/cluster/kafka-cluster.yml"
 ```
 
 ```yaml
---8<-- "examples/definitions/acl/topic/store.events.order-created.yml"
+--8<-- "docs/examples/definitions/acl/topic/store.events.order-created.yml"
 ```
 
 ## Schema
