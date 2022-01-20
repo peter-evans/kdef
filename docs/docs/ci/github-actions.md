@@ -15,7 +15,7 @@ This example demonstrates passing secrets for SASL mechanism authentication.
 This is preferable to committing sensitive credentials to the repository in `config.yml`.
 
 ```yaml
---8<-- "examples/ci/github-actions/kdef.yml"
+--8<-- "docs/examples/ci/github-actions/kdef.yml"
 ```
 
 ## Manual workflow
@@ -25,5 +25,5 @@ It may be desirable to manually run workflows in some situations.
 In this `workflow_dispatch` example, a rebalance operation is triggered by setting the property override `-P topic.spec.managedAssignments.balance=all`.
 
 ```yaml
---8<-- "examples/ci/github-actions/rebalance.yml"
+--8<-- "docs/examples/ci/github-actions/rebalance.yml"
 ```

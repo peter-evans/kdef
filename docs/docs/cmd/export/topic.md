@@ -67,4 +67,4 @@ kdef export topic --match "myapp.*"
 
 ## Global options
 
---8<-- "cmd/global-options.md"
+--8<-- "docs/cmd/global-options.md"

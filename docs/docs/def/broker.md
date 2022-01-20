@@ -41,7 +41,7 @@ A definition representing a single specified Kafka broker.
 ## Examples
 
 ```yaml
---8<-- "examples/definitions/broker/1.yml"
+--8<-- "docs/examples/definitions/broker/1.yml"
 ```
 
 ## Schema

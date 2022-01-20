@@ -140,19 +140,19 @@ In particular, partition leaders (the first replica in the assignment) are evenl
 ## Examples
 
 ```yaml
---8<-- "examples/definitions/topic/store.events.order-created.yml"
+--8<-- "docs/examples/definitions/topic/store.events.order-created.yml"
 ```
 
 ```yaml
---8<-- "examples/definitions/topic/store.events.order-updated.yml"
+--8<-- "docs/examples/definitions/topic/store.events.order-updated.yml"
 ```
 
 ```yaml
---8<-- "examples/definitions/topic/store.events.order-picked.yml"
+--8<-- "docs/examples/definitions/topic/store.events.order-picked.yml"
 ```
 
 ```yaml
---8<-- "examples/definitions/topic/store.events.order-dispatched.yml"
+--8<-- "docs/examples/definitions/topic/store.events.order-dispatched.yml"
 ```
 
 ## Schema
