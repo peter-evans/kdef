@@ -46,8 +46,8 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets:
       base_path:
-        - .
-        - docs
+        - .    # mkdocs-material (docker dev server)
+        - docs # mkdocs build (ci)
   - pymdownx.tabbed
   - toc:
       title: On this page
