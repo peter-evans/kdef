@@ -41,4 +41,4 @@ kdef export broker --quiet
 
 ## Global options
 
---8<-- "docs/cmd/global-options.md"
+--8<-- "cmd/global-options.md"
