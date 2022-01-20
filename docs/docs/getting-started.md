@@ -32,10 +32,6 @@ This short tutorial introduces some of the main features of kdef.
     In this directory is a `config.yml` configuration file.
     This is the configuration kdef will use to connect to the Kafka cluster spun up in the previous step.
 
-    ```yaml
-    --8<-- "tutorial/config.yml"
-    ```
-
 ## Applying definitions
 
 The cluster we spun up in the previous section has no resources. Let's apply some definitions.
