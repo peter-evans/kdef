@@ -258,6 +258,7 @@ func SyncRackConstraints(
 	return newAssignments
 }
 
+// Rebalance checks partition assignments are balanced, updating if necessary.
 func Rebalance(
 	assignments [][]int32,
 	clusterReplicaCounts map[int32]int,
@@ -325,6 +326,7 @@ func Rebalance(
 	return newAssignments
 }
 
+// RebalanceWithRackConstraints checks partition assignments with rack constraints are balanced, updating if necessary.
 func RebalanceWithRackConstraints(
 	assignments [][]int32,
 	rackConstraints [][]string,

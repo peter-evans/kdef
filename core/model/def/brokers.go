@@ -10,6 +10,7 @@ import (
 	"github.com/peter-evans/kdef/core/model/opt"
 )
 
+// KindBrokers represents the brokers definition kind.
 const KindBrokers string = "brokers"
 
 // BrokersSpecDefinition represents a brokers spec definition.

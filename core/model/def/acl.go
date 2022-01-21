@@ -13,6 +13,7 @@ import (
 	"github.com/peter-evans/kdef/core/util/str"
 )
 
+// KindACL represents the acl definition kind.
 const KindACL string = "acl"
 
 var aclResourceTypes = []string{

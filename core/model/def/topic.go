@@ -16,8 +16,10 @@ import (
 	"github.com/peter-evans/kdef/core/util/str"
 )
 
+// KindTopic represents the topic definition kind.
 const KindTopic string = "topic"
 
+// Balance types.
 const (
 	BalanceNew = "new"
 	BalanceAll = "all"
@@ -28,6 +30,7 @@ var balanceScopes = []string{
 	BalanceAll,
 }
 
+// Selection types.
 const (
 	SelectionTopicClusterUse = "topic-cluster-use"
 	SelectionTopicUse        = "topic-use"

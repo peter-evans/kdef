@@ -622,7 +622,7 @@ func (a *applier) updateAssignments(ctx context.Context) error {
 			return err
 		}
 		if len(a.reassignments) > 0 {
-			// Kafka would return a very similiar error if we attempted to execute the reassignment.
+			// Kafka would return a very similar error if we attempted to execute the reassignment.
 			return fmt.Errorf("a partition reassignment is in progress for the topic %q", a.localDef.Metadata.Name)
 		}
 	} else if err := a.srv.AlterPartitionAssignments(
