@@ -12,6 +12,7 @@ import (
 	"github.com/peter-evans/kdef/core/util/i32"
 )
 
+// KindBroker represents the broker definition kind.
 const KindBroker string = "broker"
 
 // BrokerSpecDefinition represents a broker spec definition.
