@@ -21,7 +21,8 @@ Welcome to kdef!
 This short interactive prompt will guide through creating a configuration
 file for your cluster.
 
----`
+---
+`
 
 const promptSeedBrokers = `
 Specify one or more seed broker addresses that kdef will connect to. They can
@@ -29,6 +30,7 @@ be entered over multiple lines or comma delimited on one line. An empty line
 continues to the next step.
 
 e.g. > b1-mycluster.example.com:9092
+
 `
 
 const promptServerName = `
@@ -40,9 +42,9 @@ address of the connected broker as the TLS server name.
 func Configure() error {
 	s := scanner.New()
 
-	fmt.Println(intro)
+	fmt.Print(intro)
 
-	fmt.Println(promptSeedBrokers)
+	fmt.Print(promptSeedBrokers)
 	seedBrokers := s.PromptMultiline(">", []string{"localhost:9092"})
 	rootConfig := map[string]interface{}{
 		"seedBrokers": seedBrokers,

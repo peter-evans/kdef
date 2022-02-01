@@ -30,8 +30,7 @@ type Scanner struct {
 
 // PromptLine prompts the user for a single line of input.
 func (s *Scanner) PromptLine(prompt string, defaultValue string) string {
-	l := s.line(prompt)
-	if len(l) > 0 {
+	if l := s.line(prompt); len(l) > 0 {
 		return l
 	}
 	return defaultValue
@@ -63,8 +62,7 @@ func (s *Scanner) PromptMultiline(prompt string, defaultValue []string) []string
 
 // PromptYesNo prompts the user for yes/no input.
 func (s *Scanner) PromptYesNo(prompt string, defaultValue bool) bool {
-	l := s.line(prompt)
-	if len(l) > 0 {
+	if l := s.line(prompt); len(l) > 0 {
 		switch l {
 		case "Yes", "yes", "Y", "y":
 			return true
