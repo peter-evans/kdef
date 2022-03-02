@@ -3,7 +3,7 @@ module github.com/peter-evans/kdef
 go 1.17
 
 require (
-	github.com/aws/aws-sdk-go v1.43.2
+	github.com/aws/aws-sdk-go v1.43.7
 	github.com/bmatcuk/doublestar/v4 v4.0.2
 	github.com/bradfitz/slice v0.0.0-20180809154707-2b758aa73013
 	github.com/fatih/color v1.13.0
@@ -62,8 +62,8 @@ require (
 	go.opencensus.io v0.23.0 // indirect
 	go4.org v0.0.0-20201209231011-d4a079459e60 // indirect
 	golang.org/x/crypto v0.0.0-20211117183948-ae814b36b871 // indirect
-	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
-	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d // indirect
+	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
 	google.golang.org/grpc v1.42.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
