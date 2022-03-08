@@ -17,8 +17,8 @@ require (
 	github.com/sergi/go-diff v1.1.0
 	github.com/spf13/cobra v1.3.0
 	github.com/testcontainers/testcontainers-go v0.12.0
-	github.com/twmb/franz-go v1.3.4
-	github.com/twmb/franz-go/pkg/kmsg v0.0.0-20220222041924-02560c7b49ca
+	github.com/twmb/franz-go v1.4.0
+	github.com/twmb/franz-go/pkg/kmsg v0.0.0-20220301191019-c3fc8e03e6f4
 )
 
 require (
@@ -38,7 +38,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/klauspost/compress v1.14.4 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
@@ -53,7 +53,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/opencontainers/runc v1.0.2 // indirect
-	github.com/pierrec/lz4/v4 v4.1.11 // indirect
+	github.com/pierrec/lz4/v4 v4.1.14 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
@@ -61,8 +61,8 @@ require (
 	github.com/twmb/go-rbtree v1.0.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go4.org v0.0.0-20201209231011-d4a079459e60 // indirect
-	golang.org/x/crypto v0.0.0-20211117183948-ae814b36b871 // indirect
-	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
+	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
 	google.golang.org/grpc v1.42.0 // indirect
