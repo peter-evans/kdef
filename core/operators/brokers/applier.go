@@ -187,7 +187,7 @@ func (a *applier) updateApplyResult() error {
 // displayPendingOps displays pending operations.
 func (a *applier) displayPendingOps() {
 	log.Infof("brokers definition %q diff (local -> remote):", a.localDef.Metadata.Name)
-	fmt.Print(a.res.Diff)
+	fmt.Println(a.res.Diff)
 }
 
 // executeOps executes update operations.
