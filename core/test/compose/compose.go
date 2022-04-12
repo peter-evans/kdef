@@ -29,9 +29,7 @@ func Up(t *testing.T, paths []string, env map[string]string) *tc.LocalDockerComp
 // Down executes compose down.
 func Down(t *testing.T, compose *tc.LocalDockerCompose) {
 	t.Helper()
-	execError := compose.
-		WithCommand([]string{"down", "--volumes"}).
-		Invoke()
+	execError := compose.Down()
 	if err := execError.Error; err != nil {
 		t.Errorf("compose down failed: %v", err)
 		t.FailNow()
