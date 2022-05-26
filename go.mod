@@ -17,7 +17,7 @@ require (
 	github.com/peter-evans/patience v0.3.0
 	github.com/spf13/cobra v1.4.0
 	github.com/testcontainers/testcontainers-go v0.13.0
-	github.com/twmb/franz-go v1.5.2
+	github.com/twmb/franz-go v1.5.3
 	github.com/twmb/franz-go/pkg/kmsg v1.0.0
 )
 
@@ -58,7 +58,6 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/twmb/go-rbtree v1.0.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go4.org v0.0.0-20201209231011-d4a079459e60 // indirect
 	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f // indirect
