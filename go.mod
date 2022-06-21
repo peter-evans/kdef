@@ -3,7 +3,7 @@ module github.com/peter-evans/kdef
 go 1.17
 
 require (
-	github.com/aws/aws-sdk-go v1.44.27
+	github.com/aws/aws-sdk-go v1.44.37
 	github.com/bmatcuk/doublestar/v4 v4.0.2
 	github.com/bradfitz/slice v0.0.0-20180809154707-2b758aa73013
 	github.com/fatih/color v1.13.0
