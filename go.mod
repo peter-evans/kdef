@@ -12,7 +12,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gotidy/copy v0.6.0
 	github.com/iancoleman/strcase v0.2.0
-	github.com/jedib0t/go-pretty/v6 v6.3.1
+	github.com/jedib0t/go-pretty/v6 v6.3.3
 	github.com/knadh/koanf v1.4.2
 	github.com/peter-evans/patience v0.3.0
 	github.com/spf13/cobra v1.4.0
@@ -67,5 +67,5 @@ require (
 	google.golang.org/grpc v1.42.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
