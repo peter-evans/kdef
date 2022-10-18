@@ -20,9 +20,9 @@ jobs:
         id: vars
         run: |
           if [[ "${{ github.event_name }}" == "push" ]] && [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-              echo "::set-output name=dry-run::";
+              echo "dry-run=" >> $GITHUB_OUTPUT;
           else
-              echo "::set-output name=dry-run::--dry-run";
+              echo "dry-run=--dry-run" >> $GITHUB_OUTPUT;
           fi
 
       - uses: actions/checkout@v2
