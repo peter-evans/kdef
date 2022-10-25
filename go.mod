@@ -17,7 +17,7 @@ require (
 	github.com/peter-evans/patience v0.3.0
 	github.com/spf13/cobra v1.6.0
 	github.com/testcontainers/testcontainers-go v0.14.0
-	github.com/twmb/franz-go v1.8.0
+	github.com/twmb/franz-go v1.9.0
 	github.com/twmb/franz-go/pkg/kmsg v1.2.0
 )
 
