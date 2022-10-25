@@ -13,7 +13,7 @@ require (
 	github.com/gotidy/copy v0.6.0
 	github.com/iancoleman/strcase v0.2.0
 	github.com/jedib0t/go-pretty/v6 v6.4.0
-	github.com/knadh/koanf v1.4.3
+	github.com/knadh/koanf v1.4.4
 	github.com/peter-evans/patience v0.3.0
 	github.com/spf13/cobra v1.6.0
 	github.com/testcontainers/testcontainers-go v0.15.0
