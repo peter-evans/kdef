@@ -5,7 +5,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -27,7 +26,7 @@ var (
 
 // FromFile parses a file to a slice of separated documents.
 func FromFile(filepath string, format Format) ([]string, error) {
-	b, err := ioutil.ReadFile(filepath)
+	b, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, err
 	}

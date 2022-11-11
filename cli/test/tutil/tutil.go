@@ -2,7 +2,7 @@
 package tutil
 
 import (
-	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 )
@@ -21,7 +21,7 @@ func ErrorContains(out error, want string) bool {
 // Fixture returns the byte slice of a test fixture.
 func Fixture(t *testing.T, path string) []byte {
 	t.Helper()
-	fileBytes, err := ioutil.ReadFile(path)
+	fileBytes, err := os.ReadFile(path)
 	if err != nil {
 		t.Errorf("failed to load test fixture %q: %v", path, err)
 		t.FailNow()

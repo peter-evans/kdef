@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"strings"
@@ -224,7 +223,7 @@ func (cl *Client) buildTLSOpt() error {
 
 	// Set CA cert.
 	if len(cl.cc.TLS.CACertPath) > 0 {
-		ca, err := ioutil.ReadFile(cl.cc.TLS.CACertPath)
+		ca, err := os.ReadFile(cl.cc.TLS.CACertPath)
 		if err != nil {
 			return fmt.Errorf("failed to read CA cert %q: %v", cl.cc.TLS.CACertPath, err)
 		}
@@ -239,12 +238,12 @@ func (cl *Client) buildTLSOpt() error {
 			return fmt.Errorf("both client and key cert paths must be provided, but only one found")
 		}
 
-		cert, err := ioutil.ReadFile(cl.cc.TLS.ClientCertPath)
+		cert, err := os.ReadFile(cl.cc.TLS.ClientCertPath)
 		if err != nil {
 			return fmt.Errorf("failed to read client cert %q: %v", cl.cc.TLS.ClientCertPath, err)
 		}
 
-		key, err := ioutil.ReadFile(cl.cc.TLS.ClientKeyPath)
+		key, err := os.ReadFile(cl.cc.TLS.ClientKeyPath)
 		if err != nil {
 			return fmt.Errorf("failed to read client key %q: %v", cl.cc.TLS.ClientKeyPath, err)
 		}
