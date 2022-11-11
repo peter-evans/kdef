@@ -4,7 +4,6 @@ package config
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -90,7 +89,7 @@ func Configure() error {
 	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
 		return fmt.Errorf("failed to create configuration directory: %v", err)
 	}
-	if err = ioutil.WriteFile(configPath, y, 0o666); err != nil {
+	if err = os.WriteFile(configPath, y, 0o666); err != nil {
 		return fmt.Errorf("failed to write configuration file: %v", err)
 	}
 	fmt.Printf("\nCreated configuration file at %s\n", configPath)

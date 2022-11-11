@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -116,7 +115,7 @@ func (e *exportController) Execute(ctx context.Context) error {
 				}
 
 				log.Infof("Writing %s definition file %q", e.kind, outputPath)
-				if err = ioutil.WriteFile(outputPath, defDocBytes, 0o666); err != nil {
+				if err = os.WriteFile(outputPath, defDocBytes, 0o666); err != nil {
 					return err
 				}
 			}
