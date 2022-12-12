@@ -12,11 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install kdef
-        uses: hyphengroup/action-install-gh-release@v1.3.0
+        uses: jaxxstorm/action-install-gh-release@v1
         with:
           repo: peter-evans/kdef
-          tag: v0.2.1
-          arch: x86_64
+          tag: v0.4.0
 
       - name: Toggle dry-run
         id: vars
@@ -27,7 +26,7 @@ jobs:
               echo "dry-run=--dry-run" >> $GITHUB_OUTPUT;
           fi
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Apply definitions
         run: |
