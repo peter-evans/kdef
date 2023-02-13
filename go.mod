@@ -18,7 +18,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/testcontainers/testcontainers-go v0.15.0
 	github.com/twmb/franz-go v1.11.6
-	github.com/twmb/franz-go/pkg/kmsg v1.3.0
+	github.com/twmb/franz-go/pkg/kmsg v1.4.0
 )
 
 require (
