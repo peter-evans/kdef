@@ -143,10 +143,7 @@ func (a *applier) fetchRemote(ctx context.Context) error {
 
 // buildOps builds topic operations.
 func (a *applier) buildOps(ctx context.Context) error {
-	if err := a.buildConfigOps(ctx); err != nil {
-		return err
-	}
-	return nil
+	return a.buildConfigOps(ctx)
 }
 
 // updateApplyResult updates the apply result with the remote definition and human readable diff.

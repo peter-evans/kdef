@@ -36,11 +36,7 @@ func (b BrokersDefinition) Copy() BrokersDefinition {
 
 // Validate validates the definition.
 func (b BrokersDefinition) Validate() error {
-	if err := b.ValidateResource(); err != nil {
-		return err
-	}
-
-	return nil
+	return b.ValidateResource()
 }
 
 // NewBrokersDefinition creates a brokers definition from metadata and config.

@@ -107,11 +107,7 @@ func (cl *Client) buildOptions() error {
 		return err
 	}
 
-	if err := cl.buildLogLevelOpt(); err != nil {
-		return err
-	}
-
-	return nil
+	return cl.buildLogLevelOpt()
 }
 
 func (cl *Client) buildSASLOpt() error {

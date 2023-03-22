@@ -58,10 +58,7 @@ kdef export acl --match "myapp.*"`,
 
 			ctx := context.Background()
 			ctl := export.NewExportController(cl, opts, def.KindACL)
-			if err := ctl.Execute(ctx); err != nil {
-				return err
-			}
-			return nil
+			return ctl.Execute(ctx)
 		},
 	}
 

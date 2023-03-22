@@ -59,10 +59,7 @@ kdef export topic --match "myapp.*"`,
 
 			ctx := context.Background()
 			ctl := export.NewExportController(cl, opts, def.KindTopic)
-			if err := ctl.Execute(ctx); err != nil {
-				return err
-			}
-			return nil
+			return ctl.Execute(ctx)
 		},
 	}
 

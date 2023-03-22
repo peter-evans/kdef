@@ -40,7 +40,7 @@ func (s *Scanner) PromptLine(prompt string, defaultValue string) string {
 func (s *Scanner) PromptMultiline(prompt string, defaultValue []string) []string {
 	var lines []string
 	for {
-		l := s.line(">")
+		l := s.line(prompt)
 		if len(l) == 0 {
 			break
 		}

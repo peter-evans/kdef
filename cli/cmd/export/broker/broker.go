@@ -51,10 +51,7 @@ kdef export broker --quiet`,
 
 			ctx := context.Background()
 			ctl := export.NewExportController(cl, opts, def.KindBroker)
-			if err := ctl.Execute(ctx); err != nil {
-				return err
-			}
-			return nil
+			return ctl.Execute(ctx)
 		},
 	}
 
