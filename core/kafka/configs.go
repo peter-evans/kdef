@@ -242,16 +242,12 @@ func alterBrokerConfigs(
 	reqR.ResourceName = brokerID
 	reqR.Configs = buildAlterConfigsResourceConfig(configOps)
 
-	if err := alterConfigs(
+	return alterConfigs(
 		ctx,
 		cl,
 		[]kmsg.AlterConfigsRequestResource{reqR},
 		validateOnly,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 // alterTopicConfigs executes a request to perform a non-incremental alter topic configs (Kafka 0.11.0+).
@@ -267,16 +263,12 @@ func alterTopicConfigs(
 	reqR.ResourceName = topic
 	reqR.Configs = buildAlterConfigsResourceConfig(configOps)
 
-	if err := alterConfigs(
+	return alterConfigs(
 		ctx,
 		cl,
 		[]kmsg.AlterConfigsRequestResource{reqR},
 		validateOnly,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 func buildAlterConfigsResourceConfig(
@@ -341,16 +333,12 @@ func incrementalAlterBrokerConfigs(
 	reqR.ResourceName = brokerID
 	reqR.Configs = buildIncrementalAlterConfigsResourceConfig(configOps)
 
-	if err := incrementalAlterConfigs(
+	return incrementalAlterConfigs(
 		ctx,
 		cl,
 		[]kmsg.IncrementalAlterConfigsRequestResource{reqR},
 		validateOnly,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 // incrementalAlterTopicConfigs executes a request to perform an incremental alter topic configs (Kafka 2.3.0+).
@@ -366,16 +354,12 @@ func incrementalAlterTopicConfigs(
 	reqR.ResourceName = topic
 	reqR.Configs = buildIncrementalAlterConfigsResourceConfig(configOps)
 
-	if err := incrementalAlterConfigs(
+	return incrementalAlterConfigs(
 		ctx,
 		cl,
 		[]kmsg.IncrementalAlterConfigsRequestResource{reqR},
 		validateOnly,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 func buildIncrementalAlterConfigsResourceConfig(

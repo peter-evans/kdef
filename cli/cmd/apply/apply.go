@@ -74,11 +74,7 @@ cat topics/my_topic.yml | kdef apply - --dry-run`,
 
 			ctx := context.Background()
 			ctl := apply.NewApplyController(cl, args, opts)
-			if err := ctl.Execute(ctx); err != nil {
-				return err
-			}
-
-			return nil
+			return ctl.Execute(ctx)
 		},
 	}
 

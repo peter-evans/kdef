@@ -151,11 +151,7 @@ func (a ACLDefinition) Validate() error {
 		return fmt.Errorf("metadata name must be \"kafka-cluster\" when type is \"cluster\"")
 	}
 
-	if err := a.Spec.ACLs.Validate(); err != nil {
-		return err
-	}
-
-	return nil
+	return a.Spec.ACLs.Validate()
 }
 
 // NewACLDefinition creates an ACL definition from metadata and config.
