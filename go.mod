@@ -15,7 +15,7 @@ require (
 	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/knadh/koanf v1.5.0
 	github.com/peter-evans/patience v0.3.0
-	github.com/spf13/cobra v1.6.1
+	github.com/spf13/cobra v1.7.0
 	github.com/testcontainers/testcontainers-go v0.15.0
 	github.com/twmb/franz-go v1.13.2
 	github.com/twmb/franz-go/pkg/kmsg v1.5.0
@@ -36,7 +36,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/compress v1.16.3 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
