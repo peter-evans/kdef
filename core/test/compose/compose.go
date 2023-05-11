@@ -13,6 +13,7 @@ import (
 func Up(t *testing.T, paths []string, env map[string]string) *tc.LocalDockerCompose {
 	t.Helper()
 	identifier := strings.ToLower(uuid.New().String())
+	// nolint
 	compose := tc.NewLocalDockerCompose(paths, identifier)
 	execError := compose.
 		WithCommand([]string{"up", "-d"}).
