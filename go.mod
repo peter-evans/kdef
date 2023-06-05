@@ -32,7 +32,7 @@ require (
 	github.com/peter-evans/patience v0.3.0
 	github.com/spf13/cobra v1.7.0
 	github.com/testcontainers/testcontainers-go/modules/compose v0.20.1
-	github.com/twmb/franz-go v1.13.4
+	github.com/twmb/franz-go v1.13.5
 	github.com/twmb/franz-go/pkg/kmsg v1.5.0
 )
 
