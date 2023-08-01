@@ -18,7 +18,7 @@ replace (
 )
 
 require (
-	github.com/aws/aws-sdk-go v1.44.300
+	github.com/aws/aws-sdk-go v1.44.313
 	github.com/bmatcuk/doublestar/v4 v4.6.0
 	github.com/bradfitz/slice v0.0.0-20180809154707-2b758aa73013
 	github.com/fatih/color v1.15.0
