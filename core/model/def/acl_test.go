@@ -20,7 +20,8 @@ func TestACLDefinition_Validate(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
-						Name: "foo",
+						Name:                "foo",
+						ResourcePatternType: "literal",
 					},
 				},
 			},
@@ -33,8 +34,9 @@ func TestACLDefinition_Validate(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
-						Name: "foo",
-						Type: "bar",
+						Name:                "foo",
+						Type:                "bar",
+						ResourcePatternType: "literal",
 					},
 				},
 			},
@@ -47,12 +49,42 @@ func TestACLDefinition_Validate(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
-						Name: "foo",
-						Type: "cluster",
+						Name:                "foo",
+						Type:                "cluster",
+						ResourcePatternType: "literal",
 					},
 				},
 			},
 			wantErr: "metadata name must be \"kafka-cluster\" when type is \"cluster\"",
+		},
+		{
+			name: "Tests missing metadata resource pattern type",
+			aclDef: ACLDefinition{
+				ResourceDefinition: ResourceDefinition{
+					APIVersion: "v1",
+					Kind:       KindACL,
+					Metadata: ResourceMetadataDefinition{
+						Name: "foo",
+						Type: "topic",
+					},
+				},
+			},
+			wantErr: "metadata resource pattern type must be supplied",
+		},
+		{
+			name: "Tests invalid metadata resource pattern type",
+			aclDef: ACLDefinition{
+				ResourceDefinition: ResourceDefinition{
+					APIVersion: "v1",
+					Kind:       KindACL,
+					Metadata: ResourceMetadataDefinition{
+						Name:                "foo",
+						Type:                "topic",
+						ResourcePatternType: "bar",
+					},
+				},
+			},
+			wantErr: "metadata resource pattern type must be one of \"literal|prefixed\"",
 		},
 		{
 			name: "Tests missing acl principals",
@@ -61,8 +93,9 @@ func TestACLDefinition_Validate(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
-						Name: "foo",
-						Type: "topic",
+						Name:                "foo",
+						Type:                "topic",
+						ResourcePatternType: "literal",
 					},
 				},
 				Spec: ACLSpecDefinition{
@@ -84,8 +117,9 @@ func TestACLDefinition_Validate(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
-						Name: "foo",
-						Type: "topic",
+						Name:                "foo",
+						Type:                "topic",
+						ResourcePatternType: "literal",
 					},
 				},
 				Spec: ACLSpecDefinition{
@@ -107,8 +141,9 @@ func TestACLDefinition_Validate(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
-						Name: "foo",
-						Type: "topic",
+						Name:                "foo",
+						Type:                "topic",
+						ResourcePatternType: "literal",
 					},
 				},
 				Spec: ACLSpecDefinition{
@@ -130,8 +165,9 @@ func TestACLDefinition_Validate(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
-						Name: "foo",
-						Type: "topic",
+						Name:                "foo",
+						Type:                "topic",
+						ResourcePatternType: "literal",
 					},
 				},
 				Spec: ACLSpecDefinition{
@@ -154,8 +190,9 @@ func TestACLDefinition_Validate(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
-						Name: "foo",
-						Type: "topic",
+						Name:                "foo",
+						Type:                "topic",
+						ResourcePatternType: "literal",
 					},
 				},
 				Spec: ACLSpecDefinition{
@@ -178,8 +215,9 @@ func TestACLDefinition_Validate(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       KindACL,
 					Metadata: ResourceMetadataDefinition{
-						Name: "foo",
-						Type: "topic",
+						Name:                "foo",
+						Type:                "topic",
+						ResourcePatternType: "literal",
 					},
 				},
 				Spec: ACLSpecDefinition{

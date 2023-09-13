@@ -153,6 +153,7 @@ func (a *applier) fetchRemote(ctx context.Context) error {
 		ctx,
 		a.localDef.Metadata.Name,
 		a.localDef.Metadata.Type,
+		a.localDef.Metadata.ResourcePatternType,
 	)
 	if err != nil {
 		return err
@@ -245,6 +246,7 @@ func (a *applier) addACLs(ctx context.Context) error {
 			ctx,
 			a.localDef.Metadata.Name,
 			a.localDef.Metadata.Type,
+			a.localDef.Metadata.ResourcePatternType,
 			a.ops.addACLs,
 		); err != nil {
 			return err
@@ -264,6 +266,7 @@ func (a *applier) deleteACLs(ctx context.Context) error {
 			ctx,
 			a.localDef.Metadata.Name,
 			a.localDef.Metadata.Type,
+			a.localDef.Metadata.ResourcePatternType,
 			a.ops.deleteACLs,
 		); err != nil {
 			return err

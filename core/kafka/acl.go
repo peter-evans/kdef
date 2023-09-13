@@ -14,9 +14,10 @@ import (
 
 // ResourceACLs represents ACLs for a named resource.
 type ResourceACLs struct {
-	ResourceName string
-	ResourceType string
-	ACLs         def.ACLEntryGroups
+	ResourceName        string
+	ResourceType        string
+	ResourcePatternType string
+	ACLs                def.ACLEntryGroups
 }
 
 // describeResourceACLs executes a request to describe ACLs of a specific resource (Kafka 0.11.0+).
@@ -25,8 +26,14 @@ func describeResourceACLs(
 	cl *client.Client,
 	name string,
 	resourceType string,
+	resourcePatternType string,
 ) (def.ACLEntryGroups, error) {
 	resType, err := kmsg.ParseACLResourceType(resourceType)
+	if err != nil {
+		return nil, err
+	}
+
+	resPatternType, err := kmsg.ParseACLResourcePatternType(resourcePatternType)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +43,7 @@ func describeResourceACLs(
 	req.ResourceType = resType
 	req.Operation = kmsg.ACLOperationAny
 	req.PermissionType = kmsg.ACLPermissionTypeAny
-	req.ResourcePatternType = kmsg.ACLResourcePatternTypeLiteral
+	req.ResourcePatternType = resPatternType
 
 	resourceACLs, err := describeACLs(ctx, cl, req)
 	if err != nil {
@@ -109,9 +116,10 @@ func describeACLs(
 		acls.Sort()
 
 		resourceACLs[i] = ResourceACLs{
-			ResourceName: resource.ResourceName,
-			ResourceType: strings.ToLower(resource.ResourceType.String()),
-			ACLs:         acls,
+			ResourceName:        resource.ResourceName,
+			ResourceType:        strings.ToLower(resource.ResourceType.String()),
+			ResourcePatternType: strings.ToLower(resource.ResourcePatternType.String()),
+			ACLs:                acls,
 		}
 	}
 
@@ -124,9 +132,15 @@ func createACLs(
 	cl *client.Client,
 	name string,
 	resourceType string,
+	resourcePatternType string,
 	acls def.ACLEntryGroups,
 ) error {
 	resType, err := kmsg.ParseACLResourceType(resourceType)
+	if err != nil {
+		return err
+	}
+
+	resPatternType, err := kmsg.ParseACLResourcePatternType(resourcePatternType)
 	if err != nil {
 		return err
 	}
@@ -148,7 +162,7 @@ func createACLs(
 					c := kmsg.NewCreateACLsRequestCreation()
 					c.ResourceName = name
 					c.ResourceType = resType
-					c.ResourcePatternType = kmsg.ACLResourcePatternTypeLiteral
+					c.ResourcePatternType = resPatternType
 					c.Principal = principal
 					c.Host = host
 					c.Operation = op
@@ -191,9 +205,15 @@ func deleteACLs(
 	cl *client.Client,
 	name string,
 	resourceType string,
+	resourcePatternType string,
 	acls def.ACLEntryGroups,
 ) error {
 	resType, err := kmsg.ParseACLResourceType(resourceType)
+	if err != nil {
+		return err
+	}
+
+	resPatternType, err := kmsg.ParseACLResourcePatternType(resourcePatternType)
 	if err != nil {
 		return err
 	}
@@ -215,7 +235,7 @@ func deleteACLs(
 					c := kmsg.NewDeleteACLsRequestFilter()
 					c.ResourceName = &name
 					c.ResourceType = resType
-					c.ResourcePatternType = kmsg.ACLResourcePatternTypeLiteral
+					c.ResourcePatternType = resPatternType
 					c.Principal = &principal
 					c.Host = &host
 					c.Operation = op

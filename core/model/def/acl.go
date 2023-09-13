@@ -24,6 +24,11 @@ var aclResourceTypes = []string{
 	"delegation_token",
 }
 
+var aclResourcePatternTypes = []string{
+	"literal",
+	"prefixed",
+}
+
 var aclOperations = []string{
 	"ALL",
 	"READ",
@@ -151,6 +156,14 @@ func (a ACLDefinition) Validate() error {
 		return fmt.Errorf("metadata name must be \"kafka-cluster\" when type is \"cluster\"")
 	}
 
+	if len(a.ResourceDefinition.Metadata.ResourcePatternType) == 0 {
+		return fmt.Errorf("metadata resource pattern type must be supplied")
+	}
+
+	if !str.Contains(a.ResourceDefinition.Metadata.ResourcePatternType, aclResourcePatternTypes) {
+		return fmt.Errorf("metadata resource pattern type must be one of %q", strings.Join(aclResourcePatternTypes, "|"))
+	}
+
 	return a.Spec.ACLs.Validate()
 }
 
@@ -191,6 +204,11 @@ func LoadACLDefinition(
 		}
 	default:
 		return def, fmt.Errorf("unsupported format")
+	}
+
+	// Set defaults
+	if len(def.Metadata.ResourcePatternType) == 0 {
+		def.Metadata.ResourcePatternType = "literal"
 	}
 
 	return def, nil

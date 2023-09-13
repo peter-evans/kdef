@@ -52,7 +52,7 @@ func Test_getResourceDefinitions(t *testing.T) {
 			name: "Tests return of resource definitions (YAML)",
 			args: args{
 				defDocs: []string{
-					"apiVersion: v1\nkind: acl\nmetadata:\n  name: \"topic_foo\"\n  type: \"topic\"",
+					"apiVersion: v1\nkind: acl\nmetadata:\n  name: \"topic_foo\"\n  type: \"topic\"\n  resourcePatternType: \"literal\"",
 					"apiVersion: v1\nkind: broker\nmetadata:\n  name: \"1\"",
 					"apiVersion: v1\nkind: brokers\nmetadata:\n  name: brokers_foo",
 					"apiVersion: v1\nkind: topic\nmetadata:\n  name: topic_foo",
@@ -64,8 +64,9 @@ func Test_getResourceDefinitions(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       def.KindACL,
 					Metadata: def.ResourceMetadataDefinition{
-						Name: "topic_foo",
-						Type: "topic",
+						Name:                "topic_foo",
+						Type:                "topic",
+						ResourcePatternType: "literal",
 					},
 				},
 				{
@@ -123,7 +124,7 @@ func Test_getResourceDefinitions(t *testing.T) {
 			name: "Tests return of resource definitions (JSON)",
 			args: args{
 				defDocs: []string{
-					"{\"apiVersion\": \"v1\", \"kind\": \"acl\", \"metadata\": {\"name\": \"topic_foo\", \"type\": \"topic\"}}",
+					"{\"apiVersion\": \"v1\", \"kind\": \"acl\", \"metadata\": {\"name\": \"topic_foo\", \"type\": \"topic\", \"resourcePatternType\": \"literal\"}}",
 					"{\"apiVersion\": \"v1\", \"kind\": \"broker\", \"metadata\": {\"name\": \"1\"}}",
 					"{\"apiVersion\": \"v1\", \"kind\": \"brokers\", \"metadata\": {\"name\": \"brokers_foo\"}}",
 					"{\"apiVersion\": \"v1\", \"kind\": \"topic\", \"metadata\": {\"name\": \"topic_foo\"}}",
@@ -135,8 +136,9 @@ func Test_getResourceDefinitions(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       def.KindACL,
 					Metadata: def.ResourceMetadataDefinition{
-						Name: "topic_foo",
-						Type: "topic",
+						Name:                "topic_foo",
+						Type:                "topic",
+						ResourcePatternType: "literal",
 					},
 				},
 				{

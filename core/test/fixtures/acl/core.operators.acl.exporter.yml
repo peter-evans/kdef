@@ -38,6 +38,32 @@ spec:
 apiVersion: v1
 kind: acl
 metadata:
+  name: core.operators.acl.exporter.baz
+  type: topic
+  resourcePatternType: prefixed
+spec:
+  acls:
+    - principals: ["User:foo", "User:baz"]
+      hosts: ["*"]
+      operations: ["READ", "WRITE"]
+      permissionType: ALLOW
+---
+apiVersion: v1
+kind: acl
+metadata:
+  name: '*'
+  type: topic
+  resourcePatternType: literal
+spec:
+  acls:
+    - principals: ["User:foo"]
+      hosts: ["*"]
+      operations: ["READ"]
+      permissionType: ALLOW
+---
+apiVersion: v1
+kind: acl
+metadata:
   name: core.operators.acl.exporter.foo
   type: group
 spec:
