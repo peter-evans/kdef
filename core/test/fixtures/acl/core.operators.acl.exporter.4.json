@@ -1,5 +1,29 @@
 [
   {
+    "id": "*",
+    "type": "topic",
+    "definition": {
+      "apiVersion": "v1",
+      "kind": "acl",
+      "metadata": {
+        "name": "*",
+        "type": "topic",
+        "resourcePatternType":"literal"
+      },
+      "spec": {
+        "acls": [
+          {
+            "principals": ["User:foo"],
+            "hosts": ["*"],
+            "operations": ["READ"],
+            "permissionType": "ALLOW"
+          }
+        ],
+        "deleteUndefinedAcls": true
+      }
+    }
+  },
+  {
     "id": "core.operators.acl.exporter.foo",
     "type": "topic",
     "definition": {
@@ -7,7 +31,8 @@
       "kind": "acl",
       "metadata": {
         "name": "core.operators.acl.exporter.foo",
-        "type": "topic"
+        "type": "topic",
+        "resourcePatternType":"literal"
       },
       "spec": {
         "acls": [

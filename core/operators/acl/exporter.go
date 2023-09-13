@@ -97,8 +97,9 @@ func (e *exporter) getACLDefinitions(ctx context.Context) ([]def.ACLDefinition, 
 
 		aclDef := def.NewACLDefinition(
 			def.ResourceMetadataDefinition{
-				Name: resource.ResourceName,
-				Type: resource.ResourceType,
+				Name:                resource.ResourceName,
+				Type:                resource.ResourceType,
+				ResourcePatternType: resource.ResourcePatternType,
 			},
 			resACLs,
 		)

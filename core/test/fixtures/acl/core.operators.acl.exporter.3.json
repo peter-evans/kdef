@@ -7,7 +7,8 @@
       "kind": "acl",
       "metadata": {
         "name": "core.operators.acl.exporter.foo",
-        "type": "group"
+        "type": "group",
+        "resourcePatternType":"literal"
       },
       "spec": {
         "acls": [
@@ -30,7 +31,8 @@
       "kind": "acl",
       "metadata": {
         "name": "core.operators.acl.exporter.foo",
-        "type": "topic"
+        "type": "topic",
+        "resourcePatternType":"literal"
       },
       "spec": {
         "acls": [

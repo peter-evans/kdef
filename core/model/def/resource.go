@@ -19,9 +19,10 @@ type ResourceMetadataLabels map[string]string
 
 // ResourceMetadataDefinition represents a resource metadata definition.
 type ResourceMetadataDefinition struct {
-	Labels ResourceMetadataLabels `json:"labels,omitempty"`
-	Name   string                 `json:"name"`
-	Type   string                 `json:"type,omitempty"`
+	Labels              ResourceMetadataLabels `json:"labels,omitempty"`
+	Name                string                 `json:"name"`
+	Type                string                 `json:"type,omitempty"`
+	ResourcePatternType string                 `json:"resourcePatternType,omitempty"`
 }
 
 // ResourceDefinition represents a resource definition.

@@ -220,8 +220,9 @@ func (s *Service) DescribeResourceACLs(
 	ctx context.Context,
 	name string,
 	resourceType string,
+	resourcePatternType string,
 ) (def.ACLEntryGroups, error) {
-	return describeResourceACLs(ctx, s.cl, name, resourceType)
+	return describeResourceACLs(ctx, s.cl, name, resourceType, resourcePatternType)
 }
 
 // DescribeAllResourceACLs executes a request to describe ACLs for all resources (Kafka 0.11.0+).
@@ -237,9 +238,10 @@ func (s *Service) CreateACLs(
 	ctx context.Context,
 	name string,
 	resourceType string,
+	resourcePatternType string,
 	acls def.ACLEntryGroups,
 ) error {
-	return createACLs(ctx, s.cl, name, resourceType, acls)
+	return createACLs(ctx, s.cl, name, resourceType, resourcePatternType, acls)
 }
 
 // DeleteACLs executes a request to delete acls (Kafka 0.11.0+).
@@ -247,7 +249,8 @@ func (s *Service) DeleteACLs(
 	ctx context.Context,
 	name string,
 	resourceType string,
+	resourcePatternType string,
 	acls def.ACLEntryGroups,
 ) error {
-	return deleteACLs(ctx, s.cl, name, resourceType, acls)
+	return deleteACLs(ctx, s.cl, name, resourceType, resourcePatternType, acls)
 }

@@ -140,7 +140,7 @@ func Test_exporter_Execute(t *testing.T) {
 				cl: cl,
 				opts: ExporterOptions{
 					Match:        ".*",
-					Exclude:      "core.operators.acl.exporter.bar",
+					Exclude:      "core.operators.acl.exporter.ba*",
 					ResourceType: "topic",
 					AutoGroup:    true,
 				},
