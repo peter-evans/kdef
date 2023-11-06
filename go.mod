@@ -17,7 +17,7 @@ require (
 	github.com/jedib0t/go-pretty/v6 v6.4.9
 	github.com/knadh/koanf v1.5.0
 	github.com/peter-evans/patience v0.3.0
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/testcontainers/testcontainers-go/modules/compose v0.26.0
 	github.com/twmb/franz-go v1.15.1
 	github.com/twmb/franz-go/pkg/kmsg v1.7.0
