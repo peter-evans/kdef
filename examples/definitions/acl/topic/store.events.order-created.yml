@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: acl
+metadata:
+  name: store.events.order-created
+  type: topic
+  labels:
+    producer: storefront
+spec:
+  acls:
+    - hosts: ["*"]
+      operations:
+        - "READ"
+        - "WRITE"
+        - "CREATE"
+        - "DESCRIBE"
+        - "DESCRIBE_CONFIGS"
+      permissionType: ALLOW
+      principals:
+        - User:foo
+        - User:bar
+        - User:baz
+    - hosts: ["*"]
+      operations:
+        - "DELETE"
+        - "ALTER"
+        - "ALTER_CONFIGS"
+      permissionType: ALLOW
+      principals: ["User:baz"]
+    - hosts: ["*"]
+      operations: ["CREATE"]
+      permissionType: DENY
+      principals: ["User:bar"]
+  deleteUndefinedAcls: true

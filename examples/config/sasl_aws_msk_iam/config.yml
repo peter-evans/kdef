@@ -1,0 +1,9 @@
+seedBrokers:
+  - "b-1.example.amazonaws.com:9098"
+  - "b-2.example.amazonaws.com:9098"
+  - "b-3.example.amazonaws.com:9098"
+timeoutMs: 10000
+tls:
+  enabled: true
+sasl:
+  method: aws_msk_iam
