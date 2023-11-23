@@ -1,7 +1,7 @@
 version: "3"
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:6.2.0
+    image: confluentinc/cp-zookeeper:7.0.11
     ports:
       - "${ZOOKEEPER_PORT}:${ZOOKEEPER_PORT}"
     environment:
@@ -9,7 +9,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   broker1:
-    image: confluentinc/cp-kafka:6.2.0 # Kafka 2.8.0
+    image: confluentinc/cp-kafka:7.0.11 # Kafka 3.0.x
     depends_on:
       - zookeeper
     ports:
@@ -26,7 +26,7 @@ services:
       KAFKA_PASSWORD_ENCODER_SECRET: 123foo
 
   broker2:
-    image: confluentinc/cp-kafka:6.2.0 # Kafka 2.8.0
+    image: confluentinc/cp-kafka:7.0.11 # Kafka 3.0.x
     depends_on:
       - zookeeper
     ports:
@@ -43,7 +43,7 @@ services:
       KAFKA_PASSWORD_ENCODER_SECRET: 123foo
 
   broker3:
-    image: confluentinc/cp-kafka:6.2.0 # Kafka 2.8.0
+    image: confluentinc/cp-kafka:7.0.11 # Kafka 3.0.x
     depends_on:
       - zookeeper
     ports:
@@ -60,7 +60,7 @@ services:
       KAFKA_PASSWORD_ENCODER_SECRET: 123foo
 
   broker4:
-    image: confluentinc/cp-kafka:6.2.0 # Kafka 2.8.0
+    image: confluentinc/cp-kafka:7.0.11 # Kafka 3.0.x
     depends_on:
       - zookeeper
     ports:
@@ -77,7 +77,7 @@ services:
       KAFKA_PASSWORD_ENCODER_SECRET: 123foo
 
   broker5:
-    image: confluentinc/cp-kafka:6.2.0 # Kafka 2.8.0
+    image: confluentinc/cp-kafka:7.0.11 # Kafka 3.0.x
     depends_on:
       - zookeeper
     ports:
@@ -94,7 +94,7 @@ services:
       KAFKA_PASSWORD_ENCODER_SECRET: 123foo
 
   broker6:
-    image: confluentinc/cp-kafka:6.2.0 # Kafka 2.8.0
+    image: confluentinc/cp-kafka:7.0.11 # Kafka 3.0.x
     depends_on:
       - zookeeper
     ports:
