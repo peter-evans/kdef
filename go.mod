@@ -19,7 +19,7 @@ require (
 	github.com/peter-evans/patience v0.3.0
 	github.com/spf13/cobra v1.8.0
 	github.com/testcontainers/testcontainers-go/modules/compose v0.27.0
-	github.com/twmb/franz-go v1.15.4
+	github.com/twmb/franz-go v1.16.0
 	github.com/twmb/franz-go/pkg/kmsg v1.7.0
 )
 
@@ -100,7 +100,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
-	github.com/klauspost/compress v1.16.7 // indirect
+	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
