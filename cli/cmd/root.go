@@ -47,7 +47,7 @@ kdef configure
 
 Manual: https://peter-evans.github.io/kdef`,
 		Args: cobra.NoArgs,
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		PersistentPreRun: func(_ *cobra.Command, _ []string) {
 			color.NoColor = noColor
 			log.Quiet = quiet
 			if verbose {
