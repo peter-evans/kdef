@@ -40,7 +40,7 @@ kdef export acl --match "myapp.*"`,
 		SilenceErrors:         true,
 		DisableFlagsInUseLine: true,
 		Args:                  cobra.NoArgs,
-		PreRunE: func(_ *cobra.Command, args []string) error {
+		PreRunE: func(_ *cobra.Command, _ []string) error {
 			opts.DefinitionFormat = opt.ParseDefinitionFormat(defFormat)
 			if opts.DefinitionFormat == opt.UnsupportedFormat {
 				return fmt.Errorf("\"format\" must be one of %q", strings.Join(opt.DefinitionFormatValidValues, "|"))
@@ -50,7 +50,7 @@ kdef export acl --match "myapp.*"`,
 			}
 			return nil
 		},
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			cl, err := config.NewClient(cOpts)
 			if err != nil {
 				return err

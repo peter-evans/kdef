@@ -16,7 +16,7 @@ func Command() *cobra.Command {
 		SilenceErrors:         true,
 		DisableFlagsInUseLine: true,
 		Args:                  cobra.NoArgs,
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			return config.Configure()
 		},
 	}
