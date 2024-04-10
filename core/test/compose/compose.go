@@ -15,8 +15,8 @@ import (
 func Up(t *testing.T, paths []string, env map[string]string) tc.ComposeStack {
 	t.Helper()
 	identifier := strings.ToLower(uuid.New().String())
-	stackId := tc.StackIdentifier(identifier)
-	compose, err := tc.NewDockerComposeWith(tc.WithStackFiles(paths...), stackId)
+	stackID := tc.StackIdentifier(identifier)
+	compose, err := tc.NewDockerComposeWith(tc.WithStackFiles(paths...), stackID)
 
 	require.NoError(t, err, "NewDockerComposeAPI()")
 

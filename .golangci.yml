@@ -1,6 +1,5 @@
 linters:
   enable:
-    - ifshort
     - gocritic
     - godot
     - gofumpt
