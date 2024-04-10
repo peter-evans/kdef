@@ -110,7 +110,6 @@ func Test_applier_Execute(t *testing.T) {
 		if srv.IsKafkaReady(ctx, harness.TopicApplier.Brokers, 90) {
 			duration := time.Since(start)
 			log.Infof("kafka cluster ready in %v", duration)
-			defer compose.Down(t, c)
 			break
 		} else {
 			log.Warnf("kafka failed to be ready within timeout")

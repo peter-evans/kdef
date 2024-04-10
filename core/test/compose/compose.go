@@ -12,7 +12,7 @@ import (
 )
 
 // Up executes compose up and registers teardown on test cleanup.
-func Up(t *testing.T, paths []string, env map[string]string) {
+func Up(t *testing.T, paths []string, env map[string]string) tc.ComposeStack {
 	t.Helper()
 	identifier := strings.ToLower(uuid.New().String())
 	stackId := tc.StackIdentifier(identifier)
@@ -28,4 +28,12 @@ func Up(t *testing.T, paths []string, env map[string]string) {
 	t.Cleanup(cancel)
 
 	require.NoError(t, compose.WithEnv(env).Up(ctx, tc.Wait(true)), "compose.Up()")
+
+	return compose
+}
+
+// Down executes compose down.
+func Down(t *testing.T, compose tc.ComposeStack) {
+	t.Helper()
+	require.NoError(t, compose.Down(context.Background(), tc.RemoveOrphans(true), tc.RemoveImagesLocal), "compose.Down()")
 }
