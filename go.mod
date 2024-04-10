@@ -18,6 +18,7 @@ require (
 	github.com/knadh/koanf v1.5.0
 	github.com/peter-evans/patience v0.3.0
 	github.com/spf13/cobra v1.8.0
+	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go/modules/compose v0.30.0
 	github.com/twmb/franz-go v1.16.1
 	github.com/twmb/franz-go/pkg/kmsg v1.7.0
@@ -63,7 +64,7 @@ require (
 	github.com/docker/cli v26.0.0-rc1+incompatible // indirect
 	github.com/docker/compose/v2 v2.24.7 // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v26.0.0-rc1+incompatible // indirect
+	github.com/docker/docker v26.0.0-rc3+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.8.0 // indirect
 	github.com/docker/go v1.5.1-1.0.20160303222718-d30aec9fd63c // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
@@ -152,7 +153,6 @@ require (
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/testcontainers/testcontainers-go v0.30.0 // indirect
 	github.com/theupdateframework/notary v0.7.0 // indirect
 	github.com/tilt-dev/fsnotify v1.4.8-0.20220602155310-fff9c274a375 // indirect
