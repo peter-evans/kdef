@@ -2,37 +2,30 @@
 package compose
 
 import (
+	"context"
 	"strings"
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
 	tc "github.com/testcontainers/testcontainers-go/modules/compose"
 )
 
-// Up executes compose up.
-func Up(t *testing.T, paths []string, env map[string]string) *tc.LocalDockerCompose {
+// Up executes compose up and registers teardown on test cleanup.
+func Up(t *testing.T, paths []string, env map[string]string) {
 	t.Helper()
 	identifier := strings.ToLower(uuid.New().String())
-	// nolint
-	compose := tc.NewLocalDockerCompose(paths, identifier)
-	execError := compose.
-		WithCommand([]string{"up", "-d"}).
-		WithEnv(env).
-		Invoke()
-	if err := execError.Error; err != nil {
-		t.Errorf("compose up failed: %v", err)
-		t.FailNow()
-	}
+	stackId := tc.StackIdentifier(identifier)
+	compose, err := tc.NewDockerComposeWith(tc.WithStackFiles(paths...), stackId)
 
-	return compose
-}
+	require.NoError(t, err, "NewDockerComposeAPI()")
 
-// Down executes compose down.
-func Down(t *testing.T, compose *tc.LocalDockerCompose) {
-	t.Helper()
-	execError := compose.Down()
-	if err := execError.Error; err != nil {
-		t.Errorf("compose down failed: %v", err)
-		t.FailNow()
-	}
+	t.Cleanup(func() {
+		require.NoError(t, compose.Down(context.Background(), tc.RemoveOrphans(true), tc.RemoveImagesLocal), "compose.Down()")
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	require.NoError(t, compose.WithEnv(env).Up(ctx, tc.Wait(true)), "compose.Up()")
 }
