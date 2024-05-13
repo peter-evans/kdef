@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go v1.51.25
 	github.com/bmatcuk/doublestar/v4 v4.6.1
 	github.com/bradfitz/slice v0.0.0-20180809154707-2b758aa73013
-	github.com/fatih/color v1.16.0
+	github.com/fatih/color v1.17.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
