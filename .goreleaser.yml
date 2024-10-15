@@ -1,3 +1,5 @@
+version: 2
+
 project_name: kdef
 
 before:
@@ -5,7 +7,7 @@ before:
     - go mod tidy
 
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 
 builds:
   - env:
@@ -53,7 +55,7 @@ brews:
   - repository:
       owner: peter-evans
       name: homebrew-kdef
-    folder: Formula
+    directory: Formula
     commit_author:
       name: Peter Evans
       email: mail@peterevans.dev
