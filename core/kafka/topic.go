@@ -113,7 +113,7 @@ func createTopic(
 			if topic.ErrorMessage != nil {
 				errMsg = fmt.Sprintf("%s: %s", errMsg, *topic.ErrorMessage)
 			}
-			return fmt.Errorf(errMsg)
+			return fmt.Errorf("%s", errMsg)
 		}
 	}
 
@@ -162,7 +162,7 @@ func createPartitions(
 			if topic.ErrorMessage != nil {
 				errMsg = fmt.Sprintf("%s: %s", errMsg, *topic.ErrorMessage)
 			}
-			return fmt.Errorf(errMsg)
+			return fmt.Errorf("%s", errMsg)
 		}
 	}
 
@@ -207,7 +207,7 @@ func alterPartitionAssignments(
 		if resp.ErrorMessage != nil {
 			errMsg = fmt.Sprintf("%s: %s", errMsg, *resp.ErrorMessage)
 		}
-		return fmt.Errorf(errMsg)
+		return fmt.Errorf("%s", errMsg)
 	}
 
 	for _, topic := range resp.Topics {
@@ -217,7 +217,7 @@ func alterPartitionAssignments(
 				if partition.ErrorMessage != nil {
 					errMsg = fmt.Sprintf("%s: %s", errMsg, *partition.ErrorMessage)
 				}
-				return fmt.Errorf(errMsg)
+				return fmt.Errorf("%s", errMsg)
 			}
 		}
 	}
@@ -251,7 +251,7 @@ func listPartitionReassignments(
 		if resp.ErrorMessage != nil {
 			errMsg = fmt.Sprintf("%s: %s", errMsg, *resp.ErrorMessage)
 		}
-		return nil, fmt.Errorf(errMsg)
+		return nil, fmt.Errorf("%s", errMsg)
 	}
 
 	var reassignments meta.PartitionReassignments
@@ -312,7 +312,7 @@ func electLeaders(
 				if partition.ErrorMessage != nil {
 					errMsg = fmt.Sprintf("%s: %s", errMsg, *partition.ErrorMessage)
 				}
-				return fmt.Errorf(errMsg)
+				return fmt.Errorf("%s", errMsg)
 			}
 		}
 	}

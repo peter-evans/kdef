@@ -93,7 +93,7 @@ func (a *applyController) Execute(ctx context.Context) error {
 					ctlErrors = true
 				}
 				if (err != nil || res.ContainsErr()) && !a.opts.ContinueOnError {
-					return fmt.Errorf(cannotContinueOnError)
+					return fmt.Errorf("%s", cannotContinueOnError)
 				}
 
 				return nil

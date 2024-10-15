@@ -21,7 +21,7 @@ type ApplyResult struct {
 // GetErr returns the error of an apply.
 func (a ApplyResult) GetErr() error {
 	if len(a.Err) > 0 {
-		return fmt.Errorf(a.Err)
+		return fmt.Errorf("%s", a.Err)
 	}
 	return nil
 }
