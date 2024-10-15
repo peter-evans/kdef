@@ -222,7 +222,7 @@ func describeConfigs(
 			if resource.ErrorMessage != nil {
 				errMsg = fmt.Sprintf("%s: %s", errMsg, *resource.ErrorMessage)
 			}
-			return nil, fmt.Errorf(errMsg)
+			return nil, fmt.Errorf("%s", errMsg)
 		}
 	}
 
@@ -313,7 +313,7 @@ func alterConfigs(
 			if resource.ErrorMessage != nil {
 				errMsg = fmt.Sprintf("%s: %s", errMsg, *resource.ErrorMessage)
 			}
-			return fmt.Errorf(errMsg)
+			return fmt.Errorf("%s", errMsg)
 		}
 	}
 
@@ -403,7 +403,7 @@ func incrementalAlterConfigs(
 			if resource.ErrorMessage != nil {
 				errMsg = fmt.Sprintf("%s: %s", errMsg, *resource.ErrorMessage)
 			}
-			return fmt.Errorf(errMsg)
+			return fmt.Errorf("%s", errMsg)
 		}
 	}
 

@@ -42,13 +42,13 @@ func Diff(a []int32, b []int32) []int32 {
 
 // Max returns the maximum element in a slice.
 func Max(s []int32) int32 {
-	max := s[0]
+	m := s[0]
 	for _, v := range s {
-		if max < v {
-			max = v
+		if m < v {
+			m = v
 		}
 	}
-	return max
+	return m
 }
 
 // ParseStr parses a string to int32.

@@ -94,7 +94,7 @@ func describeACLs(
 		if resp.ErrorMessage != nil {
 			errMsg = fmt.Sprintf("%s: %s", errMsg, *resp.ErrorMessage)
 		}
-		return nil, fmt.Errorf(errMsg)
+		return nil, fmt.Errorf("%s", errMsg)
 	}
 
 	resourceACLs := make([]ResourceACLs, len(resp.Resources))
@@ -192,7 +192,7 @@ func createACLs(
 			if result.ErrorMessage != nil {
 				errMsg = fmt.Sprintf("%s: %s", errMsg, *result.ErrorMessage)
 			}
-			return fmt.Errorf(errMsg)
+			return fmt.Errorf("%s", errMsg)
 		}
 	}
 
@@ -265,7 +265,7 @@ func deleteACLs(
 			if result.ErrorMessage != nil {
 				errMsg = fmt.Sprintf("%s: %s", errMsg, *result.ErrorMessage)
 			}
-			return fmt.Errorf(errMsg)
+			return fmt.Errorf("%s", errMsg)
 		}
 	}
 

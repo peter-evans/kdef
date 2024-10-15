@@ -139,7 +139,7 @@ func describeCluster(ctx context.Context, cl *client.Client) (*kmsg.DescribeClus
 		if resp.ErrorMessage != nil {
 			errMsg = fmt.Sprintf("%s: %s", errMsg, *resp.ErrorMessage)
 		}
-		return nil, fmt.Errorf(errMsg)
+		return nil, fmt.Errorf("%s", errMsg)
 	}
 
 	return resp, nil
