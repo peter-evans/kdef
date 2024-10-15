@@ -6,7 +6,7 @@ replace github.com/cucumber/godog => github.com/laurazard/godog v0.0.0-202209220
 
 require (
 	github.com/aws/aws-sdk-go v1.55.3
-	github.com/bmatcuk/doublestar/v4 v4.6.1
+	github.com/bmatcuk/doublestar/v4 v4.7.1
 	github.com/bradfitz/slice v0.0.0-20180809154707-2b758aa73013
 	github.com/fatih/color v1.17.0
 	github.com/ghodss/yaml v1.0.0
