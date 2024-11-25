@@ -20,7 +20,7 @@ require (
 	github.com/knadh/koanf v1.5.0
 	github.com/peter-evans/patience v0.3.0
 	github.com/spf13/cobra v1.8.1
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/testcontainers/testcontainers-go/modules/compose v0.34.0
 	github.com/twmb/franz-go v1.18.0
 	github.com/twmb/franz-go/pkg/kmsg v1.9.0
