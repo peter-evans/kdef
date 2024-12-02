@@ -16,7 +16,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gotidy/copy v0.6.0
 	github.com/iancoleman/strcase v0.3.0
-	github.com/jedib0t/go-pretty/v6 v6.6.2
+	github.com/jedib0t/go-pretty/v6 v6.6.3
 	github.com/knadh/koanf v1.5.0
 	github.com/peter-evans/patience v0.3.0
 	github.com/spf13/cobra v1.8.1
