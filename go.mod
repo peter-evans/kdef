@@ -16,7 +16,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gotidy/copy v0.6.0
 	github.com/iancoleman/strcase v0.3.0
-	github.com/jedib0t/go-pretty/v6 v6.6.5
+	github.com/jedib0t/go-pretty/v6 v6.6.6
 	github.com/knadh/koanf v1.5.0
 	github.com/peter-evans/patience v0.3.0
 	github.com/spf13/cobra v1.9.1
@@ -116,7 +116,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-runewidth v0.0.15 // indirect
+	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/mattn/go-shellwords v1.0.12 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
@@ -152,7 +152,7 @@ require (
 	github.com/prometheus/common v0.44.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/r3labs/sse v0.0.0-20210224172625-26fe804710bc // indirect
-	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/secure-systems-lab/go-securesystemslib v0.4.0 // indirect
 	github.com/serialx/hashring v0.0.0-20200727003509-22c0c7ab6b1b // indirect
 	github.com/shibumi/go-pathspec v1.3.0 // indirect
@@ -194,10 +194,10 @@ require (
 	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3 // indirect
 	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.18.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/term v0.28.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/term v0.29.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20231016165738-49dd2c1f3d0b // indirect
