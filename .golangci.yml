@@ -1,11 +1,14 @@
+version: "2"
 linters:
   enable:
     - gocritic
     - godot
-    - gofumpt
     - prealloc
     - predeclared
     - revive
     - thelper
     - unconvert
     - unparam
+formatters:
+  enable:
+    - gofumpt

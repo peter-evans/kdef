@@ -144,23 +144,23 @@ func (a ACLDefinition) Validate() error {
 		return err
 	}
 
-	if len(a.ResourceDefinition.Metadata.Type) == 0 {
+	if len(a.Metadata.Type) == 0 {
 		return fmt.Errorf("metadata type must be supplied")
 	}
 
-	if !str.Contains(a.ResourceDefinition.Metadata.Type, aclResourceTypes) {
+	if !str.Contains(a.Metadata.Type, aclResourceTypes) {
 		return fmt.Errorf("metadata type must be one of %q", strings.Join(aclResourceTypes, "|"))
 	}
 
-	if a.ResourceDefinition.Metadata.Type == "cluster" && a.ResourceDefinition.Metadata.Name != "kafka-cluster" {
+	if a.Metadata.Type == "cluster" && a.Metadata.Name != "kafka-cluster" {
 		return fmt.Errorf("metadata name must be \"kafka-cluster\" when type is \"cluster\"")
 	}
 
-	if len(a.ResourceDefinition.Metadata.ResourcePatternType) == 0 {
+	if len(a.Metadata.ResourcePatternType) == 0 {
 		return fmt.Errorf("metadata resource pattern type must be supplied")
 	}
 
-	if !str.Contains(a.ResourceDefinition.Metadata.ResourcePatternType, aclResourcePatternTypes) {
+	if !str.Contains(a.Metadata.ResourcePatternType, aclResourcePatternTypes) {
 		return fmt.Errorf("metadata resource pattern type must be one of %q", strings.Join(aclResourcePatternTypes, "|"))
 	}
 
