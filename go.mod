@@ -22,7 +22,7 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/testcontainers/testcontainers-go/modules/compose v0.37.0
-	github.com/twmb/franz-go v1.19.4
+	github.com/twmb/franz-go v1.19.5
 	github.com/twmb/franz-go/pkg/kmsg v1.11.2
 )
 
