@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: topic
+metadata:
+  name: store.events.order-created
+  labels:
+    producer: storefront
+spec:
+  configs:
+    retention.ms: "86400000"
+  partitions: 3
+  replicationFactor: 2

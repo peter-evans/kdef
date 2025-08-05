@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: brokers
+metadata:
+  name: store-cluster
+spec:
+  configs:
+    leader.replication.throttled.rate: "700000000"
+    follower.replication.throttled.rate: "700000000"

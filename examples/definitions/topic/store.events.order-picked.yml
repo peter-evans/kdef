@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: topic
+metadata:
+  name: store.events.order-picked
+  labels:
+    producer: backoffice
+spec:
+  configs:
+    retention.ms: "86400000"
+  partitions: 4
+  replicationFactor: 2
+  managedAssignments:
+    rackConstraints:
+      - ["zone-a", "zone-b"]
+      - ["zone-b", "zone-c"]
+      - ["zone-c", "zone-a"]
+      - ["zone-a", "zone-b"]
