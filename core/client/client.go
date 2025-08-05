@@ -14,7 +14,7 @@ import (
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/core/util/str"
 
-	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go-v2/config"
 
 	"github.com/twmb/franz-go/pkg/kgo"
 	"github.com/twmb/franz-go/pkg/kversion"
@@ -139,12 +139,12 @@ func (cl *Client) buildSASLOpt() error {
 			IsToken: cl.cc.SASL.IsToken,
 		}.AsSha512Mechanism()))
 	case "awsmskiam":
-		sess, err := session.NewSession()
+		cfg, err := config.LoadDefaultConfig(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to create aws session: %v", err)
+			return fmt.Errorf("failed to load aws config: %v", err)
 		}
 		cl.addOpt(kgo.SASL(aws.ManagedStreamingIAM(func(ctx context.Context) (aws.Auth, error) {
-			creds, err := sess.Config.Credentials.GetWithContext(ctx)
+			creds, err := cfg.Credentials.Retrieve(ctx)
 			if err != nil {
 				return aws.Auth{}, err
 			}
