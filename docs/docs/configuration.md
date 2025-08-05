@@ -130,7 +130,7 @@ The following configuration can be used to access an Amazon MSK cluster with [IA
 --8<-- "docs/examples/config/sasl_aws_msk_iam/config.yml"
 ```
 
-When executing kdef, the AWS SDK must be instructed as to where credentials can be sourced. See [here](https://docs.aws.amazon.com/sdk-for-go/api/aws/session/) for further documentation.
+When executing kdef, the AWS SDK must be instructed as to where credentials can be sourced. See [here](https://docs.aws.amazon.com/sdk-for-go/v2/api/config/) for further documentation.
 
 ```sh
 AWS_SDK_LOAD_CONFIG=1 AWS_PROFILE=my-profile kdef export topic
