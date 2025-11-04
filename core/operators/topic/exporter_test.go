@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 // Package topic implements operators for topic definition operations.
 package topic
