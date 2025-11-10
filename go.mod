@@ -14,13 +14,13 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gotidy/copy v0.6.0
 	github.com/iancoleman/strcase v0.3.0
-	github.com/jedib0t/go-pretty/v6 v6.6.9
+	github.com/jedib0t/go-pretty/v6 v6.7.1
 	github.com/knadh/koanf v1.5.0
 	github.com/peter-evans/patience v0.3.0
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
-	github.com/testcontainers/testcontainers-go/modules/compose v0.39.1
-	github.com/twmb/franz-go v1.20.2
+	github.com/testcontainers/testcontainers-go/modules/compose v0.40.0
+	github.com/twmb/franz-go v1.20.3
 	github.com/twmb/franz-go/pkg/kmsg v1.12.0
 )
 
@@ -163,7 +163,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
-	github.com/testcontainers/testcontainers-go v0.39.0 // indirect
+	github.com/testcontainers/testcontainers-go v0.40.0 // indirect
 	github.com/theupdateframework/notary v0.7.0 // indirect
 	github.com/tilt-dev/fsnotify v1.4.8-0.20220602155310-fff9c274a375 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
