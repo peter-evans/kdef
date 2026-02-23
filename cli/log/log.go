@@ -1,5 +1,5 @@
 // Package log implements a logging interface.
-package log
+package log //nolint:revive // package name conflicts with standard library
 
 import (
 	"fmt"
