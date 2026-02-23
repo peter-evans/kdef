@@ -1,5 +1,5 @@
 // Package log implements a logging interface.
-package log //nolint:revive // package name intentionally mirrors standard library
+package log //nolint:revive // package name conflicts with standard library
 
 import (
 	"fmt"

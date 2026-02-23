@@ -1,5 +1,5 @@
 // Package scanner implements a scanner with methods to prompt for user input.
-package scanner //nolint:revive // package name intentionally mirrors standard library
+package scanner //nolint:revive // package name conflicts with standard library
 
 import (
 	"bufio"
