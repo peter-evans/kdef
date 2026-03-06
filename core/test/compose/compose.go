@@ -1,3 +1,5 @@
+//go:build integration
+
 // Package compose implements Docker compose setup and teardown for integration tests.
 package compose
 
