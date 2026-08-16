@@ -83,7 +83,7 @@ func (e *exporter) getTopicDefinitions(ctx context.Context) ([]def.TopicDefiniti
 
 	topicConfigsMapMap := map[string]def.ConfigsMap{}
 	for _, resource := range resourceConfigs {
-		topicConfigsMapMap[resource.ResourceName] = resource.Configs.ToExportableMap()
+		topicConfigsMapMap[resource.ResourceName] = resource.Configs.ToExportableMap(def.ConfigSourceDynamicTopicConfig)
 	}
 
 	matchRegExp, err := regexp.Compile(e.opts.Match)

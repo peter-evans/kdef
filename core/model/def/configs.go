@@ -48,11 +48,23 @@ func (c Configs) ToMap() ConfigsMap {
 }
 
 // ToExportableMap returns an exportable map of the configs (sensitive keys filtered out).
-func (c Configs) ToExportableMap() ConfigsMap {
+func (c Configs) ToExportableMap(allowedSources ...ConfigSource) ConfigsMap {
 	configsMap := ConfigsMap{}
 	for _, config := range c {
 		if !config.IsSensitive {
-			configsMap[config.Name] = config.Value
+			// If no allowed sources are specified, include all non-sensitive configs
+			if len(allowedSources) == 0 {
+				configsMap[config.Name] = config.Value
+				continue
+			}
+
+			// Filter by expected source(s)
+			for _, s := range allowedSources {
+				if s == config.Source {
+					configsMap[config.Name] = config.Value
+					break
+				}
+			}
 		}
 	}
 	return configsMap
