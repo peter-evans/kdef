@@ -70,7 +70,7 @@ func (e *exporter) getBrokerDefinitions(ctx context.Context) ([]def.BrokerDefini
 				def.ResourceMetadataDefinition{
 					Name: brokerIDStr,
 				},
-				brokerConfigs.ToExportableMap(),
+				brokerConfigs.ToExportableMap(def.ConfigSourceDynamicBrokerConfig, def.ConfigSourceStaticBrokerConfig),
 			),
 		)
 	}

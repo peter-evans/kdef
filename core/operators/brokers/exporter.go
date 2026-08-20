@@ -51,7 +51,7 @@ func (e *exporter) getBrokersDefinition(ctx context.Context) (*def.BrokersDefini
 		def.ResourceMetadataDefinition{
 			Name: "brokers",
 		},
-		brokerConfigs.ToExportableMap(),
+		brokerConfigs.ToExportableMap(def.ConfigSourceDynamicDefaultBrokerConfig),
 	)
 
 	return &brokersDef, nil
