@@ -571,7 +571,7 @@ func (a *applier) buildAssignmentsOp() {
 
 // fetchPartitionReassignments executes a request to list partition reassignments.
 func (a *applier) fetchPartitionReassignments(ctx context.Context, suppressLog bool) error {
-	if !(suppressLog) {
+	if !suppressLog {
 		log.Debugf("Fetching in-progress partition reassignments for topic %q", a.localDef.Metadata.Name)
 	}
 
