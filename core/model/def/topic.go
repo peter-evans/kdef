@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/ghodss/yaml"
-	"github.com/gotidy/copy"
+	deepcopy "github.com/gotidy/copy"
 	"github.com/peter-evans/kdef/cli/log"
 	"github.com/peter-evans/kdef/core/model/meta"
 	"github.com/peter-evans/kdef/core/model/opt"
@@ -98,7 +98,7 @@ type TopicDefinition struct {
 
 // Copy creates a copy of this TopicDefinition.
 func (t TopicDefinition) Copy() TopicDefinition {
-	copiers := copy.New()
+	copiers := deepcopy.New()
 	copier := copiers.Get(&TopicDefinition{}, &TopicDefinition{})
 	var topicDefCopy TopicDefinition
 	copier.Copy(&topicDefCopy, &t)

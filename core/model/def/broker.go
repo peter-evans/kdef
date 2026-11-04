@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/ghodss/yaml"
-	"github.com/gotidy/copy"
+	deepcopy "github.com/gotidy/copy"
 	"github.com/peter-evans/kdef/core/model/meta"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/util/i32"
@@ -29,7 +29,7 @@ type BrokerDefinition struct {
 
 // Copy creates a copy of this BrokerDefinition.
 func (b BrokerDefinition) Copy() BrokerDefinition {
-	copiers := copy.New()
+	copiers := deepcopy.New()
 	copier := copiers.Get(&BrokerDefinition{}, &BrokerDefinition{})
 	var brokerDefCopy BrokerDefinition
 	copier.Copy(&brokerDefCopy, &b)
