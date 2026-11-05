@@ -8,7 +8,7 @@ import (
 
 	"github.com/bradfitz/slice" //nolint
 	"github.com/ghodss/yaml"
-	"github.com/gotidy/copy"
+	deepcopy "github.com/gotidy/copy"
 	"github.com/peter-evans/kdef/core/model/opt"
 	"github.com/peter-evans/kdef/core/util/str"
 )
@@ -131,7 +131,7 @@ type ACLDefinition struct {
 
 // Copy creates a copy of this ACLDefinition.
 func (a ACLDefinition) Copy() ACLDefinition {
-	copiers := copy.New()
+	copiers := deepcopy.New()
 	copier := copiers.Get(&ACLDefinition{}, &ACLDefinition{})
 	var aclDefCopy ACLDefinition
 	copier.Copy(&aclDefCopy, &a)
